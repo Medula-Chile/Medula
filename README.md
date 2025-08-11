@@ -4,98 +4,66 @@
 Estructura del proyecto; (Propuesto)
 
 /
-├── .github/                  # Configuraciones de GitHub (CI/CD, etc.)
+├── .github/                  # Configuración de GitHub
+│   └── workflows/            # Automatización (tests y despliegues)
 │
-├── backend/                  # API (Node.js + Express + MongoDB)
+├── backend/                  # API del sistema (Node.js/Express)
 │   ├── src/
-│   │   ├── config/           # Configuración global
+│   │   ├── config/
 │   │   │   ├── db.js         # Conexión a MongoDB
-│   │   │   └── auth.js       # Configuración de JWT
+│   │   │   └── auth.js       # Configuración JWT
 │   │   │
-│   │   ├── controllers/      # Lógica de rutas
-│   │   │   ├── authController.js  # Login/registro
-│   │   │   ├── recordController.js # CRUD fichas
-│   │   │   └── userController.js  # Gestión usuarios
+│   │   ├── controllers/      # Lógica de negocio
+│   │   │   ├── auth.js       # Autenticación (login/registro)
+│   │   │   ├── patients.js   # Gestión pacientes (añadir/listar)
+│   │   │   └── records.js    # CRUD fichas médicas
 │   │   │
-│   │   ├── middlewares/      # Validaciones
-│   │   │   ├── auth.js       # Autenticación JWT
-│   │   │   └── roles.js      # Permisos (doctor/patient)
+│   │   ├── models/           # Modelos de datos
+│   │   │   ├── User.js       # Usuarios (doctores/pacientes)
+│   │   │   └── Record.js     # Fichas clínicas
 │   │   │
-│   │   ├── models/           # Esquemas de MongoDB
-│   │   │   ├── User.js       # Usuarios (roles)
-│   │   │   ├── Record.js     # Fichas médicas
-│   │   │   └── Doctor.js     # Datos específicos de doctores
+│   │   ├── routes/           # Endpoints API
+│   │   │   ├── auth.js       # /login, /register
+│   │   │   └── api.js        # Rutas protegidas (/patients, /records)
 │   │   │
-│   │   ├── routes/           # Endpoints
-│   │   │   ├── authRoutes.js
-│   │   │   ├── recordRoutes.js
-│   │   │   └── userRoutes.js
-│   │   │
-│   │   ├── services/         # Lógica de negocio
-│   │   │   ├── authService.js
-│   │   │   └── recordService.js
-│   │   │
-│   │   ├── uploads/          # Archivos subidos (PDF, imágenes)
-│   │   ├── utils/            # Helpers
-│   │   └── app.js            # Inicialización del servidor
+│   │   └── app.js            # Configuración servidor Express
 │   │
-│   ├── tests/                # Pruebas
-│   └── package.json
+│   └── package.json          # Dependencias backend
 │
 ├── frontend/                 # Aplicación React
-│   ├── public/               # Assets estáticos
-│   │   ├── index.html
-│   │   └── assets/           # Imágenes/fuentes
+│   ├── public/               # Archivos estáticos
+│   │   ├── index.html        # Plantilla HTML base
+│   │   └── assets/           # Imágenes/iconos
 │   │
 │   └── src/
 │       ├── components/       # Componentes reutilizables
 │       │   ├── Auth/
-│       │   │   ├── LoginForm.jsx
+│       │   │   ├── LoginForm.jsx  # Formulario controlado
 │       │   │   └── RegisterForm.jsx
 │       │   │
-│       │   ├── UI/
-│       │   │   ├── Button.jsx
-│       │   │   └── Modal.jsx
-│       │   │
-│       │   └── ProtectedRoute.jsx  # Rutas con permisos
+│       │   └── UI/
+│       │       ├── Button.jsx     # Componente estilizado
+│       │       └── Modal.jsx      # Diálogos emergentes
 │       │
-│       ├── contexts/         # Estados globales
-│       │   ├── AuthContext.jsx
-│       │   └── RecordContext.jsx
+│       ├── hooks/            # Lógica reusable
+│       │   ├── useAuth.js     # Manejo de autenticación
+│       │   └── useApi.js      # Fetch a la API
 │       │
-│       ├── hooks/            # Custom hooks
-│       │   ├── useAuth.js
-│       │   └── useRecords.js
-│       │
-│       ├── pages/            # Vistas
+│       ├── pages/            # Vistas completas
 │       │   ├── Doctor/
-│       │   │   ├── Dashboard.jsx    # Vista doctor
-│       │   │   └── NewRecord.jsx    # Formulario diagnóstico
+│       │   │   ├── Dashboard.jsx  # Tablero médico
+│       │   │   └── AddPatient.jsx # Formulario nuevo paciente  <-- Añadido
 │       │   │
-│       │   ├── Patient/
-│       │   │   ├── Dashboard.jsx    # Vista paciente
-│       │   │   └── RecordDetail.jsx # Ver historial
-│       │   │
-│       │   ├── Auth/
-│       │   │   ├── Login.jsx
-│       │   │   └── Register.jsx
-│       │   │
-│       │   └── Shared/
-│       │       └── PdfViewer.jsx    # Visualizador de PDF
+│       │   └── Patient/
+│       │       └── Dashboard.jsx  # Vista paciente
 │       │
-│       ├── services/         # Llamadas a la API
-│       │   ├── api.js        # Configuración de Axios
-│       │   ├── auth.js       # Login/registro
-│       │   └── records.js    # Fetch de fichas
+│       ├── services/         # Conexión al backend
+│       │   └── api.js        # Configuración Axios
 │       │
-│       ├── styles/           # Estilos
-│       │   ├── main.css      # Global
-│       │   └── themes/       # Temas (opcional)
-│       │
-│       ├── App.jsx           # Componente raíz
-│       ├── main.jsx          # Punto de entrada
-│       └── routes.jsx        # Configuración de rutas (React Router)
+│       ├── App.jsx           # Configuración rutas
+│       └── main.jsx          # Renderizado inicial
 │
-├── docs/                    # Documentación
-├── scripts/                 # Scripts de despliegue
-└── README.md                # Guía del proyecto
+├── docs/                     # Documentación
+└── README.md                 # Guía de inicio
+
+bizagi modeler plataforma de automatizacion de procesos
