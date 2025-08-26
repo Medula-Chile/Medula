@@ -1,8 +1,8 @@
-# healthtechile-ficha-clinica
+# -Medula -ficha-clinica
 
 > 📊 Ficha clínica digital con agendamiento  
 > **Stack:** Frontend: React/Vue + Vite • Backend: Node.js (Express) • DB: MongoDB (Mongoose) • Auth: JWT  
-> 🚀 Desarrollado por @HealthTechILE  
+> 🚀 Desarrollado por @Medula 
 > **Próximos features:** notificaciones y API externa.
 
 ---
