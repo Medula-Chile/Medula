@@ -42,30 +42,112 @@
 <summary>Ver estructura de carpetas</summary>
 
 medula-project/
-├── client/ # Aplicación React
-│ ├── public/
-│ ├── src/
-│ │ ├── components/ # Componentes reutilizables
-│ │ │ ├── common/ # Header, Footer, Sidebar, etc.
-│ │ │ ├── auth/ # Login, Registro
-│ │ │ ├── dashboard/ # Panel principal
-│ │ │ ├── medical/ # Componentes médicos
-│ │ │ └── profile/ # Perfil de usuario
-│ │ ├── pages/ # Páginas principales
-│ │ ├── services/ # Servicios API
-│ │ ├── utils/ # Utilidades
-│ │ ├── hooks/ # Custom hooks
-│ │ ├── contexts/ # Context API
-│ │ └── styles/ # Estilos globales y temas
-├── server/ # Backend Node.js/Express
-│ ├── controllers/ # Lógica de endpoints
-│ ├── models/ # Modelos MongoDB
-│ ├── routes/ # Definición de rutas
-│ ├── middleware/ # Middlewares
-│ ├── config/ # Configuración de servidor y DB
-│ └── utils/ # Utilidades
-├── docs/ # Documentación
-└── scripts/ # Scripts de despliegue
+├── client/                          # Aplicación React
+│   ├── public/
+│   │   ├── index.html               # Plantilla HTML principal
+│   │   ├── favicon.ico              # Icono de la aplicación
+│   │   └── manifest.json            # Configuración PWA
+│   ├── src/
+│   │   ├── components/              # Componentes reutilizables
+│   │   │   ├── common/              # Componentes generales
+│   │   │   │   ├── Header.js        # Encabezado de la aplicación
+│   │   │   │   ├── Footer.js        # Pie de página
+│   │   │   │   ├── Sidebar.js       # Menú lateral de navegación
+│   │   │   │   ├── LoadingSpinner.js # Indicador de carga
+│   │   │   │   └── Modal.js         # Componente modal
+│   │   │   ├── auth/                # Componentes de autenticación
+│   │   │   │   ├── Login.js         # Formulario de inicio de sesión
+│   │   │   │   └── Register.js      # Formulario de registro
+│   │   │   ├── dashboard/           # Panel principal
+│   │   │   │   ├── Dashboard.js     # Panel principal
+│   │   │   │   ├── StatsCard.js     # Tarjeta de estadísticas
+│   │   │   │   ├── RecentActivity.js # Actividad reciente
+│   │   │   │   └── UpcomingAppointments.js # Próximas citas
+│   │   │   ├── medical/             # Componentes médicos
+│   │   │   │   ├── MedicalRecords.js # Historial médico
+│   │   │   │   ├── Appointments.js  # Citas médicas
+│   │   │   │   ├── Prescriptions.js # Recetas médicas
+│   │   │   │   ├── Exams.js         # Exámenes médicos
+│   │   │   │   ├── AppointmentCard.js # Tarjeta de cita
+│   │   │   │   └── LabResults.js    # Resultados de laboratorio
+│   │   │   └── profile/             # Gestión de perfil
+│   │   │       ├── UserProfile.js   # Perfil de usuario
+│   │   │       └── ChangePassword.js # Cambio de contraseña
+│   │   ├── pages/                   # Páginas principales
+│   │   │   ├── LoginPage.js         # Página de inicio de sesión
+│   │   │   ├── RegisterPage.js      # Página de registro
+│   │   │   ├── DashboardPage.js     # Página del dashboard
+│   │   │   ├── MedicalHistoryPage.js # Página de historial médico
+│   │   │   ├── AppointmentsPage.js  # Página de citas
+│   │   │   ├── PrescriptionsPage.js # Página de prescripciones
+│   │   │   └── ProfilePage.js       # Página de perfil
+│   │   ├── services/                # Servicios API
+│   │   │   ├── api.js               # Cliente HTTP para API
+│   │   │   ├── auth.js              # Servicios de autenticación
+│   │   │   ├── patients.js          # Servicios de pacientes
+│   │   │   ├── records.js           # Servicios de registros
+│   │   │   └── appointments.js      # Servicios de citas
+│   │   ├── utils/                   # Utilidades
+│   │   │   ├── formatters.js        # Funciones de formateo
+│   │   │   ├── validators.js        # Validaciones de formularios
+│   │   │   └── constants.js         # Constantes de la aplicación
+│   │   ├── hooks/                   # Custom hooks
+│   │   │   ├── useAuth.js           # Hook de autenticación
+│   │   │   ├── useApi.js            # Hook para llamadas API
+│   │   │   └── useForm.js           # Hook para formularios
+│   │   ├── contexts/                # Contexts de React
+│   │   │   ├── AuthContext.js       # Contexto de autenticación
+│   │   │   └── AppContext.js        # Contexto de la aplicación
+│   │   ├── styles/                  # Estilos
+│   │   │   ├── Global.css           # Estilos globales
+│   │   │   ├── Components.css       # Estilos de componentes
+│   │   │   └── Theme.js             # Tema de la aplicación
+│   │   ├── App.js                   # Componente principal
+│   │   ├── index.js                 # Punto de entrada
+│   │   └── App.css                  # Estilos principales
+│   ├── package.json                 # Dependencias del frontend
+│   └── vite.config.js               # Configuración de Vite
+├── server/                          # Backend Node.js/Express
+│   ├── controllers/                 # Lógica de endpoints
+│   │   ├── authController.js        # Controlador de autenticación
+│   │   ├── patientController.js     # Controlador de pacientes
+│   │   ├── recordController.js      # Controlador de registros médicos
+│   │   ├── appointmentController.js # Controlador de citas
+│   │   └── userController.js        # Controlador de usuarios
+│   ├── models/                      # Modelos de MongoDB
+│   │   ├── User.js                  # Modelo de usuario
+│   │   ├── Patient.js               # Modelo de paciente
+│   │   ├── MedicalRecord.js         # Modelo de historial médico
+│   │   └── Appointment.js           # Modelo de citas
+│   ├── routes/                      # Definición de rutas
+│   │   ├── auth.js                  # Rutas de autenticación
+│   │   ├── patients.js              # Rutas de pacientes
+│   │   ├── records.js               # Rutas de registros médicos
+│   │   ├── appointments.js          # Rutas de citas
+│   │   └── users.js                 # Rutas de usuarios
+│   ├── middleware/                  # Middlewares
+│   │   ├── auth.js                  # Middleware de autenticación
+│   │   ├── validation.js            # Validación de datos
+│   │   ├── errorHandler.js          # Manejo de errores
+│   │   └── roleCheck.js             # Verificación de roles
+│   ├── config/                      # Configuraciones
+│   │   ├── database.js              # Configuración de MongoDB
+│   │   ├── jwt.js                   # Configuración de JWT
+│   │   └── server.js                # Configuración del servidor
+│   ├── utils/                       # Utilidades del servidor
+│   │   ├── helpers.js               # Funciones auxiliares
+│   │   └── logger.js                # Sistema de logging
+│   ├── server.js                    # Servidor principal
+│   ├── package.json                 # Dependencias del backend
+│   └── .env                         # Variables de entorno
+├── docs/                            # Documentación
+│   ├── API.md                       # Documentación de la API
+│   ├── SETUP.md                     # Guía de instalación
+│   └── ARCHITECTURE.md              # Arquitectura del sistema
+└── scripts/                         # Scripts de despliegue y utilidades
+    ├── deploy.sh                    # Script de despliegue
+    ├── backup.sh                    # Script de respaldo
+    └── setup.sh                     # Script de configuración
 
 
 </details>
