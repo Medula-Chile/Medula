@@ -4,186 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Medula - Inicio de Sesión</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-      background-color: #fff;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-    .container {
-      max-width: 400px;
-      width: 100%;
-      border-radius: 20px;
-      border: 1px solid #ddd;
-      padding: 30px 25px;
-      box-sizing: border-box;
-      background-color: #fff;
-      box-shadow: 0 0 15px rgba(0,0,0,0.05);
-    }
-    .logo {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    .logo svg {
-      width: 90px;
-      height: auto;
-    }
-    .app-name {
-      font-weight: 900;
-      font-size: 2rem;
-      text-align: center;
-      margin: 0 0 5px 0;
-      color: #222;
-    }
-    .tagline {
-      text-align: center;
-      font-size: 1rem;
-      color: #444;
-      margin-bottom: 25px;
-    }
-    h2 {
-      font-weight: 700;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    .toggle-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 25px;
-    }
-    .toggle-button {
-      border-radius: 6px;
-      border: 1px solid #ddd;
-      padding: 7px 15px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.9rem;
-      user-select: none;
-      background-color: #fff;
-      color: #222;
-      transition: all 0.3s ease;
-      flex-grow: 1;
-      justify-content: center;
-    }
-    .toggle-button.selected {
-      background-color: #007bff;
-      border-color: #007bff;
-      color: #fff;
-    }
-    .toggle-button svg {
-      width: 16px;
-      height: 16px;
-      fill: currentColor;
-    }
-    label {
-      font-weight: 600;
-      display: block;
-      margin-bottom: 5px;
-      font-size: 0.95rem;
-    }
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px 14px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      box-sizing: border-box;
-      margin-bottom: 20px;
-      transition: border-color 0.2s ease;
-    }
-    input[type="email"]:focus,
-    input[type="password"]:focus {
-      border-color: #007bff;
-      outline: none;
-    }
-    .checkbox-container {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 20px;
-      font-size: 0.9rem;
-      color: #444;
-    }
-    .checkbox-container a {
-      color: #007bff;
-      text-decoration: none;
-    }
-    .checkbox-container a:hover {
-      text-decoration: underline;
-    }
-    button.submit-btn {
-      background-color: #007bff;
-      color: #fff;
-      width: 100%;
-      padding: 12px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button.submit-btn:hover {
-      background-color: #0056b3;
-    }
-    .clave-unica {
-      margin-top: 15px;
-      font-size: 1rem;
-      text-align: center;
-      cursor: pointer;
-      user-select: none;
-      color: #222;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-    }
-    .clave-icon {
-      width: 20px;
-      height: 20px;
-      stroke: currentColor;
-      stroke-width: 2;
-      fill: none;
-    }
-    /* Radio circle */
-    .password-wrapper {
-      position: relative;
-    }
-    .password-radio {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-  </style>
+  <link rel="stylesheet" type="text/css" href="stylesLo.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
   <div class="container" role="main" aria-labelledby="titulo">
     <div class="logo" aria-hidden="true">
       <!-- Logo "M" en degradado azul -->
-      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-        <defs>
-          <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#00bfff" />
-            <stop offset="100%" stop-color="#0053ba" />
-          </linearGradient>
-        </defs>
-        <path fill="url(#grad)" d="M25 80 C20 30, 40 5, 50 30 C60 5, 80 30, 75 80 L65 80 C70 40 55 40 50 70 C45 40 30 40 35 80 Z"></path>
-      </svg>
+      <img src="/client/public/img/medula_icono.png" alt="Logo Médula" style="width:120px;max-width:100%;height:auto;">
+      
     </div>
     <h1 id="titulo" class="app-name">MEDULA</h1>
     <p class="tagline">Cuida, organiza y protege</p>
@@ -217,8 +46,12 @@
           <a href="#" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>
         </label>
       </div>
+      <button type="submit" class="submit-btn btn btn-primary btn-sm">Iniciar Sesión</button>
+      
 
-      <button type="submit" class="submit-btn">Iniciar Sesión</button>
+<div class="login-link" style="margin-top: 16px; text-align: center;">
+  ¿No tienes cuenta? <a href="Register.html">Regístrate aquí</a>
+</div>
 
       <div class="clave-unica" tabindex="0" role="button" aria-pressed="false">
         <svg class="clave-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -226,28 +59,15 @@
           <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none" />
           <line x1="12" y1="15" x2="12" y2="21" stroke="currentColor" stroke-width="2" />
         </svg>
-        Ingresar con ClaveÚnica
+       Ingresar con ClaveÚnica
       </div>
     </form>
 
-  <script>
-    // Alternar botones tipo usuario: solo visual
-    const pacienteBtn = document.getElementById('paciente-btn');
-    const medicoBtn = document.getElementById('medico-btn');
-
-    pacienteBtn.addEventListener('click', () => {
-      pacienteBtn.classList.add('selected');
-      pacienteBtn.setAttribute('aria-pressed', 'true');
-      medicoBtn.classList.remove('selected');
-      medicoBtn.setAttribute('aria-pressed', 'false');
-    });
-    medicoBtn.addEventListener('click', () => {
-      medicoBtn.classList.add('selected');
-      medicoBtn.setAttribute('aria-pressed', 'true');
-      pacienteBtn.classList.remove('selected');
-      pacienteBtn.setAttribute('aria-pressed', 'false');
-    });
-  </script>
+  
   </div>
+<script src="Login.js"></script>
+<div style="text-align:center; margin-top:32px;">
+  <button id="dark-mode-toggle" class="btn btn-secondary btn-sm">Modo oscuro</button>
+</div>
 </body>
 </html>

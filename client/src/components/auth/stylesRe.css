@@ -1,0 +1,262 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 420px;
+            max-width: 400px;
+            width: 100%;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            padding: 30px 25px;
+            box-sizing: border-box;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo svg {
+            width: 100px;
+            height: auto;
+        }
+        
+        .app-name {
+            font-weight: 900;
+            font-size: 2rem;
+            text-align: center;
+            margin: 0 0 5px 0;
+            color: #222;
+    }
+        .logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo h1 {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            letter-spacing: 1px;
+        }
+        
+        .logo p {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .user-type {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .user-option {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border: 2px solid #e6e9ed;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 5px;
+        }
+        
+        .user-option.active {
+            border-color: #3498db;
+            background-color: #f0f8ff;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #e6e9ed;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border 0.3s;
+        }
+        
+        .form-group input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+        
+        .checkbox-group input {
+            margin-right: 10px;
+            margin-top: 3px;
+        }
+        
+        .checkbox-group label {
+            font-size: 14px;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+        
+        .checkbox-group a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #f5f7fa;
+            color: #3498db;
+            border: 1px solid #e6e9ed;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e6e9ed;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .divider::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background-color: #e6e9ed;
+        }
+        
+        .divider span {
+            background-color: white;
+            padding: 0 15px;
+            position: relative;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .login-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        div {
+          display: block;
+         unicode-bidi: isolate;
+        }
+
+        body.dark-mode {
+  background-color: #181a1b;
+  color: #f1f1f1;
+}
+body.dark-mode .container,
+body.dark-mode .card {
+  background-color: #23272b;
+  color: #f1f1f1;
+}
+body.dark-mode input,
+body.dark-mode button,
+body.dark-mode label {
+  background-color: #23272b;
+  color: #f1f1f1;
+  border-color: #444;
+}
+body.dark-mode a {
+  color: #90caf9;
+}
+body.dark-mode .btn-primary {
+  background-color: #1565c0;
+  border-color: #1565c0;
+}
+body.dark-mode .btn-secondary {
+  background-color: #333;
+  border-color: #333;
+}
+body.dark-mode .divider span {
+  color: #f1f1f1;
+}
+body.dark-mode .logo h1 {
+  color: #111;
+}
+body.dark-mode .logo p {
+  color: #fff;
+}
+body.dark-mode .title {
+  color: #fff;
+}
+#dark-mode-toggle {
+  padding: 1px 6px;
+  font-size: 0.85rem;
+  min-width: unset;
+  width: unset;
+
+}
