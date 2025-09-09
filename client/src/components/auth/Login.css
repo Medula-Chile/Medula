@@ -33,6 +33,8 @@ body {
       text-align: center;
       margin: 0 0 5px 0;
       color: #222;
+      font-family: 'Fira Sans', Arial, sans-serif;
+
     }
      
     .tagline {
@@ -197,5 +199,6 @@ body.dark-mode .tagline {
   color: #fff;
 }
 body.dark-mode .app-name {
-  color: #111;
+  color: #1565c0
 }
+
