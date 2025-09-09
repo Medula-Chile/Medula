@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEDULA - Portal del Paciente</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Iconos (reemplazar con tus iconos reales) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <div>
+                        <h1>MEDULA</h1>
+                        <p>Portal del Paciente</p>
+                    </div>
+                </div>
+
+                <div class="welcome-section">
+                    <h2 id="patient-greeting">Hola, Usuario</h2>
+                    <p>Bienvenida a tu portal médico</p>
+                </div>
+
+                <div class="header-actions">
+                    <div class="secure-connection">
+                        <i class="fas fa-shield-alt"></i>
+                        <span class="secure-badge">Conexión Segura</span>
+                    </div>
+                    
+                    <button class="icon-btn notifications-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">2</span>
+                    </button>
+
+                    <button class="logout-btn" id="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar Sesión</span>
+                    </button>
+
+                    <div class="user-profile">
+                        <div class="user-info">
+                            <p id="patient-name">Nombre Usuario</p>
+                            <p id="patient-plan">Plan de Salud</p>
+                        </div>
+                        <div class="avatar">
+                            <span id="avatar-initials">NU</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <div class="health-status">
+                        <div class="health-title">
+                            <i class="fas fa-heart"></i>
+                            <span>Estado de Salud</span>
+                        </div>
+                        <div class="health-details">
+                            <div class="health-item">
+                                <span>Última consulta</span>
+                                <span>15 Ago 2024</span>
+                            </div>
+                            <div class="health-item">
+                                <span>Medicamentos activos</span>
+                                <span class="medication-badge">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <div class="nav-items">
+                        <button class="nav-item active">
+                            <i class="fas fa-home"></i>
+                            <span>Inicio</span>
+                        </button>
+                        <button class="nav-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Citas</span>
+                        </button>
+                        <button class="nav-item">
+                            <i class="fas fa-file-medical"></i>
+                            <span>Documentos</span>
+                        </button>
+                        <button class="nav-item">
+                            <i class="fas fa-prescription"></i>
+                            <span>Recetas</span>
+                        </button>
+                        <button class="nav-item">
+                            <i class="fas fa-hospital-user"></i>
+                            <span>Centros Médicos</span>
+                        </button>
+                    </div>
+
+                    <div class="nav-divider"></div>
+                    
+                    <div class="nav-items">
+                        <button class="nav-item" id="sidebar-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Cerrar Sesión</span>
+                        </button>
+                    </div>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <p>Protegido por Ley 21.668</p>
+                    <div class="badges">
+                        <span class="footer-badge">FONASA</span>
+                        <span class="footer-badge">MINSAL</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Contenido principal - 3 columnas -->
+            <div class="content-columns">
+                <!-- Timeline historial - 35% -->
+                <div class="timeline-column">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Mi Timeline Médico</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="timeline-list" id="consultation-list">
+                                <!-- Las consultas se cargarán con JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalle consulta seleccionada - 40% -->
+                <div class="detail-column">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 id="consultation-date">Consulta del 15 Ago 2024</h3>
+                            <span class="status-badge completed">Completada</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="detail-section">
+                                <h4>Diagnóstico y Observaciones</h4>
+                                <p id="consultation-diagnosis" class="diagnosis-text">Cargando diagnóstico...</p>
+                            </div>
+                            
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <p class="detail-label">Especialista</p>
+                                    <p id="consultation-doctor" class="detail-value">Dr. Juan Pérez</p>
+                                </div>
+                                <div class="detail-item">
+                                    <p class="detail-label">Especialidad</p>
+                                    <p id="consultation-specialty" class="detail-value">Cardiología</p>
+                                </div>
+                                <div class="detail-item">
+                                    <p class="detail-label">Centro médico</p>
+                                    <p id="consultation-location" class="detail-value">Clínica Las Condes</p>
+                                </div>
+                                <div class="detail-item">
+                                    <p class="detail-label">Próximo control</p>
+                                    <p id="consultation-next" class="detail-value">15 Sep 2024</p>
+                                </div>
+                            </div>
+
+                            <div id="medications-section" class="detail-section">
+                                <h4>Medicamentos Prescritos</h4>
+                                <div id="medications-list" class="medications-list">
+                                    <!-- Los medicamentos se cargarán con JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widgets estado actual - 25% -->
+                <div class="widgets-column">
+                    <!-- Alergias -->
+                    <div id="allergies-alert" class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="alert-content">
+                            <strong>ALERGIAS:</strong><br>
+                            <span id="allergies-list">Penicilina, Ibuprofeno</span>
+                        </div>
+                    </div>
+
+                    <!-- Signos vitales -->
+                    <div class="card">
+                        <div class="card-header compact">
+                            <h3>Signos Vitales</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="vital-item">
+                                <i class="fas fa-heart vital-icon bp"></i>
+                                <div>
+                                    <p class="vital-label">Presión</p>
+                                    <p id="blood-pressure" class="vital-value">120/80 mmHg</p>
+                                </div>
+                            </div>
+                            <div class="vital-item">
+                                <i class="fas fa-thermometer-half vital-icon temp"></i>
+                                <div>
+                                    <p class="vital-label">Temperatura</p>
+                                    <p id="temperature" class="vital-value">36.5°C</p>
+                                </div>
+                            </div>
+                            <div class="vital-item">
+                                <i class="fas fa-heartbeat vital-icon pulse"></i>
+                                <div>
+                                    <p class="vital-label">Pulso</p>
+                                    <p id="heart-rate" class="vital-value">72 lpm</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medicamentos actuales -->
+                    <div class="card">
+                        <div class="card-header compact">
+                            <h3>Medicamentos Activos</h3>
+                        </div>
+                        <div class="card-content">
+                            <div id="active-medications-list" class="medications-list compact">
+                                <!-- Los medicamentos activos se cargarán con JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acciones rápidas -->
+                    <div class="card">
+                        <div class="card-header compact">
+                            <h3>Acciones</h3>
+                        </div>
+                        <div class="card-content">
+                            <button class="action-btn">
+                                <i class="fas fa-download"></i>
+                                Descargar Recetas
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-phone"></i>
+                                Telemedicina
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Próxima cita -->
+                    <div class="card compact">
+                        <div class="card-content">
+                            <div class="next-appointment">
+                                <div class="appointment-header">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Próxima cita</span>
+                                </div>
+                                <div class="appointment-details">
+                                    <p id="next-appointment-date">20 Sep 2024 • 10:30</p>
+                                    <p id="next-appointment-doctor" class="doctor">Dra. María González</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
