@@ -38,30 +38,22 @@ function aceptarDescargable() {
 // Toggle prescription image display on eye icon click and hide on outside click
 document.addEventListener('DOMContentLoaded', function() {
     const eyeIcons = document.querySelectorAll('.eye-icon-btn');
-    const prescriptionImage = document.createElement('img');
-    prescriptionImage.alt = 'Receta Médica';
-    prescriptionImage.className = 'prescription-image'; // Use CSS class for styling
-
-    document.body.appendChild(prescriptionImage);
-
     eyeIcons.forEach(icon => {
         icon.addEventListener('click', function(event) {
             event.stopPropagation();
-            console.log('Eye icon clicked');
-            const imageName = this.getAttribute('image')  // Default if no data-image
-            const imageSrc = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + 'imageName/' + encodeURIComponent(imageName);
-            prescriptionImage.src = imageSrc;
-            prescriptionImage.classList.add('show'); // Add the 'show' class
-            console.log('Image src set to: ' + imageSrc);
+            const imageName = this.getAttribute('image');
+            if (imageName) {
+                Swal.fire({
+                    title: 'Receta Médica',
+                    imageUrl: '../../components/recetas/imágenes/' + encodeURIComponent(imageName),
+                    imageAlt: 'Receta Médica',
+                    confirmButtonText: 'Cerrar',
+                    width: 600
+                });
+            } else {
+                Swal.fire('No se encontró la receta.');
+            }
         });
-    });
-
-    prescriptionImage.addEventListener('click', function(event) {
-        event.stopPropagation();
-    });
-
-    document.addEventListener('click', function() {
-        prescriptionImage.classList.remove('show'); // Hide by removing the 'show' class
     });
 });
 
