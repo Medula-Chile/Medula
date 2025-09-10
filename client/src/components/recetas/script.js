@@ -38,7 +38,7 @@ function aceptarDescargable() {
 // Toggle prescription image display on eye icon click and hide on outside click
 document.addEventListener('DOMContentLoaded', function() {
     const eyeIcons = document.querySelectorAll('.eye-icon-btn');
-    const prescriptionImage = document.createElement('img');
+    const prescriptionImage = document.createElement('imagen');
     prescriptionImage.alt = 'Receta Médica';
     prescriptionImage.className = 'prescription-image'; // Use CSS class for styling
 
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
         icon.addEventListener('click', function(event) {
             event.stopPropagation();
             console.log('Eye icon clicked');
-            const imageName = this.getAttribute('image')  // Default if no data-image
+            const imageName = this.getAttribute('imagen')  // Default if no data-image
             const imageSrc = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + 'imageName/' + encodeURIComponent(imageName);
             prescriptionImage.src = imageSrc;
             prescriptionImage.classList.add('show'); // Add the 'show' class
