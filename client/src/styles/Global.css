@@ -1,6 +1,6 @@
 /* Variables y reset */
 :root {
-    --primary: #2563eb;
+    --primary: hsl(221, 83%, 53%);
     --primary-foreground: #ffffff;
     --background: #f8fafc;
     --foreground: #020617;
@@ -30,6 +30,10 @@ body {
     background-color: var(--background);
     color: var(--foreground);
     line-height: 1.5;
+    font-weight: bold;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
 }
 
 /* Utilidades */
@@ -54,6 +58,7 @@ body {
 }
 
 .header {
+    /* background-color: #29a5ff; */
     background-color: white;
     border-bottom: 1px solid var(--border);
     padding: 1rem 1.5rem;
@@ -206,7 +211,7 @@ body {
 }
 
 .sidebar {
-    width: 16rem;
+    width: 350px;
     background-color: var(--sidebar);
     border-right: 1px solid var(--sidebar-border);
     display: flex;
@@ -325,4 +330,168 @@ body {
     padding: 0 0.25rem;
     border-radius: 0.375rem;
     font-size: 0.75rem;
+}
+
+    /* Right Panel */
+.right-panel {
+    width: 25%;
+    background-color: rgba(243, 244, 246, 0.3);
+    border-left: 1px solid var(--border);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+}
+
+/* Cards */
+.panel-card {
+    background-color: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.card-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.card-content {
+    padding: 1rem 1.5rem;
+}
+
+/* Citas */
+.appointment-item {
+    padding: 0.75rem;
+    background-color: var(--background);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+}
+
+.appointment-time {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.appointment-time .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+.appointment-doctor {
+    font-weight: 500;
+    margin-bottom: 0.125rem;
+}
+
+.appointment-specialty {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin-bottom: 0.5rem;
+}
+
+.appointment-location {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+}
+
+.appointment-location .icon {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+/* Alertas */
+.alert-item {
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+}
+
+.alert-item.warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.alert-item.info {
+    background-color: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.alert-title {
+    font-weight: 500;
+    margin-bottom: 0.125rem;
+}
+
+.alert-item.warning .alert-title {
+    color: rgba(180, 83, 9);
+}
+
+.alert-item.info .alert-title {
+    color: rgba(37, 99, 235);
+}
+
+.alert-desc {
+    font-size: 0.75rem;
+}
+
+.alert-item.warning .alert-desc {
+    color: rgba(180, 83, 9);
+}
+
+.alert-item.info .alert-desc {
+    color: rgba(37, 99, 235);
+}
+
+/* Emergencias */
+.emergency-contacts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.emergency-number {
+    font-weight: 500;
+}
+
+.emergency-email {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+}
+
+.emergency-email .icon {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+/* Iconos */
+.icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Separator (ojo: estaba comentado en tu CSS original) */
+.separator {
+    height: 1px;
+    background-color: var(--border);
+    margin: 1rem 0;
 }
