@@ -1,0 +1,293 @@
+/* Variables de colores (si no están definidas globalmente) */
+:root {
+    --card: #ffffff;
+    --card-foreground: #1f2937;
+    --border: #e5e7eb;
+    --muted-foreground: #6b7280;
+    --primary: #2563eb;
+    --success: #10b981;
+    --success-foreground: #ffffff;
+    --secondary: #f9fafb;
+  }
+  
+  /* Contenedor principal */
+  .timeline-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .timeline-column {
+    position: relative;
+  }
+  
+  .timeline-column::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 30px;
+    width: 4px;
+    background: #e5e7eb;
+    z-index: 0;
+  }
+  
+  /* Card principal */
+  .card {
+    background-color: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(90deg, #f8fafc, #f1f5f9);
+  }
+  
+  .card-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--card-foreground);
+    margin: 0;
+  }
+  
+  .card-content {
+    padding: 1.5rem;
+  }
+  
+  /* Utilidades de espaciado */
+  .p-5 {
+    padding: 1.25rem;
+  }
+  
+  .space-y-5 > * + * {
+    margin-top: 1.25rem;
+  }
+  
+  .flex {
+    display: flex;
+  }
+  
+  .items-center {
+    align-items: center;
+  }
+  
+  .gap-3 {
+    gap: 0.75rem;
+  }
+  
+  /* Tipos de consulta */
+  .consultation-type {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+  
+  .detail-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--card-foreground);
+    margin: 0 0 0.5rem 0;
+  }
+  
+  /* Secciones de detalle */
+  .detail-section {
+    margin-bottom: 1.25rem;
+  }
+  
+  .detail-section p {
+    color: var(--muted-foreground);
+    line-height: 1.6;
+    margin: 0;
+  }
+  
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    background: #fff;
+  }
+  
+  .badge.ok {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+  }
+  
+  /* Fila de medicamentos */
+  .med-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+  }
+  
+  .pill-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+  }
+  
+  .med-row div p {
+    margin: 0;
+  }
+  
+  .med-row div p:first-child {
+    font-weight: 600;
+    color: var(--card-foreground);
+  }
+  
+  .med-row div p:last-child {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  
+  /* Lista de medicamentos */
+  .medication-list {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .medication-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    padding-left: 1.5rem;
+  }
+  
+  .medication-list li:before {
+    content: "•";
+    color: var(--primary);
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+    font-size: 1.2rem;
+  }
+  
+  /* Botones */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--card-foreground);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  
+  .btn:hover {
+    background: #f9fafb;
+  }
+  
+  .btn-outline {
+    background: transparent;
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  
+  .btn-outline:hover {
+    background: var(--primary);
+    color: white;
+  }
+  
+  .view-prescription {
+    margin-top: 0.5rem;
+  }
+  
+  /* Lista de exámenes */
+  .exam-list {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .exam-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .exam-list li:last-child {
+    border-bottom: none;
+  }
+  
+  .doc-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    font-size: 1.125rem;
+    flex-shrink: 0;
+  }
+  
+  .doc-icon-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .exam-list a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .exam-list a:hover {
+    text-decoration: underline;
+  }
+  
+  .text-2 {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .timeline-column::before {
+      left: 15px;
+    }
+    
+    .card-header h3 {
+      font-size: 1.25rem;
+    }
+    
+    .detail-title {
+      font-size: 1rem;
+    }
+    
+    .med-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }

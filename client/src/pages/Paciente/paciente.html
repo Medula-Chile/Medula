@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MEDULA - Portal del Paciente</title>
+    <link rel="stylesheet" href="../../styles/Global.css">  
     <link rel="stylesheet" href="paciente.css">
     <!-- Iconos (reemplazar con tus iconos reales) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -87,7 +88,11 @@
                         </button>
                         <button class="nav-item">
                             <i class="fas fa-calendar-alt"></i>
-                            <span>Citas</span>
+                            <a href="../../components/citas/historial_citas.html"><span>Historial Citas</span></a>
+                        </button>
+                        <button class="nav-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <a href="../../components/historial_medico/historial_medico.html"><span>Historial Medico</span></a>
                         </button>
                         <button class="nav-item">
                             <i class="fas fa-file-medical"></i>
@@ -95,7 +100,7 @@
                         </button>
                         <button class="nav-item">
                             <i class="fas fa-prescription"></i>
-                            <span>Recetas</span>
+                            <a href="../../components/recetas/PatientDesktopView.html"><span>Recetas</span></a>
                         </button>
                         <button class="nav-item">
                             <i class="fas fa-hospital-user"></i>
@@ -192,7 +197,7 @@
                     </div>
 
                     <!-- Signos vitales -->
-                    <div class="card">
+                    <!-- <div class="card">
                         <div class="card-header compact">
                             <h3>Signos Vitales</h3>
                         </div>
@@ -219,7 +224,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <!-- Medicamentos actuales -->
                     <div class="card">
@@ -229,6 +234,22 @@
                         <div class="card-content">
                             <div id="active-medications-list" class="medications-list compact">
                                 <!-- Los medicamentos activos se cargarán con JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Próxima cita -->
+                    <div class="card compact">
+                        <div class="card-content">
+                            <div class="next-appointment">
+                                <div class="appointment-header">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Próxima cita</span>
+                                </div>
+                                <div class="appointment-details">
+                                    <p id="next-appointment-date">20 Sep 2024 • 10:30</p>
+                                    <p id="next-appointment-doctor" class="doctor">Dra. María González</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -249,27 +270,10 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Próxima cita -->
-                    <div class="card compact">
-                        <div class="card-content">
-                            <div class="next-appointment">
-                                <div class="appointment-header">
-                                    <i class="fas fa-calendar"></i>
-                                    <span>Próxima cita</span>
-                                </div>
-                                <div class="appointment-details">
-                                    <p id="next-appointment-date">20 Sep 2024 • 10:30</p>
-                                    <p id="next-appointment-doctor" class="doctor">Dra. María González</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
