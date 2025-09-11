@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../styles/Global.css">
+    <link rel="stylesheet" href="historial_medico.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Document</title>
+</head>
+<body>
+    <div class="contanier">
+      <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <div>
+                        <h1>MEDULA</h1>
+                        <p>Portal del Paciente</p>
+                    </div>
+                </div>
+
+                <div class="welcome-section">
+                    <h2 id="patient-greeting">Hola, Usuario</h2>
+                    <p>Bienvenida a tu portal médico</p>
+                </div>
+
+                <div class="header-actions">
+                    <div class="secure-connection">
+                        <i class="fas fa-shield-alt"></i>
+                        <span class="secure-badge">Conexión Segura</span>
+                    </div>
+                    
+                    <button class="icon-btn notifications-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">2</span>
+                    </button>
+
+                    <button class="logout-btn" id="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar Sesión</span>
+                    </button>
+
+                    <div class="user-profile">
+                        <div class="user-info">
+                            <p id="patient-name">Nombre Usuario</p>
+                            <p id="patient-plan">Plan de Salud</p>
+                        </div>
+                        <div class="avatar">
+                            <span id="avatar-initials">NU</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <div class="health-status">
+                        <div class="health-title">
+                            <i class="fas fa-heart"></i>
+                            <span>Estado de Salud</span>
+                        </div>
+                        <div class="health-details">
+                            <div class="health-item">
+                                <span>Última consulta</span>
+                                <span>15 Ago 2024</span>
+                            </div>
+                            <div class="health-item">
+                                <span>Medicamentos activos</span>
+                                <span class="medication-badge">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <nav class="sidebar-nav">
+                    <div class="nav-items">
+                        <!-- <button class="nav-item active">
+                            <i class="fas fa-home"></i>
+                            <span>Inicio</span>
+                        </button> -->
+                        <button class="nav-item active" data-target="historial">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Historial Medico</span>
+                        </button>
+                        <button class="nav-item" data-target="medicamentos">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Medicamentos</span>
+                        </button>
+                        <button class="nav-item" data-target="examenes">
+                            <i class="fas fa-file-medical"></i>
+                            <span>Exámenes</span>
+                        </button>
+                    </div>
+                </nav>
+                <div class="sidebar-footer">
+                    <p>Protegido por Ley 21.668</p>
+                    <div class="badges">
+                        <span class="footer-badge">FONASA</span>
+                        <span class="footer-badge">MINSAL</span>
+                    </div>
+                </div>
+            </aside>
+            <main class="main">
+                <!-- HISTORIAL -->
+                <section class="section default" id="historial">
+                    <div class="space-y-7">
+                    <div class="flex items-center between">
+                        <h2 class="page-title">Historial Médico</h2>
+                        <button class="btn btn-primary" id="btn-print">⬇ Descargar PDF</button>
+                    </div>
+                
+                    <div class="space-y-5">
+                      <div class="card p-5">
+                        <div class="entry">
+                          <div class="entry-left">
+                            <div class="icon-circle" aria-hidden="true">📈</div>
+                            <div>
+                              <div class="flex items-center gap-2">
+                                <h3 style="margin:0;font-weight:800">Control General</h3>
+                                <span class="badge">15 Ene 2024</span>
+                              </div>
+                              <p class="subtitle">Dra. Valentina Araya</p>
+                              <p class="p">Diagnóstico: Estado saludable. Control en 6 meses.</p>
+                            </div>
+                          </div>
+                          <button class="btn btn-ghost view-btn" data-title="Control General" data-detail="Dra. Valentina Araya — 15 Ene 2024 Diagnóstico: Estado saludable. Control en 6 meses.">👁 Ver</button>
+                        </div>
+                      </div>
+                      <div class="card p-5">
+                        <div class="entry">
+                          <div class="entry-left">
+                            <div class="icon-circle" aria-hidden="true">📈</div>
+                            <div>
+                              <div class="flex items-center gap-2">
+                                <h3 style="margin:0;font-weight:800">Consulta Nutrición</h3>
+                                <span class="badge">02 Mar 2024</span>
+                              </div>
+                              <p class="subtitle">Nut. Camilo Vega</p>
+                              <p class="p">Diagnóstico: Ajuste de dieta mediterránea.</p>
+                            </div>
+                          </div>
+                          <button class="btn btn-ghost view-btn" data-title="Consulta Nutrición" data-detail="Nut. Camilo Vega — 02 Mar 2024 Diagnóstico: Ajuste de dieta mediterránea.">👁 Ver</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <!-- MEDICAMENTOS -->
+                <section class="section" id="medicamentos">
+                  <div class="space-y-7">
+                    <h2 class="page-title">Mis Medicamentos</h2>
+                
+                    <div class="space-y-5">
+                      <div class="card p-5">
+                        <div class="med-row">
+                          <div class="flex items-center gap-4">
+                            <div class="pill-icon" aria-hidden="true">💊</div>
+                            <div>
+                              <h3 style="margin:0;font-weight:800">Metformina</h3>
+                              <p class="subtitle">850 mg — 1 cada 12h</p>
+                              <p>Próxima dosis: hoy 20:00</p>
+                            </div>
+                          </div>
+                          <div style="text-align:right">
+                            <p style="margin:0 0 6px;font-weight:800">Stock: 8 días</p>
+                            <div class="progress" aria-label="progreso stock"><span style="width:28%"></span></div>
+                          </div>
+                        </div>
+                      </div>
+                  
+                      <div class="card p-5">
+                        <div class="med-row">
+                          <div class="flex items-center gap-4">
+                            <div class="pill-icon" aria-hidden="true">💊</div>
+                            <div>
+                              <h3 style="margin:0;font-weight:800">Losartán</h3>
+                              <p class="subtitle">50 mg — 1 diaria</p>
+                              <p>Próxima dosis: mañana 08:00</p>
+                            </div>
+                          </div>
+                          <div style="text-align:right">
+                            <p style="margin:0 0 6px;font-weight:800">Stock: 22 días</p>
+                            <div class="progress" aria-label="progreso stock"><span style="width:73%"></span></div>
+                          </div>
+                        </div>
+                      </div>
+                  
+                    </div>
+                  </div>
+                </section>
+
+                <!-- EXÁMENES -->
+                <section class="section" id="examenes">
+                  <div class="space-y-7">
+                    <h2 class="page-title">Resultados de Exámenes</h2>
+                
+                    <div class="space-y-5">
+                      <div class="card p-5">
+                        <div class="flex items-center between">
+                          <div class="flex items-center gap-4">
+                            <div class="doc-icon" aria-hidden="true">📄</div>
+                            <div>
+                                <h3 style="margin:0;font-weight:800">Perfil Lipídico</h3>
+                                <p class="subtitle">15 Dic 2023</p>
+                                <span class="badge ok">✅ Normal</span>
+                            </div>
+                          </div>
+                          <button class="btn btn-ghost view-btn" data-title="Perfil Lipídico" data-detail="15 Dic 2023 — Resultado: Normal">👁 Ver</button>
+                        </div>
+                      </div>
+                  
+                      <div class="card p-5">
+                        <div class="flex items-center between">
+                          <div class="flex items-center gap-4">
+                            <div class="doc-icon" aria-hidden="true">📄</div>
+                            <div>
+                              <h3 style="margin:0;margin:0;font-weight:800">Hemograma Completo</h3>
+                              <p class="subtitle">28 Nov 2023</p>
+                              <span class="badge ok">✅ Normal</span>
+                            </div>
+                          </div>
+                          <button class="btn btn-ghost view-btn" data-title="Hemograma Completo" data-detail="28 Nov 2023 — Resultado: Normal">👁 Ver</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+            </main>
+            <div class="right-panel">
+                <!-- Próximas Citas -->
+                <div class="panel-card">
+                    <div class="card-header">
+                        <h2>
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z"/>
+                            </svg>
+                            Próximas Citas
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="appointment-item">
+                            <div class="appointment-time">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/>
+                                </svg>
+                                <span>20 Dic 2023 - 10:30 AM</span>
+                            </div>
+                            <p class="appointment-doctor">Dr. Roberto Sánchez</p>
+                            <p class="appointment-specialty">Cardiología</p>
+                            <div class="appointment-location">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/>
+                                </svg>
+                                <span>Consultorio 304, Piso 3</span>
+                            </div>
+                        </div>
+
+                        <div class="appointment-item">
+                            <div class="appointment-time">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/>
+                                </svg>
+                                <span>5 Ene 2024 - 11:15 AM</span>
+                            </div>
+                            <p class="appointment-doctor">Dra. Carolina Méndez</p>
+                            <p class="appointment-specialty">Medicina General</p>
+                            <div class="appointment-location">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/>
+                                </svg>
+                                <span>Consultorio 201, Piso 2</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas de Salud -->
+                <div class="panel-card">
+                    <div class="card-header">
+                        <h2>
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                            </svg>
+                            Alertas
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="alert-item warning">
+                            <p class="alert-title">Medicamento por acabar</p>
+                            <p class="alert-desc">Metformina - 8 días restantes</p>
+                        </div>
+                        <div class="alert-item info">
+                            <p class="alert-title">Recordatorio</p>
+                            <p class="alert-desc">Control cardiológico pendiente</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contacto de Emergencia -->
+                <div class="panel-card">
+                    <div class="card-header">
+                        <h2>
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/>
+                            </svg>
+                            Emergencias
+                        </h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="emergency-contacts">
+                            <p class="emergency-number">SAMU: 131</p>
+                            <p class="emergency-number">Bomberos: 132</p>
+                            <p class="emergency-number">Carabineros: 133</p>
+                            <div class="separator"></div>
+                            <p class="emergency-email">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6M20 6L12 11L4 6H20M20 18H4V8L12 13L20 8V18Z"/>
+                                </svg>
+                                medula@fonasa.cl
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="historial_medico.js"></script>
+</body>
+</html>
