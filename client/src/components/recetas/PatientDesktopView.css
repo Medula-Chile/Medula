@@ -536,3 +536,19 @@
     }
 }
 
+.nav-item.active {
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 8px;
+}
+.nav-item.active i,
+.nav-item.active span {
+  color: #fff;
+}
+
+.section-content {
+  display: none;
+}
+.section-content.active {
+  display: block;
+}

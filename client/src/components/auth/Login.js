@@ -20,11 +20,19 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('form').addEventListener('submit', function(e) {
         e.preventDefault();
         const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             alert('Por favor, ingresa un correo electrónico válido.');
             return;
         }
+        if (!password) {
+            alert('Por favor, ingresa tu contraseña.');
+            return;
+        }
+        // Si todo está correcto, redirige al portal del paciente
+        window.location.href = window.location.href.replace('/components/auth/login.html', '/pages/Paciente/paciente.html');
+
         alert('¡Inicio de sesión exitoso! Bienvenido a Médula.');
     });
 

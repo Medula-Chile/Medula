@@ -82,25 +82,25 @@
 
                 <nav class="sidebar-nav">
                     <div class="nav-items">
-                        <button class="nav-item active">
+                        <button class="nav-item active" data-redirect="paciente.html">
                             <i class="fas fa-home"></i>
                             <span>Inicio</span>
                         </button>
-                        <button class="nav-item">
+                       <!-- <button class="nav-item">
                             <i class="fas fa-calendar-alt"></i>
                             <a href="../../components/citas/historial_citas.html"><span>Historial Citas</span></a>
-                        </button>
-                        <button class="nav-item">
+                        </button> -->
+                        <button class="nav-item" data-redirect="../../components/historial_medico/historial_medico.html">
                             <i class="fas fa-calendar-alt"></i>
-                            <a href="../../components/historial_medico/historial_medico.html"><span>Historial Medico</span></a>
+                            <span>Historial Medico</span>
                         </button>
                         <button class="nav-item">
                             <i class="fas fa-file-medical"></i>
                             <span>Documentos</span>
                         </button>
-                        <button class="nav-item">
+                        <button class="nav-item" data-redirect="../../components/recetas/PatientDesktopView.html">
                             <i class="fas fa-prescription"></i>
-                            <a href="../../components/recetas/PatientDesktopView.html"><span>Recetas</span></a>
+                            <span>Recetas</span>
                         </button>
                         <button class="nav-item">
                             <i class="fas fa-hospital-user"></i>
@@ -255,6 +255,7 @@
                     </div>
 
                     <!-- Acciones rápidas -->
+                 
                     <div class="card">
                         <div class="card-header compact">
                             <h3>Acciones</h3>
@@ -274,6 +275,6 @@
             </div>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script src="paciente.js"></script>
 </body>
 </html>

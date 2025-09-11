@@ -460,5 +460,3 @@ body.theme-dark .cal-search input::placeholder{color:#9aa6bf}
     .user-card .stretched-link{ position:absolute; inset:0; border-radius:12px; text-indent:-9999px; }
     .user-card:hover{ filter:brightness(1.02) }
     .user-card:focus-within{ outline:none; box-shadow:var(--focus) }
-
-

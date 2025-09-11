@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="../../styles/Global.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+</a>
 </head>
 <body>
     <div class="container">
@@ -74,18 +76,19 @@
                 </div>
 
                 <nav class="sidebar-nav">
-                    <div class="nav-items">
+                    <div class="nav-items" >
                         <button class="nav-item active">
                             <i class="fas fa-home"></i>
                             <span>Inicio</span>
                         </button>
+                        <!-- se omitio esto 
                         <button class="nav-item">
                             <i class="fas fa-calendar-alt"></i>
                             <a href="../../components/citas/historial_citas.html"><span>Historial Citas</span></a>
-                        </button>
-                        <button class="nav-item">
-                            <i class="fas fa-calendar-alt"></i>
-                            <a href="../../components/historial_medico/historial_medico.html"><span>Historial Medico</span></a>
+                        </button>-->
+                        <button class="nav-item" data-section="historial_medico">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Historial Médico</span>
                         </button>
                         <button class="nav-item">
                             <i class="fas fa-file-medical"></i>
@@ -93,7 +96,7 @@
                         </button>
                         <button class="nav-item">
                             <i class="fas fa-prescription"></i>
-                            <a href="../../components/recetas/PatientDesktopView.html"><span>Recetas</span></a>
+                            <span>Recetas</span></a>
                         </button>
                         <button class="nav-item">
                             <i class="fas fa-hospital-user"></i>
@@ -104,10 +107,7 @@
                     <div class="nav-divider"></div>
                     
                     <div class="nav-items">
-                        <button class="nav-item" id="sidebar-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Cerrar Sesión</span>
-                        </button>
+
                     </div>
                 </nav>
 

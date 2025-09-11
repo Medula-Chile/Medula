@@ -1,24 +1,22 @@
 // Script para manejar la navegación entre secciones
-        document.addEventListener('DOMContentLoaded', function() {
-            const navButtons = document.querySelectorAll('.nav-btn');
-            const sectionContents = document.querySelectorAll('.section-content');
-            
-            navButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const sectionId = button.getAttribute('data-section');
-                    
-                    // Remover clase active de todos los botones y contenidos
-                    navButtons.forEach(btn => btn.classList.remove('active'));
-                    sectionContents.forEach(content => content.classList.remove('active'));
-                    
-                    // Agregar clase active al botón clickeado
-                    button.classList.add('active');
-                    
-                    // Mostrar el contenido correspondiente
-                    document.getElementById(sectionId).classList.add('active');
+      document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.eye-icon-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const imageName = btn.getAttribute('image');
+            if (imageName) {
+                Swal.fire({
+                    title: 'Receta Médica',
+                    imageUrl: '../../components/recetas/imágenes/' + encodeURIComponent(imageName),
+                    imageAlt: 'Receta Médica',
+                    confirmButtonText: 'Cerrar',
+                    width: 600
                 });
-            });
+            } else {
+                Swal.fire('No se encontró la receta.');
+            }
         });
+    });
+});
 function aceptarDescargable() {
     Swal.fire({
         title: 'Solicitud de Descarga',
@@ -101,5 +99,50 @@ document.addEventListener('keydown', function(event) {
         hideModalAlert();
     }
 });
+// boton de cerrar sesion a incio seccion 
+document.addEventListener('DOMContentLoaded', function() {
+    const logoutBtn = document.getElementById('logout-btn');
+    const sidebarLogoutBtn = document.getElementById('sidebar-logout');
 
+    function goToLogin() {
+        window.location.href = '../../pages/Paciente/paciente.html';
+    }
 
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', goToLogin);
+    }
+    if (sidebarLogoutBtn) {
+        sidebarLogoutBtn.addEventListener('click', goToLogin);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle lateral nav buttons
+    const navItems = document.querySelectorAll('.nav-item');
+    const sections = document.querySelectorAll('.section-content');
+    
+    navItems.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Toggle color
+            navItems.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Navegación interna
+            const target = btn.getAttribute('data-section');
+            if (target) {
+                if (target === 'historial_medico') {
+                    // Redirigir a la página de historial médico
+                    window.location.href = '../../components/historial_medico/historial_medico.html';
+                } else {
+                    sections.forEach(sec => sec.classList.remove('active'));
+                    const targetSection = document.getElementById(target);
+                    if (targetSection) {
+                        targetSection.classList.add('active');
+                    }
+                }
+            }
+        });
+    });
+
+    // ...tu código existente para logout y otras funciones...
+});
