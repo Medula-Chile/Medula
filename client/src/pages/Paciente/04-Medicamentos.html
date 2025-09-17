@@ -155,44 +155,45 @@
             <!-- Contenido principal -->
             <div class="flex-grow-1 p-3 p-md-4">
                 <div class="row g-3">
-                    <!-- Timeline historial - 35% en desktop, 100% en móvil -->
-                    <div class="col-12 col-lg-5 col-xl-4">
+                    <!-- Lista de medicamentos -->
+                    <div class="col-12 col-md-6 col-xl-4">
                         <div class="card h-100">
                             <div class="card-header bg-white pb-2">
                                 <h5 class="card-title mb-0">Mis Medicamentos</h5>
                             </div>
-                            <div class="card-body">
-                                <table class="table table-hover mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Nombre</th>
-                                            <th>Dosis</th>
-                                            <th>Frecuencia</th>
-                                            <th>Tiempo</th>
+                            <div class="card-body p-0 pb-3 overflow-auto" style="max-height: calc(100vh - 260px);">
+                                <!-- Encabezados -->
+                                <div class="row gx-2 gy-0 border-bottom small text-muted fw-semibold py-2 px-3 position-sticky top-0 bg-white" style="z-index: 1;">
+                                    <div class="col-6 col-md-3">Nombre</div>
+                                    <div class="col-6 col-md-2">Dosis</div>
+                                    <div class="col-12 col-md-5 d-none d-md-block">Frecuencia</div>
+                                    <div class="col-6 col-md-2 d-none d-md-block">Tiempo</div>
+                                </div>
 
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Paracetamol</td>
-                                            <td>500 mg</td>
-                                            <td>cada 8 horas x 3 días</td>
-                                            <td>2025-09-01</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Aspirina</td>
-                                            <td>100 mg</td>
-                                            <td>cada 12 horas</td>
-                                            <td>2025-09-01</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Paracetamol</td>
-                                            <td>500 mg</td>
-                                            <td>cada 8 horas</td>
-                                            <td>2025-09-01</td>
-                                        </tr>
-                                    </tbody>
-                                </table>   
+                                <!-- Filas -->
+                                <div class="px-2">
+                                    <div class="row gx-2 align-items-center py-2 border-bottom">
+                                        <div class="col-6 col-md-3"><span class="fw-medium">Paracetamol</span></div>
+                                        <div class="col-6 col-md-2">500 mg</div>
+                                        <div class="col-12 col-md-5 small text-muted d-none d-md-block">cada 8 horas x 3 días</div>
+                                        <div class="col-6 col-md-2 small text-muted d-none d-md-block">2025-09-01</div>
+                                        <div class="col-12 d-md-none small text-muted mt-1">cada 8 horas x 3 días • 2025-09-01</div>
+                                    </div>
+                                    <div class="row gx-2 align-items-center py-2 border-bottom">
+                                        <div class="col-6 col-md-3"><span class="fw-medium">Aspirina</span></div>
+                                        <div class="col-6 col-md-2">100 mg</div>
+                                        <div class="col-12 col-md-5 small text-muted d-none d-md-block">cada 12 horas</div>
+                                        <div class="col-6 col-md-2 small text-muted d-none d-md-block">2025-09-01</div>
+                                        <div class="col-12 d-md-none small text-muted mt-1">cada 12 horas • 2025-09-01</div>
+                                    </div>
+                                    <div class="row gx-2 align-items-center py-2 border-bottom">
+                                        <div class="col-6 col-md-3"><span class="fw-medium">Paracetamol</span></div>
+                                        <div class="col-6 col-md-2">500 mg</div>
+                                        <div class="col-12 col-md-5 small text-muted d-none d-md-block">cada 8 horas</div>
+                                        <div class="col-6 col-md-2 small text-muted d-none d-md-block">2025-09-01</div>
+                                        <div class="col-12 d-md-none small text-muted mt-1">cada 8 horas • 2025-09-01</div>
+                                    </div>
+                                </div>
                             </div>
                             </div>
                             <!--<div class="card-body p-0">
@@ -270,8 +271,8 @@
                         </div>
                     </div>
 
-                    <!-- Detalle consulta seleccionada - 40% en desktop, 100% en móvil -->
-                    <div class="col-12 col-lg-7 col-xl-5">
+                    <!-- Detalle (placeholder) -->
+                    <div class="col-12 col-md-6 col-xl-5">
                         <div class="card">
                             <div class="card-header bg-white">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -325,7 +326,7 @@
                         </div>
                     </div>
 
-                    <!-- Widgets estado actual - 25% en desktop, 100% en móvil -->
+                    <!-- Widgets estado actual -->
                     <div class="col-12 col-xl-3">
                         <!-- Alergias -->
                         <div class="alert border-destructive bg-destructive-5 d-flex align-items-center">
