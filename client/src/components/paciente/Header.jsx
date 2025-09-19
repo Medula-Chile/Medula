@@ -45,10 +45,10 @@
              </span>
            </button>
 
-           <button className="btn btn-ghost d-none d-md-flex align-items-center gap-2" onClick={onLogout}>
+           {/*<button className="btn btn-ghost d-none d-md-flex align-items-center gap-2" onClick={onLogout}>
              <i className="fas fa-sign-out-alt"></i>
              <span>Cerrar Sesión</span>
-           </button>
+           </button>*/}
 
            <div className="d-flex align-items-center gap-3 ps-3 border-start border-gray-200">
              <div className="d-none d-md-block text-end">

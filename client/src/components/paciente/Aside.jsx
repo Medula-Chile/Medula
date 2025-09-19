@@ -11,7 +11,7 @@
          aria-label="Cerrar menú lateral"
        />
        <aside className={`sidebar ${isOpen ? 'show' : ''}`}>
-         <div className="p-3 p-md-4">
+         {/*<div className="p-3 p-md-4">
            <div className="bg-success-10 border border-success-20 rounded-lg p-3 mb-4">
              <div className="d-flex align-items-center gap-2 mb-2">
                <i className="fas fa-heart text-success"></i>
@@ -28,9 +28,9 @@
                </div>
              </div>
            </div>
-         </div>
+         </div>*/}
 
-         <nav className="flex-grow-1 px-3 px-md-4">
+         <nav className="flex-grow-1 px-3 px-md-4" style={{marginTop: '20px'}}>
            <div className="d-flex flex-column gap-1">
              <a href="03-Historial.html" className="nav-link active">
                <i className="fas fa-history"></i>
@@ -64,7 +64,7 @@
 
            <hr className="my-4" />
 
-           <div className="d-flex flex-column gap-1">
+           <div className="d-flex flex-column gap-1" style={{marginBottom: '20px'}}>
              <button className="nav-link btn btn-link text-start p-0" onClick={onLogout}>
                <i className="fas fa-sign-out-alt"></i>
                <span className="ms-2">Cerrar Sesión</span>

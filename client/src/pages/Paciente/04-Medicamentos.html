@@ -156,123 +156,39 @@
             <div class="flex-grow-1 p-3 p-md-4">
                 <div class="row g-3">
                     <!-- Lista de medicamentos -->
-                    <div class="col-12 col-md-6 col-xl-4">
+                    <div class="col-12 col-md-12 col-lg-9">
                         <div class="card h-100">
                             <div class="card-header bg-white pb-2">
                                 <h5 class="card-title mb-0">Mis Medicamentos</h5>
                             </div>
-                            <div class="card-body p-0 pb-3 overflow-auto" style="max-height: calc(100vh - 260px);">
+                            <div class="card-body px-2 pt-0 pb-3 overflow-auto" style="max-height: calc(100vh - 260px);">
                                 <!-- Encabezados -->
-                                <div class="row gx-2 gy-0 border-bottom small text-muted fw-semibold py-2 px-3 position-sticky top-0 bg-white" style="z-index: 1;">
+                                <div class="row gx-2 gy-0 border-bottom small text-muted fw-semibold py-2 px-2 position-sticky top-0 bg-white" style="z-index: 1;">
                                     <div class="col-6 col-md-3">Nombre</div>
                                     <div class="col-6 col-md-2">Dosis</div>
-                                    <div class="col-12 col-md-5 d-none d-md-block">Frecuencia</div>
-                                    <div class="col-6 col-md-2 d-none d-md-block">Tiempo</div>
+                                    <div class="col-12 col-md-3 d-none d-md-block">Frecuencia</div>
+                                    <div class="col-6 col-md-2 d-none d-md-block">Inicio</div>
+                                    <div class="col-6 col-md-1 d-none d-md-block">ID</div>
+                                    <div class="col-6 col-md-1 d-none d-md-block text-end pe-2">Estado</div>
                                 </div>
 
                                 <!-- Filas -->
-                                <div class="px-2">
-                                    <div class="row gx-2 align-items-center py-2 border-bottom">
-                                        <div class="col-6 col-md-3"><span class="fw-medium">Paracetamol</span></div>
-                                        <div class="col-6 col-md-2">500 mg</div>
-                                        <div class="col-12 col-md-5 small text-muted d-none d-md-block">cada 8 horas x 3 días</div>
-                                        <div class="col-6 col-md-2 small text-muted d-none d-md-block">2025-09-01</div>
-                                        <div class="col-12 d-md-none small text-muted mt-1">cada 8 horas x 3 días • 2025-09-01</div>
-                                    </div>
-                                    <div class="row gx-2 align-items-center py-2 border-bottom">
-                                        <div class="col-6 col-md-3"><span class="fw-medium">Aspirina</span></div>
-                                        <div class="col-6 col-md-2">100 mg</div>
-                                        <div class="col-12 col-md-5 small text-muted d-none d-md-block">cada 12 horas</div>
-                                        <div class="col-6 col-md-2 small text-muted d-none d-md-block">2025-09-01</div>
-                                        <div class="col-12 d-md-none small text-muted mt-1">cada 12 horas • 2025-09-01</div>
-                                    </div>
-                                    <div class="row gx-2 align-items-center py-2 border-bottom">
-                                        <div class="col-6 col-md-3"><span class="fw-medium">Paracetamol</span></div>
-                                        <div class="col-6 col-md-2">500 mg</div>
-                                        <div class="col-12 col-md-5 small text-muted d-none d-md-block">cada 8 horas</div>
-                                        <div class="col-6 col-md-2 small text-muted d-none d-md-block">2025-09-01</div>
-                                        <div class="col-12 d-md-none small text-muted mt-1">cada 8 horas • 2025-09-01</div>
-                                    </div>
+                                <div class="px-2" id="medsRows">
+                                    <!-- Contenido generado dinámicamente por 04-Medicamentos.js -->
+                                </div>
+                                <!-- Paginación -->
+                                <div class="d-flex justify-content-between align-items-center pt-2 px-2">
+                                    <small id="medsPageInfo" class="text-muted"></small>
+                                    <nav aria-label="Paginación de medicamentos">
+                                        <ul class="pagination pagination-sm mb-0" id="medsPagination"></ul>
+                                    </nav>
                                 </div>
                             </div>
-                            </div>
-                            <!--<div class="card-body p-0">
-                                <div class="overflow-auto" style="max-height: calc(100vh - 240px);">
-                                    <div class="consultation-item active">
-                                        <div class="d-flex gap-3">
-                                            <div class="bg-primary-10 rounded-circle p-2 flex-shrink-0">
-                                                <i class="fas fa-heart text-primary"></i>
-                                            </div>
-                                            
-                                            <div class="flex-grow-1 min-w-0">
-                                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                                    <div class="flex-grow-1 min-w-0">
-                                                        <h6 class="fw-medium mb-0">Medicina General</h6>
-                                                        <p class="text-muted-foreground small mb-0">Dr. Ana Silva</p>
-                                                    </div>
-                                                    <span class="text-muted-foreground small fw-medium ms-2">
-                                                        15 Ago 2024
-                                                    </span>
-                                                </div>
-                                                
-                                                <p class="text-muted-foreground small mb-1">CESFAM Norte</p>
-                                                <p class="small line-clamp-2 mb-0">Control rutinario anual. Paciente en buen estado general.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="consultation-item">
-                                        <div class="d-flex gap-3">
-                                            <div class="bg-primary-10 rounded-circle p-2 flex-shrink-0">
-                                                <i class="fas fa-heart text-primary"></i>
-                                            </div>
-                                            
-                                            <div class="flex-grow-1 min-w-0">
-                                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                                    <div class="flex-grow-1 min-w-0">
-                                                        <h6 class="fw-medium mb-0">Ginecología</h6>
-                                                        <p class="text-muted-foreground small mb-0">Dr. Carlos Mendoza</p>
-                                                    </div>
-                                                    <span class="text-muted-foreground small fw-medium ms-2">
-                                                        02 Jul 2024
-                                                    </span>
-                                                </div>
-                                                
-                                                <p class="text-muted-foreground small mb-1">Hospital Regional</p>
-                                                <p class="small line-clamp-2 mb-0">Control ginecológico anual. Papanicolaou normal.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="consultation-item">
-                                        <div class="d-flex gap-3">
-                                            <div class="bg-primary-10 rounded-circle p-2 flex-shrink-0">
-                                                <i class="fas fa-heart text-primary"></i>
-                                            </div>
-                                            
-                                            <div class="flex-grow-1 min-w-0">
-                                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                                    <div class="flex-grow-1 min-w-0">
-                                                        <h6 class="fw-medium mb-0">Oftalmología</h6>
-                                                        <p class="text-muted-foreground small mb-0">Dr. Roberto Sánchez</p>
-                                                    </div>
-                                                    <span class="text-muted-foreground small fw-medium ms-2">
-                                                        18 May 2024
-                                                    </span>
-                                                </div>
-                                                
-                                                <p class="text-muted-foreground small mb-1">Hospital El Salvador</p>
-                                                <p class="small line-clamp-2 mb-0">Control vista. Prescripción de lentes correctivos.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>-->
                         </div>
                     </div>
 
                     <!-- Detalle (placeholder) -->
-                    <div class="col-12 col-md-6 col-xl-5">
+                    <!-- <div class="col-12 col-md-6 col-lg-5 col-xl-5">
                         <div class="card">
                             <div class="card-header bg-white">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -324,10 +240,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div>-->
 
                     <!-- Widgets estado actual -->
-                    <div class="col-12 col-xl-3">
+                    <div class="col-12 col-md-12 col-lg-3 col-xl-3">
                         <!-- Alergias -->
                         <div class="alert border-destructive bg-destructive-5 d-flex align-items-center">
                             <i class="fas fa-exclamation-triangle text-destructive me-3"></i>
@@ -338,7 +254,7 @@
                         </div>
 
                         <!-- Signos vitales -->
-                        <div class="card mb-3">
+                        <!--<div class="card mb-3">
                             <div class="card-header bg-white pb-2">
                                 <h6 class="card-title mb-0">Signos Vitales</h6>
                             </div>
@@ -365,26 +281,15 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div>-->
 
                         <!-- Medicamentos actuales -->
                         <div class="card mb-3">
                             <div class="card-header bg-white pb-2">
                                 <h6 class="card-title mb-0">Medicamentos Activos</h6>
                             </div>
-                            <div class="card-body">
-                                <div class="d-flex align-items-center gap-2 small mb-2">
-                                    <i class="fas fa-pills text-success small"></i>
-                                    <span>Vitaminas prenatales</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 small mb-2">
-                                    <i class="fas fa-pills text-success small"></i>
-                                    <span>Ácido fólico 5mg</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 small">
-                                    <i class="fas fa-pills text-success small"></i>
-                                    <span>Calcio 600mg</span>
-                                </div>
+                            <div class="card-body" id="activosCardBody">
+                                
                             </div>
                         </div>
 
