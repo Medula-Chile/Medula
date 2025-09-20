@@ -15,9 +15,13 @@ function Header({ onToggleSidebar }) {
                     <i className="fas fa-bars" />
                     </button>
                     <div className="d-flex align-items-center gap-3">
-                        <div className="bg-primary rounded-lg p-2">
-                        <i className="fas fa-stethoscope text-white" />
-                        </div>
+                        <img
+                          src="/medula_icono.png"
+                          alt="Medula"
+                          width={40}
+                          height={40}
+                          style={{ objectFit: 'contain' }}
+                        />
                         <div>
                             <h1 className="h5 mb-0 fw-bold text-primary">MEDULA</h1>
                             <p className="text-muted-foreground small mb-0">

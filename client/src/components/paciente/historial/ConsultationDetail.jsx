@@ -1,10 +1,35 @@
 import React from 'react';
+import axios from 'axios';
 
 export default function ConsultationDetail({ consulta }) {
   if (!consulta) return null;
   const presion = consulta?.vitals?.presion ?? '—';
   const temperatura = consulta?.vitals?.temperatura ?? '—';
   const pulso = consulta?.vitals?.pulso ?? '—';
+
+  // Cargar recetas para mostrar medicamentos desde la receta vinculada
+  const [recetas, setRecetas] = React.useState([]);
+  React.useEffect(() => {
+    let mounted = true;
+    axios.get('/mock/recetas.json')
+      .then(r => { if (mounted) setRecetas(Array.isArray(r.data) ? r.data : []); })
+      .catch(() => { /* opcional: console.warn('No se pudo cargar recetas'); */ });
+    return () => { mounted = false; };
+  }, []);
+
+  const recetaActiva = React.useMemo(() => {
+    if (!consulta?.recetaId || !Array.isArray(recetas)) return null;
+    return recetas.find(r => r.id === consulta.recetaId) || null;
+  }, [consulta?.recetaId, recetas]);
+
+  const medsFromReceta = React.useMemo(() => {
+    if (!recetaActiva?.meds) return null;
+    return recetaActiva.meds.map(m => {
+      const f = m.frecuencia || '';
+      const display = f && f.toLowerCase().includes('diario') ? f : `${f}${m.duracionDias ? ` x ${m.duracionDias} días` : ''}`;
+      return `${m.nombre} ${m.dosis} • ${display}`;
+    });
+  }, [recetaActiva]);
 
   return (
     <div className="card">
@@ -16,7 +41,7 @@ export default function ConsultationDetail({ consulta }) {
           </span>
         </div>
       </div>
-      <div className="card-body">
+      <div className="card-body watermark-bg">
         <div className="mb-4">
           <h6 className="fw-medium mb-2">Diagnóstico y Observaciones</h6>
           <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{consulta.observaciones}</p>
@@ -59,7 +84,7 @@ export default function ConsultationDetail({ consulta }) {
         <div>
           <h6 className="fw-medium mb-2">Medicamentos Prescritos</h6>
           <div className="d-flex flex-column gap-2">
-            {consulta.medicamentos?.map((m, idx) => (
+            {(medsFromReceta || consulta.medicamentos || []).map((m, idx) => (
               <div key={idx} className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
                 <i className="fas fa-pills text-success"></i>
                 <span className="small">{m}</span>

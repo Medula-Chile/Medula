@@ -9,6 +9,37 @@ export default function MedicamentosPage() {
   const navigate = useNavigate();
   const goToReceta = (idOrFolio, folio) => navigate(`/paciente/recetas?folio=${encodeURIComponent(folio || idOrFolio)}`);
 
+  // Cargar recetas para derivar frecuencia/duración desde el folio
+  const [recetas, setRecetas] = React.useState([]);
+  React.useEffect(() => {
+    let mounted = true;
+    axios.get('/mock/recetas.json')
+      .then(r => { if (mounted) setRecetas(Array.isArray(r.data) ? r.data : []); })
+      .catch(() => { /* opcional: console.warn('No se pudo cargar recetas'); */ });
+    return () => { mounted = false; };
+  }, []);
+  const recetaByFolio = React.useMemo(() => {
+    const map = new Map();
+    for (const r of recetas) map.set(r.id, r);
+    return map;
+  }, [recetas]);
+
+  const displayFrecuencia = React.useCallback((m) => {
+    const r = recetaByFolio.get(m.folio || m.id);
+    if (r && Array.isArray(r.meds)) {
+      const rm = r.meds.find(x => (x.nombre || '').toLowerCase() === (m.nombre || '').toLowerCase());
+      if (rm) {
+        const f = rm.frecuencia || m.frecuencia || '';
+        if (f && f.toLowerCase().includes('diario')) return f;
+        const d = rm.duracionDias || m.duracionDias;
+        return `${f}${d ? ` x ${d} días` : ''}`;
+      }
+    }
+    const f = m.frecuencia || '';
+    if (f && f.toLowerCase().includes('diario')) return f;
+    return `${f}${m.duracionDias ? ` x ${m.duracionDias} días` : ''}`;
+  }, [recetaByFolio]);
+
   React.useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -72,7 +103,7 @@ export default function MedicamentosPage() {
                 <div key={`${m.id}-${m.nombre}`} className="row gx-2 gy-2 py-2 border-bottom align-items-center small">
                   <div className="col-6 col-md-3 fw-medium">{m.nombre}</div>
                   <div className="col-6 col-md-2">{m.dosis}</div>
-                  <div className="col-12 col-md-3 d-none d-md-block">{m.frecuencia && m.frecuencia.toLowerCase().includes('diario') ? m.frecuencia : `${m.frecuencia}${m.duracionDias ? ` x ${m.duracionDias} días` : ''}`}</div>
+                  <div className="col-12 col-md-3 d-none d-md-block">{displayFrecuencia(m)}</div>
                   <div className="col-6 col-md-2 d-none d-md-block">{m.inicio}</div>
                   <div className="col-6 col-md-1 d-none d-md-block">
                     <button
@@ -91,7 +122,7 @@ export default function MedicamentosPage() {
                   </div>
                   {/* Resumen móvil */}
                   <div className="col-12 d-md-none small text-muted mt-1">
-                    {(m.frecuencia && m.frecuencia.toLowerCase().includes('diario')) ? m.frecuencia : `${m.frecuencia}${m.duracionDias ? ` x ${m.duracionDias} días` : ''}`} • {m.inicio} • 
+                    {displayFrecuencia(m)} • {m.inicio} • 
                     <button
                       className="btn btn-link p-0 align-baseline ms-1 me-1"
                       title="Ver receta"

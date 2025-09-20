@@ -2,29 +2,35 @@ import React from 'react';
 import ActiveMedicationsCard from '../shared/ActiveMedicationsCard';
 import QuickActionsCard from '../shared/QuickActionsCard';
 import { useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 export default function RecetasPage() {
-  const recetas = [
-    { id: 'R-001', fecha: '2024-08-15', fechaLabel: '15 Ago 2024', doctor: 'Dr. Ana Silva', centro: 'CESFAM Norte', status: 'Vigente', validaHasta: '15 Sep 2024', notas: 'Tomar según indicación. Evitar duplicidad con otros analgésicos.', meds: [ { nombre: 'Paracetamol', dosis: '500 mg', frecuencia: 'Cada 8 horas' }, { nombre: 'Ibuprofeno', dosis: '200 mg', frecuencia: 'Cada 12 horas' }, { nombre: 'Omeprazol', dosis: '20 mg', frecuencia: 'Diario' } ] },
-    { id: 'R-002', fecha: '2024-07-02', fechaLabel: '02 Jul 2024', doctor: 'Dr. Carlos Mendoza', centro: 'Hospital Regional', status: 'Vigente', validaHasta: '02 Oct 2024', notas: 'Controlar glicemias al iniciar tratamiento y registrar adherencia.', meds: [ { nombre: 'Losartán', dosis: '50 mg', frecuencia: 'Diario' }, { nombre: 'Metformina', dosis: '500 mg', frecuencia: 'Cada 12 horas' } ] },
-    { id: 'R-003', fecha: '2024-07-15', fechaLabel: '15 Jul 2024', doctor: 'Dra. Patricia Loyola', centro: 'Clínica Santa María', status: 'Vigente', validaHasta: '15 Oct 2024', notas: 'Suplementación indicada por déficit.', meds: [ { nombre: 'Vitamina D', dosis: '1000 UI', frecuencia: 'Diario' }, { nombre: 'Calcio', dosis: '600 mg', frecuencia: 'Diario' } ] },
-    { id: 'R-004', fecha: '2024-03-28', fechaLabel: '28 Mar 2024', doctor: 'Dr. Juan Rivas', centro: 'Hospital El Salvador', status: 'Vigente', validaHasta: '28 Abr 2024', notas: 'Infección bacteriana, completar tratamiento.', meds: [ { nombre: 'Amoxicilina', dosis: '500 mg', frecuencia: 'Cada 8 horas' } ] },
-    { id: 'R-005', fecha: '2024-02-10', fechaLabel: '10 Feb 2024', doctor: 'Dra. Marcela Pérez', centro: 'CESFAM Oriente', status: 'Vigente', validaHasta: '10 May 2024', notas: 'Control endocrino.', meds: [ { nombre: 'Levotiroxina', dosis: '50 mcg', frecuencia: 'Diario' }, { nombre: 'Atorvastatina', dosis: '20 mg', frecuencia: 'Diario' } ] },
-    { id: 'R-006', fecha: '2024-07-22', fechaLabel: '22 Jul 2024', doctor: 'Dr. Ricardo Soto', centro: 'Clínica Dávila', status: 'Vigente', validaHasta: '22 Oct 2024', notas: 'Anemia ferropénica.', meds: [ { nombre: 'Hierro', dosis: '325 mg', frecuencia: 'Diario' } ] },
-    { id: 'R-008', fecha: '2024-01-05', fechaLabel: '05 Ene 2024', doctor: 'Dra. Paula Contreras', centro: 'Clínica Alemana', status: 'Vigente', validaHasta: '05 Abr 2024', notas: 'Control cardiológico.', meds: [ { nombre: 'Atenolol', dosis: '25 mg', frecuencia: 'Diario' } ] },
-  ];
+  const [recetas, setRecetas] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
+  React.useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    axios.get('/mock/recetas.json')
+      .then(r => { if (mounted) { setRecetas(Array.isArray(r.data) ? r.data : []); setError(''); }})
+      .catch(() => { if (mounted) setError('No se pudo cargar la lista de recetas.'); })
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, []);
 
   const location = useLocation();
   const getQueryParam = (name) => new URLSearchParams(location.search).get(name);
-  const [activa, setActiva] = React.useState(recetas[0]);
+  const [activa, setActiva] = React.useState(null);
   React.useEffect(() => {
+    if (!recetas || recetas.length === 0) return;
     const folio = getQueryParam('folio');
-    if (!folio) return;
-    const found = recetas.find(r => r.id === folio);
-    if (found) setActiva(found);
-  }, [location.search]);
-
-  
+    if (folio) {
+      const found = recetas.find(r => r.id === folio);
+      setActiva(found || recetas[0]);
+    } else {
+      setActiva(recetas[0]);
+    }
+  }, [location.search, recetas]);
 
   const printAreaRef = React.useRef(null);
 
@@ -34,7 +40,7 @@ export default function RecetasPage() {
     return `VRF-${Math.abs(hash).toString(16).toUpperCase()}`;
   }, []);
   const paciente = { nombre: 'María Elena Contreras', id: 'RUN 12.345.678-9' };
-  const verifCode = React.useMemo(() => computeVerificationCode(activa), [activa, computeVerificationCode]);
+  const verifCode = React.useMemo(() => (activa ? computeVerificationCode(activa) : ''), [activa, computeVerificationCode]);
   const handleVerify = () => {
     alert(`Receta ${activa.id}\nEstado: ${activa.status}\nEmitida: ${activa.fechaLabel}\nVálida hasta: ${activa.validaHasta}\nCódigo de verificación: ${verifCode}`);
   };
@@ -47,13 +53,31 @@ export default function RecetasPage() {
     w.document.open();
     w.document.write(`<!doctype html><html><head><title>Receta ${activa.id}</title>
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-      <link rel="stylesheet" href="/src/pages/Paciente/plantilla.css">
+      <style>
+        /* Forzar impresión de colores/fondos */
+        @media print {
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        /* Marca de agua (mismo estilo que plantilla.css) */
+        .watermark-bg { position: relative; overflow: hidden; }
+        .watermark-bg::after {
+          content: "";
+          position: absolute; inset: 0;
+          background: url('/medula_icono.png') no-repeat center center;
+          background-size: contain;
+          opacity: 0.06; pointer-events: none;
+        }
+      </style>
     </head><body>
       <div class="container p-3">${content}</div>
       <script>window.onload = function(){ window.print(); window.close(); }</script>
     </body></html>`);
     w.document.close();
   };
+
+  if (loading) return (<div className="p-3 text-muted small">Cargando recetas…</div>);
+  if (error) return (<div className="alert alert-danger my-2" role="alert">{error}</div>);
+  if (!activa) return null;
 
   return (
     <div className="row g-3">
@@ -105,7 +129,7 @@ export default function RecetasPage() {
               </div>
             </div>
           </div>
-          <div className="card-body position-relative">
+          <div className="card-body position-relative watermark-bg">
             <div className="mb-4">
               <h6 className="fw-medium mb-2">Indicaciones de la Receta</h6>
               <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{activa.notas}</p>
@@ -148,7 +172,7 @@ export default function RecetasPage() {
                 {activa.meds.map((m, idx) => (
                   <div key={idx} className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
                     <i className="fas fa-pills text-success"></i>
-                    <span className="small">{m.nombre} {m.dosis} <span className="text-muted">• {m.frecuencia}</span></span>
+                    <span className="small">{m.nombre} {m.dosis} <span className="text-muted">• {m.frecuencia && m.frecuencia.toLowerCase().includes('diario') ? m.frecuencia : `${m.frecuencia}${m.duracionDias ? ` x ${m.duracionDias} días` : ''}`}</span></span>
                   </div>
                 ))}
               </div>
