@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../../header/Header';
 import Aside from '../../header/Aside';
 import Timeline from '../historial/Timeline';
@@ -10,6 +11,7 @@ import NextAppointmentCard from '../shared/NextAppointmentCard';
 export default function PacienteLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeId, setActiveId] = useState(1);
+  const navigate = useNavigate();
 
   const timelineItems = useMemo(
     () => [
@@ -58,7 +60,10 @@ export default function PacienteLayout() {
   const handleToggleSidebar = () => setSidebarOpen((s) => !s);
   const handleCloseSidebar = () => setSidebarOpen(false);
   const handleLogout = () => {
-    alert('Función de cierre de sesión activada');
+    // Opcional: limpiar storage/session aquí
+    // localStorage.removeItem('token');
+    setSidebarOpen(false);
+    navigate('/auth/login', { replace: true });
   };
 
   return (

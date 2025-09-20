@@ -8,12 +8,18 @@ import RecetasPage from './components/paciente/recetas/RecetasPage';
 import PerfilPage from './components/paciente/perfil/PerfilPage';
 import ConfiguracionPage from './components/paciente/configuracion/ConfiguracionPage';
 import PlaceholderPage from './components/paciente/PlaceholderPage';
+import LoginPage from './components/auth/LoginPage.jsx';
+import RegisterPage from './components/auth/RegisterPage.jsx';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/paciente/historial" replace />} />
+
+        {/* Rutas de autenticación */}
+        <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="/auth/register" element={<RegisterPage />} />
 
         <Route path="/paciente" element={<PacienteShell />}> 
           <Route index element={<Navigate to="historial" replace />} />

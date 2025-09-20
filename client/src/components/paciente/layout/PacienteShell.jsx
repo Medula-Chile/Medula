@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Header from '../../header/Header';
 import Aside from '../../header/Aside';
 import '../../../pages/Paciente/plantilla.css';
 
 export default function PacienteShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleToggleSidebar = () => setSidebarOpen((s) => !s);
   const handleCloseSidebar = () => setSidebarOpen(false);
-  const handleLogout = () => alert('Función de cierre de sesión activada');
+  const handleLogout = () => {
+    // Aquí podrías limpiar credenciales si aplica
+    setSidebarOpen(false);
+    navigate('/auth/login', { replace: true });
+  };
 
   return (
     <div className="d-flex flex-column min-vh-100">
