@@ -1,0 +1,92 @@
+import React from 'react';
+
+export default function ConfiguracionPage() {
+  const [notifEmail, setNotifEmail] = React.useState(false);
+  const [notifSMS, setNotifSMS] = React.useState(false);
+  const [theme, setTheme] = React.useState('system');
+  const [lang, setLang] = React.useState('es');
+
+  // Cargar preferencias desde localStorage
+  React.useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('medula_config')) || {};
+      if (typeof saved.notifEmail === 'boolean') setNotifEmail(saved.notifEmail);
+      if (typeof saved.notifSMS === 'boolean') setNotifSMS(saved.notifSMS);
+      if (typeof saved.theme === 'string') setTheme(saved.theme);
+      if (typeof saved.lang === 'string') setLang(saved.lang);
+    } catch {}
+  }, []);
+
+  // Guardar preferencias en localStorage
+  React.useEffect(() => {
+    const data = { notifEmail, notifSMS, theme, lang };
+    localStorage.setItem('medula_config', JSON.stringify(data));
+  }, [notifEmail, notifSMS, theme, lang]);
+
+  return (
+    <div className="row g-3">
+      <div className="col-12">
+        <div className="card">
+          <div className="card-header bg-white">
+            <h5 className="card-title mb-0">Configuración</h5>
+          </div>
+          <div className="card-body">
+            <div className="row g-3 small">
+              <div className="col-12 col-md-6">
+                <h6 className="mb-2">Notificaciones</h6>
+                <div className="form-check form-switch mb-2">
+                  <input className="form-check-input" type="checkbox" id="inNotifEmail" checked={notifEmail} onChange={(e) => setNotifEmail(e.target.checked)} />
+                  <label className="form-check-label" htmlFor="inNotifEmail">Email</label>
+                </div>
+                <div className="form-check form-switch">
+                  <input className="form-check-input" type="checkbox" id="inNotifSMS" checked={notifSMS} onChange={(e) => setNotifSMS(e.target.checked)} />
+                  <label className="form-check-label" htmlFor="inNotifSMS">SMS</label>
+                </div>
+              </div>
+
+              <div className="col-12 col-md-6">
+                <h6 className="mb-2">Preferencias</h6>
+                <div className="mb-2">
+                  <label className="form-label mb-1" htmlFor="inTheme">Tema</label>
+                  <select id="inTheme" className="form-select form-select-sm" value={theme} onChange={(e) => setTheme(e.target.value)}>
+                    <option value="system">Del sistema</option>
+                    <option value="light">Claro</option>
+                    <option value="dark">Oscuro</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label mb-1" htmlFor="inLang">Idioma</label>
+                  <select id="inLang" className="form-select form-select-sm" value={lang} onChange={(e) => setLang(e.target.value)}>
+                    <option value="es">Español</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="col-12"><hr className="my-2" /></div>
+
+              <div className="col-12 col-md-6">
+                <h6 className="mb-2">Sesión</h6>
+                <div className="d-flex gap-2 flex-wrap">
+                  <button className="btn btn-outline-secondary btn-sm" id="btnLogoutCurrent">Cerrar sesión (este dispositivo)</button>
+                  <button className="btn btn-outline-danger btn-sm" id="btnLogoutAll">Cerrar sesión en todos los dispositivos</button>
+                </div>
+                <p className="text-muted-foreground mt-2 mb-0">Si usas ClaveÚnica, el cierre global puede requerir revocar desde el proveedor.</p>
+              </div>
+
+              <div className="col-12 col-md-6">
+                <h6 className="mb-2">Herramientas (demo)</h6>
+                <div className="form-check form-switch mb-2">
+                  <input className="form-check-input" type="checkbox" id="inUseApi" />
+                  <label className="form-check-label" htmlFor="inUseApi">Conectar al backend (USE_API)</label>
+                </div>
+                <button className="btn btn-outline-secondary btn-sm" id="btnClearLocal">Limpiar datos locales (localStorage)</button>
+                <p className="text-muted-foreground mt-2 mb-0">Los cambios de modo aplican al recargar.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

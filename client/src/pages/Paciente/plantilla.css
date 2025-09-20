@@ -77,6 +77,11 @@ body {
     text-decoration: none;
 }
 
+/* Evita salto de línea en los textos de los botones del sidebar ("Mis Medicamentos" no debe apilarse) */
+.nav-link span {
+    white-space: nowrap;
+}
+
 .nav-link:hover {
     background-color: #f9fafb;
 }

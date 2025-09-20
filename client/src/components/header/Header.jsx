@@ -42,10 +42,7 @@ function Header() {
                         2
                     </span>
                     </button>
-                    <button className="btn btn-ghost d-none d-md-flex align-items-center gap-2" id="logoutBtn">
-                        <i className="fas fa-sign-out-alt" />
-                        <span>Cerrar Sesión</span>
-                    </button>
+                   
                     <div className="d-flex align-items-center gap-3 ps-3 border-start border-gray-200">
                         <div className="d-none d-md-block text-end">
                             <p className="small fw-medium mb-0">María Elena Contreras</p>

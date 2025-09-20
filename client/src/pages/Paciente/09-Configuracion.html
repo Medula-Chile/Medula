@@ -23,11 +23,13 @@
                         <div class="bg-primary rounded-lg p-2">
                             <i class="fas fa-stethoscope text-white"></i>
                         </div>
+                    -->
                         <div>
                             <h1 class="h5 mb-0 fw-bold text-primary">MEDULA</h1>
                             <p class="text-muted-foreground small mb-0">Portal del Paciente</p>
                         </div>
                     </div>
+                    -->
                 </div>
 
                 <!-- Saludo personalizado centrado -->
@@ -154,8 +156,84 @@
 
             <!-- Contenido principal -->
             <div class="flex-grow-1 p-3 p-md-4">
+                <div id="modeBanner" class="alert alert-secondary py-2 small" role="alert" style="display: none;"></div>
                 <div class="row g-3">
+                    <!-- Configuración - MVP -->
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="card-title mb-0">Configuración</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3 small">
+                                    <!-- Notificaciones -->
+                                    <div class="col-12 col-md-6">
+                                        <h6 class="mb-2">Notificaciones</h6>
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" id="inNotifEmail">
+                                            <label class="form-check-label" for="inNotifEmail">Email</label>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="inNotifSMS">
+                                            <label class="form-check-label" for="inNotifSMS">SMS</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Preferencias -->
+                                    <div class="col-12 col-md-6">
+                                        <h6 class="mb-2">Preferencias</h6>
+                                        <div class="mb-2">
+                                            <label class="form-label mb-1" for="inTheme">Tema</label>
+                                            <select id="inTheme" class="form-select form-select-sm">
+                                                <option value="system">Del sistema</option>
+                                                <option value="light">Claro</option>
+                                                <option value="dark">Oscuro</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="form-label mb-1" for="inLang">Idioma</label>
+                                            <select id="inLang" class="form-select form-select-sm">
+                                                <option value="es">Español</option>
+                                                <option value="en">English</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12"><hr class="my-2"></div>
+
+                                    <!-- Sesión -->
+                                    <div class="col-12 col-md-6">
+                                        <h6 class="mb-2">Sesión</h6>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-outline-secondary btn-sm" id="btnLogoutCurrent">
+                                                Cerrar sesión (este dispositivo)
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" id="btnLogoutAll">
+                                                Cerrar sesión en todos los dispositivos
+                                            </button>
+                                        </div>
+                                        <p class="text-muted-foreground mt-2 mb-0">Si usas ClaveÚnica, el cierre global puede requerir revocar desde el proveedor.</p>
+                                    </div>
+
+                                    <!-- Herramientas de desarrollo -->
+                                    <div class="col-12 col-md-6">
+                                        <h6 class="mb-2">Herramientas (demo)</h6>
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" id="inUseApi">
+                                            <label class="form-check-label" for="inUseApi">Conectar al backend (USE_API)</label>
+                                        </div>
+                                        <button class="btn btn-outline-secondary btn-sm" id="btnClearLocal">
+                                            Limpiar datos locales (localStorage)
+                                        </button>
+                                        <p class="text-muted-foreground mt-2 mb-0">Los cambios de modo aplican al recargar.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Timeline historial - 35% en desktop, 100% en móvil -->
+                    <!--
                     <div class="col-12 col-lg-5 col-xl-4">
                         <div class="card h-100">
                             <div class="card-header bg-white pb-2">
@@ -237,6 +315,7 @@
                     </div>
 
                     <!-- Detalle consulta seleccionada - 40% en desktop, 100% en móvil -->
+                    <!--
                     <div class="col-12 col-lg-7 col-xl-5">
                         <div class="card">
                             <div class="card-header bg-white">
@@ -292,6 +371,7 @@
                     </div>
 
                     <!-- Widgets estado actual - 25% en desktop, 100% en móvil -->
+                    <!--
                     <div class="col-12 col-xl-3">
                         <!-- Alergias -->
                         <div class="alert border-destructive bg-destructive-5 d-flex align-items-center">
@@ -386,6 +466,7 @@
                             </div>
                         </div>
                     </div>
+                    -->
                 </div>
             </div>
         </div>

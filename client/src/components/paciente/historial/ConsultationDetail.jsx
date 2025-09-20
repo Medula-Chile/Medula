@@ -2,6 +2,9 @@ import React from 'react';
 
 export default function ConsultationDetail({ consulta }) {
   if (!consulta) return null;
+  const presion = consulta?.vitals?.presion ?? '—';
+  const temperatura = consulta?.vitals?.temperatura ?? '—';
+  const pulso = consulta?.vitals?.pulso ?? '—';
 
   return (
     <div className="card">
@@ -17,6 +20,13 @@ export default function ConsultationDetail({ consulta }) {
         <div className="mb-4">
           <h6 className="fw-medium mb-2">Diagnóstico y Observaciones</h6>
           <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{consulta.observaciones}</p>
+        </div>
+
+        <div className="mb-4">
+          <h6 className="fw-medium mb-2">Signos Vitales</h6>
+          <p className="text-muted-foreground small bg-gray-100 p-3 rounded">
+            Presión: {presion} • Temperatura: {temperatura} • Pulso: {pulso}
+          </p>
         </div>
 
         <div className="row mb-4 small">

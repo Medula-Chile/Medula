@@ -1,0 +1,14 @@
+[
+  {"nombre":"Paracetamol","dosis":"500mg","frecuencia":"Cada 8 horas","inicio":"2024-08-01","id":"RX-001","estado":"Activo"},
+  {"nombre":"Ibuprofeno","dosis":"200mg","frecuencia":"Cada 12 horas","inicio":"2024-08-10","id":"RX-002","estado":"Suspendido"},
+  {"nombre":"Vitamina D","dosis":"1000UI","frecuencia":"Diario","inicio":"2024-07-15","id":"RX-003","estado":"Activo"},
+  {"nombre":"Hierro","dosis":"325mg","frecuencia":"Diario","inicio":"2024-07-22","id":"RX-004","estado":"Activo"},
+  {"nombre":"Calcio","dosis":"600mg","frecuencia":"Diario","inicio":"2024-06-05","id":"RX-005","estado":"Activo"},
+  {"nombre":"Omeprazol","dosis":"20mg","frecuencia":"Diario","inicio":"2024-06-11","id":"RX-006","estado":"Activo"},
+  {"nombre":"Losartán","dosis":"50mg","frecuencia":"Diario","inicio":"2024-05-20","id":"RX-007","estado":"Activo"},
+  {"nombre":"Metformina","dosis":"500mg","frecuencia":"Cada 12 horas","inicio":"2024-05-02","id":"RX-008","estado":"Activo"},
+  {"nombre":"Atorvastatina","dosis":"20mg","frecuencia":"Diario","inicio":"2024-04-15","id":"RX-009","estado":"Suspendido"},
+  {"nombre":"Amoxicilina","dosis":"500mg","frecuencia":"Cada 8 horas","inicio":"2024-03-28","id":"RX-010","estado":"Activo"},
+  {"nombre":"Levotiroxina","dosis":"50mcg","frecuencia":"Diario","inicio":"2024-02-10","id":"RX-011","estado":"Activo"},
+  {"nombre":"Atenolol","dosis":"25mg","frecuencia":"Diario","inicio":"2024-01-05","id":"RX-012","estado":"Activo"}
+]

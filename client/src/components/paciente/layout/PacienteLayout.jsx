@@ -1,12 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import Header from './Header';
-import Aside from './Aside';
-import Timeline from './Timeline';
-import ConsultationDetail from './ConsultationDetail';
-import VitalsCard from './VitalsCard';
-import ActiveMedicationsCard from './ActiveMedicationsCard';
-import QuickActionsCard from './QuickActionsCard';
-import NextAppointmentCard from './NextAppointmentCard';
+import Header from '../../header/Header';
+import Aside from '../../header/Aside';
+import Timeline from '../historial/Timeline';
+import ConsultationDetail from '../historial/ConsultationDetail';
+import ActiveMedicationsCard from '../shared/ActiveMedicationsCard';
+import QuickActionsCard from '../shared/QuickActionsCard';
+import NextAppointmentCard from '../shared/NextAppointmentCard';
 
 export default function PacienteLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -88,8 +87,6 @@ export default function PacienteLayout() {
                   Penicilina
                 </div>
               </div>
-
-              <VitalsCard presion="120/80" temperatura="36.5°C" pulso="72 bpm" />
 
               <ActiveMedicationsCard items={["Vitaminas prenatales", "Ácido fólico 5mg", "Calcio 600mg"]} />
 
