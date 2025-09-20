@@ -46,6 +46,14 @@ export default function ConsultationDetail({ consulta }) {
             <p className="text-muted-foreground mb-0">Próximo control</p>
             <p className="fw-medium mb-0">{consulta.proximoControl}</p>
           </div>
+          {consulta.recetaId && (
+            <div className="col-12 col-md-12 mb-2">
+              <p className="text-muted-foreground mb-0">Receta vinculada</p>
+              <p className="fw-medium mb-0">
+                <a className="link-primary" href={`/paciente/recetas?folio=${encodeURIComponent(consulta.recetaId)}`}>Ver receta {consulta.recetaId}</a>
+              </p>
+            </div>
+          )}
         </div>
 
         <div>

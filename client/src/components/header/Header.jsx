@@ -1,11 +1,17 @@
 import './Header.css'
-function Header() {
+function Header({ onToggleSidebar }) {
     return (
         <>
         <header className="bg-white border-bottom border-gray-200 px-3 px-md-4 py-3">
             <div className="d-flex align-items-center justify-content-between">
                 <div className="d-flex align-items-center">
-                    <button className="btn btn-ghost d-lg-none me-2" type="button" id="sidebarToggle">
+                    <button
+                      className="btn btn-ghost d-lg-none me-2"
+                      type="button"
+                      id="sidebarToggle"
+                      aria-label="Abrir menú lateral"
+                      onClick={onToggleSidebar}
+                    >
                     <i className="fas fa-bars" />
                     </button>
                     <div className="d-flex align-items-center gap-3">

@@ -22,8 +22,8 @@ function App() {
           <Route path="recetas" element={<RecetasPage />} />
           <Route path="perfil" element={<PerfilPage />} />
           <Route path="configuracion" element={<ConfiguracionPage />} />
-          <Route path="examenes" element={<PlaceholderPage title="Mis Exámenes" description="Vista en desarrollo, será integrada cuando tu compañero la finalice." />} />
-          <Route path="centro" element={<PlaceholderPage title="Centro Médico" description="Vista en desarrollo, será integrada cuando tu compañero la finalice." />} />
+          <Route path="examenes" element={<PlaceholderPage title="Mis Exámenes" description="Vista en desarrollo." />} />
+          <Route path="centro" element={<PlaceholderPage title="Centro Médico" description="Vista en desarrollo." />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/paciente/historial" replace />} />

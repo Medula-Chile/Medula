@@ -20,8 +20,9 @@ export default function HistorialPage() {
         observaciones: 'Control rutinario anual. Paciente en buen estado general.',
         estado: 'Completada',
         proximoControl: '15 Feb 2025',
-        medicamentos: ['Vitaminas B12', 'Calcio 600mg'],
+        medicamentos: ['Paracetamol 500mg', 'Ibuprofeno 200mg', 'Omeprazol 20mg'],
         vitals: { presion: '120/80', temperatura: '36.5°C', pulso: '72 bpm' },
+        recetaId: 'R-001',
       },
       {
         id: 2,
@@ -33,8 +34,9 @@ export default function HistorialPage() {
         observaciones: 'Control ginecológico anual. Papanicolaou normal.',
         estado: 'Completada',
         proximoControl: '02 Ene 2025',
-        medicamentos: [],
+        medicamentos: ['Losartán 50mg', 'Metformina 500mg'],
         vitals: { presion: null, temperatura: '36.7°C', pulso: null },
+        recetaId: 'R-002',
       },
       {
         id: 3,
@@ -46,8 +48,65 @@ export default function HistorialPage() {
         observaciones: 'Prescripción de lentes correctivos.',
         estado: 'Completada',
         proximoControl: '18 Nov 2024',
-        medicamentos: [],
+        medicamentos: ['Vitamina D 1000UI', 'Calcio 600mg'],
         vitals: { presion: '110/70', temperatura: null, pulso: '68 bpm' },
+        recetaId: 'R-003',
+      },
+      {
+        id: 4,
+        especialidad: 'Medicina General',
+        medico: 'Dr. Juan Rivas',
+        fecha: '28 Mar 2024',
+        centro: 'Hospital El Salvador',
+        resumen: 'Cuadro infeccioso tratado con antibiótico.',
+        observaciones: 'Infección bacteriana, completar tratamiento con amoxicilina.',
+        estado: 'Completada',
+        proximoControl: '28 Abr 2024',
+        medicamentos: ['Amoxicilina 500mg'],
+        vitals: { presion: '118/76', temperatura: '37.6°C', pulso: '80 bpm' },
+        recetaId: 'R-004',
+      },
+      {
+        id: 5,
+        especialidad: 'Endocrinología',
+        medico: 'Dra. Marcela Pérez',
+        fecha: '10 Feb 2024',
+        centro: 'CESFAM Oriente',
+        resumen: 'Control endocrino con ajuste terapéutico.',
+        observaciones: 'Se mantiene Levotiroxina y se indica Atorvastatina.',
+        estado: 'Completada',
+        proximoControl: '10 May 2024',
+        medicamentos: ['Levotiroxina 50mcg', 'Atorvastatina 20mg'],
+        vitals: { presion: '122/82', temperatura: '36.6°C', pulso: '74 bpm' },
+        recetaId: 'R-005',
+      },
+      {
+        id: 6,
+        especialidad: 'Hematología',
+        medico: 'Dr. Ricardo Soto',
+        fecha: '22 Jul 2024',
+        centro: 'Clínica Dávila',
+        resumen: 'Anemia ferropénica, suplemento de hierro.',
+        observaciones: 'Control en 3 meses. Considerar efectos GI del hierro.',
+        estado: 'Completada',
+        proximoControl: '22 Oct 2024',
+        medicamentos: ['Hierro 325mg'],
+        vitals: { presion: '116/78', temperatura: '36.4°C', pulso: '70 bpm' },
+        recetaId: 'R-006',
+      },
+      {
+        id: 7,
+        especialidad: 'Cardiología',
+        medico: 'Dra. Paula Contreras',
+        fecha: '05 Ene 2024',
+        centro: 'Clínica Alemana',
+        resumen: 'Control cardiológico, beta bloqueador indicado.',
+        observaciones: 'Se indica Atenolol 25mg diario.',
+        estado: 'Completada',
+        proximoControl: '05 Abr 2024',
+        medicamentos: ['Atenolol 25mg'],
+        vitals: { presion: '130/85', temperatura: '36.5°C', pulso: '66 bpm' },
+        recetaId: 'R-008',
       },
     ],
     []
@@ -75,9 +134,9 @@ export default function HistorialPage() {
           </div>
         </div>
 
-        {/* <VitalsCard presion="120/80" temperatura="36.5°C" pulso="72 bpm" /> */}
+        
 
-        <ActiveMedicationsCard items={["Vitaminas prenatales", "Ácido fólico 5mg", "Calcio 600mg"]} />
+        <ActiveMedicationsCard />
 
         <QuickActionsCard />
 

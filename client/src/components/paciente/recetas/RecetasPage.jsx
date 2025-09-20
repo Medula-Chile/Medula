@@ -5,9 +5,13 @@ import { useLocation } from 'react-router-dom';
 
 export default function RecetasPage() {
   const recetas = [
-    { id: 'R-120', fecha: '2024-08-15', fechaLabel: '15 Ago 2024', doctor: 'Dr. Ana Silva', centro: 'CESFAM Norte', status: 'Vigente', validaHasta: '15 Sep 2024', notas: 'Tomar según indicación. Evitar duplicidad con otros analgésicos.', meds: [ { nombre: 'Paracetamol', dosis: '500 mg', frecuencia: 'cada 8 horas' }, { nombre: 'Ibuprofeno', dosis: '200 mg', frecuencia: 'cada 8 horas' }, { nombre: 'Omeprazol', dosis: '20 mg', frecuencia: 'cada 24 horas' } ] },
-    { id: 'R-342', fecha: '2024-07-02', fechaLabel: '02 Jul 2024', doctor: 'Dr. Carlos Mendoza', centro: 'Hospital Regional', status: 'Vigente', validaHasta: '02 Oct 2024', notas: 'Controlar glicemias al iniciar tratamiento y registrar adherencia.', meds: [ { nombre: 'Aspirina', dosis: '100 mg', frecuencia: 'cada 12 horas' }, { nombre: 'Metformina', dosis: '850 mg', frecuencia: 'cada 12 horas' } ] },
-    { id: 'R-555', fecha: '2024-05-18', fechaLabel: '18 May 2024', doctor: 'Dr. Roberto Sánchez', centro: 'Hospital El Salvador', status: 'Vencida', validaHasta: '18 Jun 2024', notas: 'Continuar solo si es indicado en próximo control.', meds: [ { nombre: 'Vitamina D3', dosis: '1000 IU', frecuencia: 'cada 24 horas' }, { nombre: 'Calcio', dosis: '600 mg', frecuencia: 'cada 24 horas' } ] },
+    { id: 'R-001', fecha: '2024-08-15', fechaLabel: '15 Ago 2024', doctor: 'Dr. Ana Silva', centro: 'CESFAM Norte', status: 'Vigente', validaHasta: '15 Sep 2024', notas: 'Tomar según indicación. Evitar duplicidad con otros analgésicos.', meds: [ { nombre: 'Paracetamol', dosis: '500 mg', frecuencia: 'Cada 8 horas' }, { nombre: 'Ibuprofeno', dosis: '200 mg', frecuencia: 'Cada 12 horas' }, { nombre: 'Omeprazol', dosis: '20 mg', frecuencia: 'Diario' } ] },
+    { id: 'R-002', fecha: '2024-07-02', fechaLabel: '02 Jul 2024', doctor: 'Dr. Carlos Mendoza', centro: 'Hospital Regional', status: 'Vigente', validaHasta: '02 Oct 2024', notas: 'Controlar glicemias al iniciar tratamiento y registrar adherencia.', meds: [ { nombre: 'Losartán', dosis: '50 mg', frecuencia: 'Diario' }, { nombre: 'Metformina', dosis: '500 mg', frecuencia: 'Cada 12 horas' } ] },
+    { id: 'R-003', fecha: '2024-07-15', fechaLabel: '15 Jul 2024', doctor: 'Dra. Patricia Loyola', centro: 'Clínica Santa María', status: 'Vigente', validaHasta: '15 Oct 2024', notas: 'Suplementación indicada por déficit.', meds: [ { nombre: 'Vitamina D', dosis: '1000 UI', frecuencia: 'Diario' }, { nombre: 'Calcio', dosis: '600 mg', frecuencia: 'Diario' } ] },
+    { id: 'R-004', fecha: '2024-03-28', fechaLabel: '28 Mar 2024', doctor: 'Dr. Juan Rivas', centro: 'Hospital El Salvador', status: 'Vigente', validaHasta: '28 Abr 2024', notas: 'Infección bacteriana, completar tratamiento.', meds: [ { nombre: 'Amoxicilina', dosis: '500 mg', frecuencia: 'Cada 8 horas' } ] },
+    { id: 'R-005', fecha: '2024-02-10', fechaLabel: '10 Feb 2024', doctor: 'Dra. Marcela Pérez', centro: 'CESFAM Oriente', status: 'Vigente', validaHasta: '10 May 2024', notas: 'Control endocrino.', meds: [ { nombre: 'Levotiroxina', dosis: '50 mcg', frecuencia: 'Diario' }, { nombre: 'Atorvastatina', dosis: '20 mg', frecuencia: 'Diario' } ] },
+    { id: 'R-006', fecha: '2024-07-22', fechaLabel: '22 Jul 2024', doctor: 'Dr. Ricardo Soto', centro: 'Clínica Dávila', status: 'Vigente', validaHasta: '22 Oct 2024', notas: 'Anemia ferropénica.', meds: [ { nombre: 'Hierro', dosis: '325 mg', frecuencia: 'Diario' } ] },
+    { id: 'R-008', fecha: '2024-01-05', fechaLabel: '05 Ene 2024', doctor: 'Dra. Paula Contreras', centro: 'Clínica Alemana', status: 'Vigente', validaHasta: '05 Abr 2024', notas: 'Control cardiológico.', meds: [ { nombre: 'Atenolol', dosis: '25 mg', frecuencia: 'Diario' } ] },
   ];
 
   const location = useLocation();
@@ -20,7 +24,7 @@ export default function RecetasPage() {
     if (found) setActiva(found);
   }, [location.search]);
 
-  const activos = ['Vitaminas prenatales', 'Ácido fólico 5mg', 'Calcio 600mg'];
+  
 
   const printAreaRef = React.useRef(null);
 
@@ -167,7 +171,7 @@ export default function RecetasPage() {
           </div>
         </div>
 
-        <ActiveMedicationsCard items={activos} />
+        <ActiveMedicationsCard />
         <QuickActionsCard />
       </div>
     </div>

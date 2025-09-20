@@ -7,6 +7,7 @@ export default function MedicamentosPage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   const navigate = useNavigate();
+  const goToReceta = (idOrFolio, folio) => navigate(`/paciente/recetas?folio=${encodeURIComponent(folio || idOrFolio)}`);
 
   React.useEffect(() => {
     let mounted = true;
@@ -22,31 +23,22 @@ export default function MedicamentosPage() {
   const estadoOrder = { ACTIVO: 1, PENDIENTE: 2, INACTIVO: 3 };
   const toUpper = (s) => (s || '').toString().trim().toUpperCase();
   const ordered = React.useMemo(() => {
-    const base = meds.map((m) => ({
+    const base = meds.map(m => ({
       id: m.id || 'R-XXX',
+      folio: m.folio,
       nombre: m.nombre || '',
       dosis: m.dosis || '',
       frecuencia: m.frecuencia || '',
+      duracionDias: m.duracionDias,
       inicio: m.inicio || '',
       estado: toUpper(m.estado) === 'SUSPENDIDO' ? 'INACTIVO' : toUpper(m.estado || 'INACTIVO'),
     }));
-    let active = 0, pending = 0;
-    const constrained = base.map((m) => {
-      if (m.estado === 'ACTIVO') {
-        if (active < 7) { active++; return m; }
-        return { ...m, estado: 'INACTIVO' };
-      }
-      if (m.estado === 'PENDIENTE') {
-        if (pending < 2) { pending++; return m; }
-        return { ...m, estado: 'INACTIVO' };
-      }
-      return m;
-    });
-    return [...constrained].sort((a, b) => (estadoOrder[a.estado] ?? 99) - (estadoOrder[b.estado] ?? 99));
+    // Respetar estados del mock y solo ordenar por estado sin imponer topes
+    return [...base].sort((a, b) => (estadoOrder[a.estado] ?? 99) - (estadoOrder[b.estado] ?? 99));
   }, [meds]);
 
   const [page, setPage] = React.useState(1);
-  const pageSize = 10;
+  const pageSize = 8;
   const totalPages = Math.max(1, Math.ceil(ordered.length / pageSize));
   const start = (page - 1) * pageSize;
   const current = ordered.slice(start, start + pageSize);
@@ -60,14 +52,14 @@ export default function MedicamentosPage() {
           <div className="card-header bg-white pb-2">
             <h5 className="card-title mb-0">Mis Medicamentos</h5>
           </div>
-          <div className="card-body px-2 pt-0 pb-3 overflow-auto" style={{ maxHeight: 'calc(100vh - 260px)' }}>
+          <div className="card-body px-2 pt-0 pb-3">
             {!loading && !error && (
             <div className="row gx-2 gy-0 border-bottom small text-muted fw-semibold py-2 px-2 position-sticky top-0 bg-white" style={{ zIndex: 1 }}>
               <div className="col-6 col-md-3">Nombre</div>
               <div className="col-6 col-md-2">Dosis</div>
               <div className="col-12 col-md-3 d-none d-md-block">Frecuencia</div>
               <div className="col-6 col-md-2 d-none d-md-block">Inicio</div>
-              <div className="col-6 col-md-1 d-none d-md-block">ID</div>
+              <div className="col-6 col-md-1 d-none d-md-block">Receta</div>
               <div className="col-6 col-md-1 d-none d-md-block text-end pe-2">Estado</div>
             </div>)}
 
@@ -80,10 +72,17 @@ export default function MedicamentosPage() {
                 <div key={`${m.id}-${m.nombre}`} className="row gx-2 gy-2 py-2 border-bottom align-items-center small">
                   <div className="col-6 col-md-3 fw-medium">{m.nombre}</div>
                   <div className="col-6 col-md-2">{m.dosis}</div>
-                  <div className="col-12 col-md-3 d-none d-md-block">{m.frecuencia}</div>
+                  <div className="col-12 col-md-3 d-none d-md-block">{m.frecuencia && m.frecuencia.toLowerCase().includes('diario') ? m.frecuencia : `${m.frecuencia}${m.duracionDias ? ` x ${m.duracionDias} días` : ''}`}</div>
                   <div className="col-6 col-md-2 d-none d-md-block">{m.inicio}</div>
                   <div className="col-6 col-md-1 d-none d-md-block">
-                    <button className="btn btn-link p-0" onClick={() => navigate(`/paciente/recetas?folio=${encodeURIComponent(m.id)}`)}>{m.id}</button>
+                    <button
+                      className="btn btn-link p-0"
+                      title="Ver receta"
+                      aria-label={`Ver receta ${m.folio || m.id}`}
+                      onClick={() => goToReceta(m.id, m.folio)}
+                    >
+                      {m.folio || m.id}
+                    </button>
                   </div>
                   <div className="col-6 col-md-1 d-none d-md-block text-end pe-2">
                     <span className={`badge ${m.estado === 'ACTIVO' ? 'bg-success' : m.estado === 'PENDIENTE' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
@@ -92,8 +91,15 @@ export default function MedicamentosPage() {
                   </div>
                   {/* Resumen móvil */}
                   <div className="col-12 d-md-none small text-muted mt-1">
-                    {m.frecuencia} • {m.inicio} • 
-                    <button className="btn btn-link p-0 align-baseline ms-1 me-1" onClick={() => navigate(`/paciente/recetas?folio=${encodeURIComponent(m.id)}`)}>{m.id}</button>
+                    {(m.frecuencia && m.frecuencia.toLowerCase().includes('diario')) ? m.frecuencia : `${m.frecuencia}${m.duracionDias ? ` x ${m.duracionDias} días` : ''}`} • {m.inicio} • 
+                    <button
+                      className="btn btn-link p-0 align-baseline ms-1 me-1"
+                      title="Ver receta"
+                      aria-label={`Ver receta ${m.folio || m.id}`}
+                      onClick={() => goToReceta(m.id, m.folio)}
+                    >
+                      {m.folio || m.id}
+                    </button>
                     • {m.estado.charAt(0)}{m.estado.slice(1).toLowerCase()}
                   </div>
                 </div>
@@ -141,7 +147,7 @@ export default function MedicamentosPage() {
             {(ordered.filter(m=>m.estado==='ACTIVO').slice(0,5)).map((m)=> (
               <div key={`act-${m.id}-${m.nombre}`} className="d-flex align-items-center gap-2 small mb-2">
                 <i className="fas fa-pills text-success small"></i>
-                <span>{m.nombre} {m.dosis} <button className="btn btn-link p-0 align-baseline" onClick={()=>navigate(`/paciente/recetas?folio=${encodeURIComponent(m.id)}`)}><span className="text-muted">({m.id})</span></button></span>
+                <span>{m.nombre} {m.dosis} <button className="btn btn-link p-0 align-baseline" onClick={()=>goToReceta(m.folio || m.id, m.folio)}><span className="text-muted">({m.folio || m.id})</span></button></span>
               </div>
             ))}
             {ordered.filter(m=>m.estado==='ACTIVO').length === 0 && (

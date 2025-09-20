@@ -120,6 +120,12 @@ body {
     overflow: hidden;
 }
 
+/* Scroll de 3 filas visibles para tarjeta de medicamentos activos */
+.active-meds-scroll {
+    max-height: 6.5rem; /* ~3 items */
+    overflow-y: auto;
+}
+
 @media (max-width: 992px) {
     .sidebar {
         position: fixed;
