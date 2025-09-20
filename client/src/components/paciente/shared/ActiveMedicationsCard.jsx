@@ -11,7 +11,8 @@ export default function ActiveMedicationsCard() {
   React.useEffect(() => {
     let mounted = true;
     setLoading(true);
-    axios.get('/mock/medicamentos.json')
+    const base = import.meta.env.BASE_URL || '/';
+    axios.get(`${base}mock/medicamentos.json`)
       .then(r => { if (mounted) { setMeds(Array.isArray(r.data) ? r.data : []); setError(''); }})
       .catch(() => { if (mounted) setError('No se pudo cargar la lista de medicamentos.'); })
       .finally(() => { if (mounted) setLoading(false); });

@@ -13,7 +13,8 @@ export default function MedicamentosPage() {
   const [recetas, setRecetas] = React.useState([]);
   React.useEffect(() => {
     let mounted = true;
-    axios.get('/mock/recetas.json')
+    const base = import.meta.env.BASE_URL || '/';
+    axios.get(`${base}mock/recetas.json`)
       .then(r => { if (mounted) setRecetas(Array.isArray(r.data) ? r.data : []); })
       .catch(() => { /* opcional: console.warn('No se pudo cargar recetas'); */ });
     return () => { mounted = false; };
@@ -43,7 +44,8 @@ export default function MedicamentosPage() {
   React.useEffect(() => {
     let mounted = true;
     setLoading(true);
-    axios.get('/mock/medicamentos.json')
+    const base = import.meta.env.BASE_URL || '/';
+    axios.get(`${base}mock/medicamentos.json`)
       .then(r => { if (mounted) { setMeds(Array.isArray(r.data) ? r.data : []); setError(''); }})
       .catch(() => { if (mounted) setError('No se pudo cargar la lista de medicamentos.'); })
       .finally(() => { if (mounted) setLoading(false); });

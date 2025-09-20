@@ -11,7 +11,8 @@ export default function RecetasPage() {
   React.useEffect(() => {
     let mounted = true;
     setLoading(true);
-    axios.get('/mock/recetas.json')
+    const base = import.meta.env.BASE_URL || '/';
+    axios.get(`${base}mock/recetas.json`)
       .then(r => { if (mounted) { setRecetas(Array.isArray(r.data) ? r.data : []); setError(''); }})
       .catch(() => { if (mounted) setError('No se pudo cargar la lista de recetas.'); })
       .finally(() => { if (mounted) setLoading(false); });
