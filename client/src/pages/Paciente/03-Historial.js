@@ -1,4 +1,20 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Mode banner
+    const modeBanner = document.getElementById('modeBanner');
+    const USE_API = Boolean(window.__USE_API);
+    if (modeBanner) {
+        if (USE_API) {
+            modeBanner.classList.remove('alert-secondary');
+            modeBanner.classList.add('alert-success');
+            modeBanner.textContent = 'Conectado al backend: algunas funciones se sincronizan con el servidor.';
+        } else {
+            modeBanner.classList.remove('alert-success');
+            modeBanner.classList.add('alert-secondary');
+            modeBanner.textContent = 'Modo demo (sin backend): datos de prueba renderizados localmente.';
+        }
+        modeBanner.style.display = 'block';
+    }
+
     // Toggle sidebar on mobile
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');

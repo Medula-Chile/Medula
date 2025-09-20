@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,8 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="08-Perfil.css">
-    </head>
+</head>
+
 <body>
     <div class="d-flex flex-column h-100">
         <!-- Header -->
@@ -20,8 +22,10 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="d-flex align-items-center gap-3">
-                        <div class="bg-primary rounded-lg p-2">
-                            <i class="fas fa-stethoscope text-white"></i>
+                        <div class="bg-primary rounded-lg p-2 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <img src="../../../public/medula_icono.png" alt="Medula"
+                                style="max-width: 100%; max-height: 100%; object-fit: contain;">
                         </div>
                         <div>
                             <h1 class="h5 mb-0 fw-bold text-primary">MEDULA</h1>
@@ -45,10 +49,11 @@
                             Conexión Segura
                         </span>
                     </div>
-                    
+
                     <button class="btn btn-ghost position-relative">
                         <i class="fas fa-bell"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-destructive">
+                        <span
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-destructive">
                             2
                         </span>
                     </button>
@@ -63,7 +68,8 @@
                             <p class="small fw-medium mb-0">María Elena Contreras</p>
                             <p class="text-muted-foreground small mb-0">FONASA B</p>
                         </div>
-                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
                             <span class="text-white fw-medium">MC</span>
                         </div>
                     </div>
@@ -78,7 +84,7 @@
             <!-- Sidebar -->
             <aside class="sidebar" id="sidebar">
                 <div class="p-3 p-md-4">
-                    <div class="bg-success-10 border border-success-20 rounded-lg p-3 mb-4">
+                    <!-- <div class="bg-success-10 border border-success-20 rounded-lg p-3 mb-4">
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <i class="fas fa-heart text-success"></i>
                             <span class="small fw-medium text-success">Estado de Salud</span>
@@ -95,7 +101,7 @@
                                 </span>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <nav class="flex-grow-1 px-3 px-md-4">
@@ -128,11 +134,11 @@
                             <i class="fas fa-cog"></i>
                             <span>Configuración</span>
                         </a>
-                        
+
                     </div>
 
                     <hr class="my-4">
-                    
+
                     <div class="d-flex flex-column gap-1">
                         <a href="#" class="nav-link" id="sidebarLogoutBtn">
                             <i class="fas fa-sign-out-alt"></i>
@@ -154,8 +160,75 @@
 
             <!-- Contenido principal -->
             <div class="flex-grow-1 p-3 p-md-4">
+                <div id="profileModeBanner" class="alert alert-secondary py-2 small" role="alert" style="display: none;"></div>
                 <div class="row g-3">
+                    <!-- Resumen de Perfil -->
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Resumen de Perfil</h5>
+                                <button class="btn btn-sm btn-outline-secondary" id="btnEditProfile">
+                                    <i class="fas fa-pen me-1"></i> Editar
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row small g-3">
+                                    <div class="col-12 col-md-6">
+                                        <p class="text-muted-foreground mb-0">Nombre</p>
+                                        <p class="fw-medium mb-0" id="pfNombre">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <p class="text-muted-foreground mb-0">RUN</p>
+                                        <p class="fw-medium mb-0" id="pfRun">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <p class="text-muted-foreground mb-0">Nacimiento</p>
+                                        <p class="fw-medium mb-0" id="pfNacimiento">—</p>
+                                    </div>
+
+                                    <div class="col-6 col-md-3">
+                                        <p class="text-muted-foreground mb-0">FONASA</p>
+                                        <p class="fw-medium mb-0" id="pfFonasa">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <p class="text-muted-foreground mb-0">Grupo sanguíneo</p>
+                                        <p class="fw-medium mb-0" id="pfSangre">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <p class="text-muted-foreground mb-0">Teléfono</p>
+                                        <p class="fw-medium mb-0" id="pfTelefono">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <p class="text-muted-foreground mb-0">Email</p>
+                                        <p class="fw-medium mb-0" id="pfEmail">—</p>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <p class="text-muted-foreground mb-0">Dirección</p>
+                                        <p class="fw-medium mb-0" id="pfDireccion">—</p>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <hr class="my-2">
+                                        <h6 class="mb-2">Contacto de emergencia</h6>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <p class="text-muted-foreground mb-0">Nombre</p>
+                                        <p class="fw-medium mb-0" id="pfEmergNombre">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <p class="text-muted-foreground mb-0">Relación</p>
+                                        <p class="fw-medium mb-0" id="pfEmergRelacion">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <p class="text-muted-foreground mb-0">Teléfono</p>
+                                        <p class="fw-medium mb-0" id="pfEmergTelefono">—</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Timeline historial - 35% en desktop, 100% en móvil -->
+                    <!--
                     <div class="col-12 col-lg-5 col-xl-4">
                         <div class="card h-100">
                             <div class="card-header bg-white pb-2">
@@ -236,7 +309,7 @@
                         </div>
                     </div>
 
-                    <!-- Detalle consulta seleccionada - 40% en desktop, 100% en móvil -->
+                    <!-- Detalle consulta seleccionada - 40% en desktop, 100% en móvil 
                     <div class="col-12 col-lg-7 col-xl-5">
                         <div class="card">
                             <div class="card-header bg-white">
@@ -289,20 +362,21 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div>-->
 
                     <!-- Widgets estado actual - 25% en desktop, 100% en móvil -->
+                    <!--
                     <div class="col-12 col-xl-3">
-                        <!-- Alergias -->
+                        <!-- Alergias 
                         <div class="alert border-destructive bg-destructive-5 d-flex align-items-center">
                             <i class="fas fa-exclamation-triangle text-destructive me-3"></i>
                             <div class="text-destructive small">
                                 <strong>ALERGIAS:</strong><br>
                                 Penicilina
                             </div>
-                        </div>
+                        </div>-->
 
-                        <!-- Signos vitales -->
+                    <!-- Signos vitales 
                         <div class="card mb-3">
                             <div class="card-header bg-white pb-2">
                                 <h6 class="card-title mb-0">Signos Vitales</h6>
@@ -330,9 +404,9 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div>-->
 
-                        <!-- Medicamentos actuales -->
+                    <!-- Medicamentos actuales 
                         <div class="card mb-3">
                             <div class="card-header bg-white pb-2">
                                 <h6 class="card-title mb-0">Medicamentos Activos</h6>
@@ -351,9 +425,9 @@
                                     <span>Calcio 600mg</span>
                                 </div>
                             </div>
-                        </div>
+                        </div>-->
 
-                        <!-- Acciones rápidas -->
+                    <!-- Acciones rápidas 
                         <div class="card mb-3">
                             <div class="card-header bg-white pb-2">
                                 <h6 class="card-title mb-0">Acciones</h6>
@@ -368,9 +442,9 @@
                                     <span class="small">Telemedicina</span>
                                 </button>
                             </div>
-                        </div>
+                        </div>-->
 
-                        <!-- Próxima cita -->
+                    <!-- Próxima cita 
                         <div class="card bg-gray-100">
                             <div class="card-body p-3">
                                 <div class="d-flex flex-column gap-2">
@@ -387,12 +461,91 @@
                         </div>
                     </div>
                 </div>
+                
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="08-Perfil.js"></script>
-    </body>
-    </html>
+    <!-- Modal editar perfil -->
+                    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Editar datos de contacto</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Cerrar"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="profileForm" class="small">
+                                        <div class="mb-3">
+                                            <label class="form-label">FONASA</label>
+                                            <select class="form-select" id="inFonasa">
+                                                <option value="FONASA A">FONASA A</option>
+                                                <option value="FONASA B">FONASA B</option>
+                                                <option value="FONASA C">FONASA C</option>
+                                                <option value="FONASA D">FONASA D</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Grupo sanguíneo</label>
+                                            <select class="form-select" id="inSangre">
+                                                <option value="O+">O+</option>
+                                                <option value="O-">O-</option>
+                                                <option value="A+">A+</option>
+                                                <option value="A-">A-</option>
+                                                <option value="B+">B+</option>
+                                                <option value="B-">B-</option>
+                                                <option value="AB+">AB+</option>
+                                                <option value="AB-">AB-</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Teléfono</label>
+                                            <input type="tel" class="form-control" id="inTelefono" placeholder="+56 9 1234 5678" />
+                                            <div class="invalid-feedback" id="fbTelefono">Ingresa un teléfono válido de Chile (e.g., +56 9 1234 5678).</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="inEmail"
+                                                placeholder="nombre@correo.com" />
+                                            <div class="invalid-feedback" id="fbEmail">Ingresa un correo válido.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Dirección</label>
+                                            <input type="text" class="form-control" id="inDireccion" placeholder="Calle 123, Comuna, Ciudad" />
+                                            <div class="invalid-feedback" id="fbDireccion">La dirección debe tener al menos 8 caracteres.</div>
+                                        </div>
+                                        <hr>
+                                        <h6 class="mb-2">Contacto de emergencia</h6>
+                                        <div class="row g-2">
+                                            <div class="col-12 col-md-6">
+                                                <label class="form-label">Nombre</label>
+                                                <input type="text" class="form-control" id="inEmergNombre" placeholder="Nombre y Apellido" />
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label class="form-label">Relación</label>
+                                                <input type="text" class="form-control" id="inEmergRelacion" placeholder="Familiar/Amigo" />
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label">Teléfono</label>
+                                                <input type="tel" class="form-control" id="inEmergTelefono" placeholder="+56 9 9876 5432" />
+                                                <div class="invalid-feedback">Usa formato +56 9 XXXX XXXX</div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-primary" id="btnSaveProfile">Guardar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bootstrap JS -->
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                    <script src="08-Perfil.js"></script>
+</body>
+
+</html>

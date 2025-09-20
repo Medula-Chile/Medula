@@ -15,8 +15,11 @@
            </button>
 
            <div className="d-flex align-items-center gap-3">
-             <div className="bg-primary rounded-lg p-2">
-               <i className="fas fa-stethoscope text-white"></i>
+             <div
+               className="bg-primary rounded-lg p-2 d-flex align-items-center justify-content-center"
+               style={{ width: 40, height: 40 }}
+             >
+               <img src="/medula_icono.png" alt="Medula" style={{ maxWidth: '100%', maxHeight: '100%' }} />
              </div>
              <div>
                <h1 className="h5 mb-0 fw-bold text-primary">MEDULA</h1>

@@ -115,6 +115,54 @@ body {
     overflow: hidden;
 }
 
+/* Watermark icon in recipe print area */
+#recipePrintArea {
+    position: relative;
+}
+#recipePrintArea .watermark-icon {
+    position: absolute;
+    inset: 0;
+    display: block;
+    pointer-events: none;
+    opacity: 0.12;
+    /* Relative path from src/pages/Paciente to client/public */
+    background-image: url('../../../public/medula_icono.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 70% auto;
+    z-index: 0;
+}
+#recipePrintArea .card-body > *:not(.watermark-icon) {
+    position: relative;
+    z-index: 1;
+}
+
+/* Verification code box */
+.code-box {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    letter-spacing: 0.05em;
+    display: inline-block;
+    user-select: all;
+}
+
+/* Print optimizations */
+@media print {
+    body {
+        background: white !important;
+    }
+    #recipePrintArea {
+        box-shadow: none !important;
+        border: none !important;
+    }
+    .sidebar, header, .overlay {
+        display: none !important;
+    }
+}
+
 @media (max-width: 992px) {
     .sidebar {
         position: fixed;

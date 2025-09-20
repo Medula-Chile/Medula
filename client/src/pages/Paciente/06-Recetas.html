@@ -78,7 +78,7 @@
             <!-- Sidebar -->
             <aside class="sidebar" id="sidebar">
                 <div class="p-3 p-md-4">
-                    <div class="bg-success-10 border border-success-20 rounded-lg p-3 mb-4">
+                    <!--<div class="bg-success-10 border border-success-20 rounded-lg p-3 mb-4">
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <i class="fas fa-heart text-success"></i>
                             <span class="small fw-medium text-success">Estado de Salud</span>
@@ -95,7 +95,7 @@
                                 </span>
                             </div>
                         </div>
-                    </div>
+                    </div>-->
                 </div>
 
                 <nav class="flex-grow-1 px-3 px-md-4">
@@ -154,83 +154,17 @@
 
             <!-- Contenido principal -->
             <div class="flex-grow-1 p-3 p-md-4">
+                <div id="modeBanner" class="alert alert-secondary py-2 small" role="alert" style="display: none;"></div>
                 <div class="row g-3">
                     <!-- Timeline historial - 35% en desktop, 100% en móvil -->
                     <div class="col-12 col-lg-5 col-xl-4">
                         <div class="card h-100">
                             <div class="card-header bg-white pb-2">
-                                <h5 class="card-title mb-0">Mi Timeline Médico</h5>
+                                <h5 class="card-title mb-0">Mis Recetas</h5>
                             </div>
                             <div class="card-body p-0">
-                                <div class="overflow-auto" style="max-height: calc(100vh - 240px);">
-                                    <div class="consultation-item active">
-                                        <div class="d-flex gap-3">
-                                            <div class="bg-primary-10 rounded-circle p-2 flex-shrink-0">
-                                                <i class="fas fa-heart text-primary"></i>
-                                            </div>
-                                            
-                                            <div class="flex-grow-1 min-w-0">
-                                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                                    <div class="flex-grow-1 min-w-0">
-                                                        <h6 class="fw-medium mb-0">Medicina General</h6>
-                                                        <p class="text-muted-foreground small mb-0">Dr. Ana Silva</p>
-                                                    </div>
-                                                    <span class="text-muted-foreground small fw-medium ms-2">
-                                                        15 Ago 2024
-                                                    </span>
-                                                </div>
-                                                
-                                                <p class="text-muted-foreground small mb-1">CESFAM Norte</p>
-                                                <p class="small line-clamp-2 mb-0">Control rutinario anual. Paciente en buen estado general.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="consultation-item">
-                                        <div class="d-flex gap-3">
-                                            <div class="bg-primary-10 rounded-circle p-2 flex-shrink-0">
-                                                <i class="fas fa-heart text-primary"></i>
-                                            </div>
-                                            
-                                            <div class="flex-grow-1 min-w-0">
-                                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                                    <div class="flex-grow-1 min-w-0">
-                                                        <h6 class="fw-medium mb-0">Ginecología</h6>
-                                                        <p class="text-muted-foreground small mb-0">Dr. Carlos Mendoza</p>
-                                                    </div>
-                                                    <span class="text-muted-foreground small fw-medium ms-2">
-                                                        02 Jul 2024
-                                                    </span>
-                                                </div>
-                                                
-                                                <p class="text-muted-foreground small mb-1">Hospital Regional</p>
-                                                <p class="small line-clamp-2 mb-0">Control ginecológico anual. Papanicolaou normal.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="consultation-item">
-                                        <div class="d-flex gap-3">
-                                            <div class="bg-primary-10 rounded-circle p-2 flex-shrink-0">
-                                                <i class="fas fa-heart text-primary"></i>
-                                            </div>
-                                            
-                                            <div class="flex-grow-1 min-w-0">
-                                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                                    <div class="flex-grow-1 min-w-0">
-                                                        <h6 class="fw-medium mb-0">Oftalmología</h6>
-                                                        <p class="text-muted-foreground small mb-0">Dr. Roberto Sánchez</p>
-                                                    </div>
-                                                    <span class="text-muted-foreground small fw-medium ms-2">
-                                                        18 May 2024
-                                                    </span>
-                                                </div>
-                                                
-                                                <p class="text-muted-foreground small mb-1">Hospital El Salvador</p>
-                                                <p class="small line-clamp-2 mb-0">Control vista. Prescripción de lentes correctivos.</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="overflow-auto" style="max-height: calc(100vh - 240px);" id="recipesList">
+                                    <!-- Lista dinámica de recetas desde 06-Recetas.js -->
                                 </div>
                             </div>
                         </div>
@@ -238,54 +172,72 @@
 
                     <!-- Detalle consulta seleccionada - 40% en desktop, 100% en móvil -->
                     <div class="col-12 col-lg-7 col-xl-5">
-                        <div class="card">
+                        <div class="card" id="recipePrintArea">
                             <div class="card-header bg-white">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <h5 class="card-title mb-0">Consulta del 15 Ago 2024</h5>
-                                    <span class="custom-badge border-success text-white bg-success">
-                                        Completada
-                                    </span>
+                                    <h5 class="card-title mb-0" id="recipeTitle">Receta</h5>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="custom-badge border-success text-white bg-success" id="recipeStatus">Vigente</span>
+                                        <button class="btn btn-outline-secondary btn-sm" id="btnVerify" title="Verificar validez">
+                                            <i class="fas fa-shield-check me-1"></i> Verificar
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" id="btnDownload" title="Descargar PDF">
+                                            <i class="fas fa-file-pdf me-1"></i> PDF
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body position-relative">
+                                <!-- Watermark background (logo) -->
+                                <div class="watermark-icon"></div>
                                 <div class="mb-4">
-                                    <h6 class="fw-medium mb-2">Diagnóstico y Observaciones</h6>
-                                    <p class="text-muted-foreground small bg-gray-100 p-3 rounded">
-                                        Control rutinario anual. Paciente en buen estado general.
+                                    <h6 class="fw-medium mb-2">Indicaciones de la Receta</h6>
+                                    <p class="text-muted-foreground small bg-gray-100 p-3 rounded" id="recipeNotes">
+                                        Selecciona una receta en la lista para ver los detalles.
                                     </p>
                                 </div>
                                 
                                 <div class="row mb-4 small">
-                                    <div class="col-6 col-md-6 mb-2">
-                                        <p class="text-muted-foreground mb-0">Especialista</p>
-                                        <p class="fw-medium mb-0">Dr. Ana Silva</p>
+                                    <div class="col-12 col-md-12 mb-2">
+                                        <p class="text-muted-foreground mb-0">Paciente</p>
+                                        <p class="fw-medium mb-0" id="recipePatientName">—</p>
                                     </div>
                                     <div class="col-6 col-md-6 mb-2">
-                                        <p class="text-muted-foreground mb-0">Especialidad</p>
-                                        <p class="fw-medium mb-0">Medicina General</p>
+                                        <p class="text-muted-foreground mb-0">ID Paciente</p>
+                                        <p class="fw-medium mb-0" id="recipePatientId">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-6 mb-2">
+                                        <p class="text-muted-foreground mb-0">Médico</p>
+                                        <p class="fw-medium mb-0" id="recipeDoctor">—</p>
                                     </div>
                                     <div class="col-6 col-md-6 mb-2">
                                         <p class="text-muted-foreground mb-0">Centro médico</p>
-                                        <p class="fw-medium mb-0">CESFAM Norte</p>
+                                        <p class="fw-medium mb-0" id="recipeCenter">—</p>
                                     </div>
                                     <div class="col-6 col-md-6 mb-2">
-                                        <p class="text-muted-foreground mb-0">Próximo control</p>
-                                        <p class="fw-medium mb-0">15 Feb 2025</p>
+                                        <p class="text-muted-foreground mb-0">Folio</p>
+                                        <p class="fw-medium mb-0" id="recipeFolio">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-6 mb-2">
+                                        <p class="text-muted-foreground mb-0">Inicio</p>
+                                        <p class="fw-medium mb-0" id="recipeStart">—</p>
+                                    </div>
+                                    <div class="col-6 col-md-6 mb-2">
+                                        <p class="text-muted-foreground mb-0">Válida hasta</p>
+                                        <p class="fw-medium mb-0" id="recipeValidUntil">—</p>
                                     </div>
                                 </div>
 
                                 <div>
                                     <h6 class="fw-medium mb-2">Medicamentos Prescritos</h6>
-                                    <div class="d-flex flex-column gap-2">
-                                        <div class="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
-                                            <i class="fas fa-pills text-success"></i>
-                                            <span class="small">Vitaminas B12</span>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
-                                            <i class="fas fa-pills text-success"></i>
-                                            <span class="small">Calcio 600mg</span>
-                                        </div>
+                                    <div class="d-flex flex-column gap-2" id="recipeMeds">
+                                        <!-- Lista dinámica de medicamentos de la receta -->
                                     </div>
+                                </div>
+
+                                <div class="mt-3 small">
+                                    <p class="text-muted-foreground mb-1">Código de verificación</p>
+                                    <div class="code-box" id="recipeVrfCode">—</div>
                                 </div>
                             </div>
                         </div>
@@ -302,7 +254,7 @@
                             </div>
                         </div>
 
-                        <!-- Signos vitales -->
+                        <!-- Signos vitales 
                         <div class="card mb-3">
                             <div class="card-header bg-white pb-2">
                                 <h6 class="card-title mb-0">Signos Vitales</h6>
@@ -330,7 +282,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div>-->
 
                         <!-- Medicamentos actuales -->
                         <div class="card mb-3">
@@ -370,7 +322,7 @@
                             </div>
                         </div>
 
-                        <!-- Próxima cita -->
+                        <!-- Próxima cita 
                         <div class="card bg-gray-100">
                             <div class="card-body p-3">
                                 <div class="d-flex flex-column gap-2">
@@ -384,7 +336,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div>-->
                     </div>
                 </div>
             </div>
