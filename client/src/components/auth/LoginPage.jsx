@@ -16,8 +16,12 @@ export default function LoginPage() {
     if (!emailRegex.test(email)) return alert('Por favor, ingresa un correo válido.');
     if (!password) return alert('Por favor, ingresa tu contraseña.');
     if (!accept) return alert('Debes aceptar Términos y Privacidad.');
-    // Demo: redirigir al portal del paciente
-    navigate('/paciente/historial');
+    // Redirigir según rol
+    if (role === 'medico') {
+      navigate('/doctor');
+    } else {
+      navigate('/paciente/historial');
+    }
   };
 
   return (

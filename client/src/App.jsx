@@ -10,12 +10,14 @@ import ConfiguracionPage from './components/paciente/configuracion/Configuracion
 import PlaceholderPage from './components/paciente/PlaceholderPage';
 import LoginPage from './components/auth/LoginPage.jsx';
 import RegisterPage from './components/auth/RegisterPage.jsx';
+import DoctorShell from './pages/Doctor/DoctorShell.jsx';
+import DoctorInicio from './pages/Doctor/DoctorInicio.jsx';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/paciente/historial" replace />} />
+        <Route path="/" element={<Navigate to="/auth/login" replace />} />
 
         {/* Rutas de autenticación */}
         <Route path="/auth/login" element={<LoginPage />} />
@@ -32,7 +34,14 @@ function App() {
           <Route path="centro" element={<PlaceholderPage title="Centro Médico" description="Vista en desarrollo." />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/paciente/historial" replace />} />
+        {/* Rutas del Médico */}
+        <Route path="/doctor" element={<DoctorShell />}> 
+          <Route index element={<Navigate to="inicio" replace />} />
+          <Route path="inicio" element={<DoctorInicio />} />
+          {/* Rutas futuras del médico: pacientes, agenda, recetas, etc. */}
+        </Route>
+
+        <Route path="*" element={<Navigate to="/auth/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

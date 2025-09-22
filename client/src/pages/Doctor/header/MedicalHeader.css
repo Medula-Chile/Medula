@@ -1,0 +1,204 @@
+:root {
+    --primary: hsl(221, 83%, 53%);
+    --primary-foreground: #ffffff;
+    --background: #f8fafc;
+    --foreground: #020617;
+    --muted-foreground: #64748b;
+    --border: #e2e8f0;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+    --destructive: #ef4444;
+    --destructive-foreground: #fef2f2;
+    --success: #22c55e;
+    --success-foreground: #f0fdf4;
+    --card: #ffffff;
+    --card-foreground: #020617;
+    --sidebar: #ffffff;
+    --sidebar-foreground: #020617;
+    --sidebar-border: #e2e8f0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    line-height: 1.5;
+    font-weight: bold;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+}
+
+/* Utilidades */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.w-4 { width: 1rem; }
+.h-4 { height: 1rem; }
+.w-5 { width: 1.25rem; }
+.h-5 { height: 1.25rem; }
+.w-6 { width: 1.5rem; }
+.h-6 { height: 1.5rem; }
+
+/* Layout principal */
+.container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    /* background-color: #29a5ff; */
+    background-color: white;
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-icon {
+    background-color: var(--primary);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    color: white;
+}
+
+.logo-section h1 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.logo-section p {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+}
+
+.welcome-section {
+    flex: 1;
+    text-align: center;
+}
+
+.welcome-section h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.welcome-section p {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.secure-connection {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--success);
+}
+
+.secure-badge {
+    border: 1px solid var(--success);
+    color: var(--success);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.icon-btn:hover {
+    background-color: var(--secondary);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -0.25rem;
+    right: -0.25rem;
+    background-color: var(--destructive);
+    color: var(--destructive-foreground);
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    color: var(--foreground);
+}
+
+.logout-btn:hover {
+    background-color: var(--secondary);
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-left: 1rem;
+    border-left: 1px solid var(--border);
+}
+
+.user-info p:first-child {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.user-info p:last-child {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+}
+
+.avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
