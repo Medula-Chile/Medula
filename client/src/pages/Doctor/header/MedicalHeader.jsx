@@ -1,8 +1,19 @@
 import './MedicalHeader.css'
+import { useState } from 'react';
 // Encabezado del Portal del Médico.
 // Props:
 // - onToggleSidebar: función para abrir/cerrar el menú lateral en dispositivos pequeños.
 function Header({ onToggleSidebar }) {
+    const [searchQuery, setSearchQuery] = useState('');
+    
+    const handleSearch = (e) => {
+        e.preventDefault();
+        // Aquí puedes agregar la lógica de búsqueda
+        console.log('Buscando:', searchQuery);
+        // Por ejemplo, podrías llamar a una función de búsqueda pasada como prop
+        // if (onSearch) onSearch(searchQuery);
+    };
+
     return (
         <>
         <header className="bg-white border-bottom border-gray-200 px-3 px-md-4 py-3">
@@ -33,13 +44,28 @@ function Header({ onToggleSidebar }) {
                         </div>
                     </div>
                 </div>
-              {/* Saludo personalizado centrado */}
-                <div className="d-none d-md-flex flex-grow-1 justify-content-center text-center">
-                    <div>
-                        <h2 className="h6 fw-semibold mb-0">Hola, María</h2>
-                        <p className="text-muted-foreground small mb-0">
-                        Bienvenida a tu portal médico
-                        </p>
+              {/* Barra de búsqueda centrada */}
+                <div className="d-none d-md-flex flex-grow-1 justify-content-center">
+                    <div className="w-100" style={{ maxWidth: '400px' }}>
+                        <form onSubmit={handleSearch} className="d-flex align-items-center">
+                            <div className="input-group">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Buscar paciente por nombre o rut"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    aria-label="Buscar en el portal médico"
+                                />
+                                <button 
+                                    className="btn btn-primary" 
+                                    type="submit"
+                                    aria-label="Ejecutar búsqueda"
+                                >
+                                    <i className="fas fa-search" />
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 <div className="d-flex align-items-center gap-3">
