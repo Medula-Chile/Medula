@@ -1,4 +1,5 @@
 :root {
+    /* Variables de tema y colores base para el header y el sidebar */
     --primary: hsl(221, 83%, 53%);
     --primary-foreground: #ffffff;
     --background: #f8fafc;
@@ -25,6 +26,7 @@
 }
 
 body {
+    /* Tipografías del sistema para una lectura nítida */
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background-color: var(--background);
     color: var(--foreground);
@@ -35,7 +37,7 @@ body {
 
 }
 
-/* Utilidades */
+/* Utilidades (helpers de layout y tamaño) */
 .flex { display: flex; }
 .items-center { align-items: center; }
 .justify-between { justify-content: space-between; }
@@ -49,7 +51,7 @@ body {
 .w-6 { width: 1.5rem; }
 .h-6 { height: 1.5rem; }
 
-/* Layout principal */
+/* Layout principal del contenedor y cabecera */
 .container {
     height: 100vh;
     display: flex;
@@ -57,7 +59,7 @@ body {
 }
 
 .header {
-    /* background-color: #29a5ff; */
+    /* Cabecera superior con borde inferior sutil */
     background-color: white;
     border-bottom: 1px solid var(--border);
     padding: 1rem 1.5rem;
@@ -70,6 +72,7 @@ body {
 }
 
 .logo-section {
+    /* Zona del logotipo e identidad de la aplicación */
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -94,6 +97,7 @@ body {
 }
 
 .welcome-section {
+    /* Mensaje de bienvenida centrado (se oculta en móviles si se desea) */
     flex: 1;
     text-align: center;
 }
@@ -109,12 +113,14 @@ body {
 }
 
 .header-actions {
+    /* Acciones del header: conexión segura, notificaciones, perfil */
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
 .secure-connection {
+    /* Indicador visual de conexión segura */
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -122,6 +128,7 @@ body {
 }
 
 .secure-badge {
+    /* Badges pequeñas para estados (ej: Conexión segura) */
     border: 1px solid var(--success);
     color: var(--success);
     padding: 0.25rem 0.5rem;
@@ -130,6 +137,7 @@ body {
 }
 
 .icon-btn {
+    /* Botones de icono (campana, etc.) con feedback al hover */
     background: none;
     border: none;
     cursor: pointer;
@@ -143,6 +151,7 @@ body {
 }
 
 .notification-badge {
+    /* Badge circular para contador de notificaciones */
     position: absolute;
     top: -0.25rem;
     right: -0.25rem;
@@ -158,6 +167,7 @@ body {
 }
 
 .logout-btn {
+    /* Botón de cierre de sesión en acciones del header */
     background: none;
     border: none;
     cursor: pointer;
@@ -174,6 +184,7 @@ body {
 }
 
 .user-profile {
+    /* Zona derecha con nombre, plan y avatar redondo */
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -192,6 +203,7 @@ body {
 }
 
 .avatar {
+    /* Avatar circular con iniciales */
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 50%;

@@ -6,8 +6,15 @@ import QuickActionsCard from '../shared/QuickActionsCard';
 import NextAppointmentCard from '../shared/NextAppointmentCard';
 
 export default function HistorialPage() {
+  // Página principal del historial médico del paciente.
+  // Se compone de 3 columnas:
+  // - Izquierda: Timeline (lista de consultas con resumen).
+  // - Centro: Detalle de la consulta seleccionada.
+  // - Derecha: Tarjetas informativas (medicamentos/acciones/próxima cita).
   const [activeId, setActiveId] = useState(1);
 
+  // Datos de ejemplo (mock) para el timeline. En producción, esto vendría del backend.
+  // Se usa useMemo para no recrear el arreglo en cada render.
   const timelineItems = useMemo(
     () => [
       {
@@ -112,19 +119,23 @@ export default function HistorialPage() {
     []
   );
 
+  // Consulta activa seleccionada en base al id.
   const consulta = timelineItems.find((x) => x.id === activeId);
 
   return (
     <div className="row g-3">
       <div className="col-12 col-lg-5 col-xl-4">
+        {/* Timeline de consultas (lista clickeable) */}
         <Timeline items={timelineItems} activeId={activeId} onSelect={setActiveId} />
       </div>
 
       <div className="col-12 col-lg-7 col-xl-5">
+        {/* Panel central que muestra el detalle de la consulta seleccionada */}
         <ConsultationDetail consulta={consulta} />
       </div>
 
       <div className="col-12 col-xl-3">
+        {/* Columna derecha con alertas y tarjetas informativas */}
         <div className="alert border-destructive bg-destructive-5 d-flex align-items-center">
           <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
           <div className="text-destructive small">
@@ -134,14 +145,16 @@ export default function HistorialPage() {
           </div>
         </div>
 
-        
-
+        {/* Tarjeta con lista de medicamentos activos (carga desde mock) */}
         <ActiveMedicationsCard />
 
+        {/* Acciones rápidas (botones demo) */}
         <QuickActionsCard />
 
+        {/* Próxima cita destacada */}
         <NextAppointmentCard fechaHora="25 Ago 2024 • 10:30" medico="Dr. Juan Pérez" />
       </div>
     </div>
   );
 }
+

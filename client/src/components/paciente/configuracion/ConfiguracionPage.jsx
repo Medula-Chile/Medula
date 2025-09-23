@@ -1,6 +1,8 @@
 import React from 'react';
 
 export default function ConfiguracionPage() {
+  // Página de configuración de preferencias de usuario (demo).
+  // Persiste algunas opciones en localStorage para simular preferencias.
   const [notifEmail, setNotifEmail] = React.useState(false);
   const [notifSMS, setNotifSMS] = React.useState(false);
   const [theme, setTheme] = React.useState('system');
@@ -22,7 +24,7 @@ export default function ConfiguracionPage() {
     const data = { notifEmail, notifSMS, theme, lang };
     localStorage.setItem('medula_config', JSON.stringify(data));
   }, [notifEmail, notifSMS, theme, lang]);
-
+  // Implementar cierre de sesión
   return (
     <div className="row g-3">
       <div className="col-12">
@@ -62,7 +64,7 @@ export default function ConfiguracionPage() {
                   </select>
                 </div>
               </div>
-
+              {/* Implementar sesiones */}  
               <div className="col-12"><hr className="my-2" /></div>
 
               <div className="col-12 col-md-6">
@@ -90,3 +92,4 @@ export default function ConfiguracionPage() {
     </div>
   );
 }
+

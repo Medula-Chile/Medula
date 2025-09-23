@@ -1,10 +1,14 @@
 import './Header.css'
+// Encabezado del Portal del Paciente.
+// Props:
+// - onToggleSidebar: función para abrir/cerrar el menú lateral en dispositivos pequeños.
 function Header({ onToggleSidebar }) {
     return (
         <>
         <header className="bg-white border-bottom border-gray-200 px-3 px-md-4 py-3">
             <div className="d-flex align-items-center justify-content-between">
                 <div className="d-flex align-items-center">
+                    {/* Botón hamburguesa visible en pantallas pequeñas para abrir el sidebar */}
                     <button
                       className="btn btn-ghost d-lg-none me-2"
                       type="button"
@@ -30,7 +34,7 @@ function Header({ onToggleSidebar }) {
                         </div>
                     </div>
                 </div>
-              {/* Saludo personalizado centrado */}
+                {/* Saludo personalizado centrado (visible en md+) */}
                 <div className="d-none d-md-flex flex-grow-1 justify-content-center text-center">
                     <div>
                         <h2 className="h6 fw-semibold mb-0">Hola, María</h2>
@@ -40,12 +44,14 @@ function Header({ onToggleSidebar }) {
                     </div>
                 </div>
                 <div className="d-flex align-items-center gap-3">
+                    {/* Indicador de conexión segura (visible en md+) */}
                     <div className="d-none d-md-flex align-items-center gap-2">
                         <i className="fas fa-shield-alt text-success" />
                         <span className="custom-badge border-success text-success">
                         Conexión Segura
                         </span>
                     </div>
+                    {/* Notificaciones */}
                     <button className="btn btn-ghost position-relative">
                     <i className="fas fa-bell" />
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-destructive">
@@ -53,6 +59,7 @@ function Header({ onToggleSidebar }) {
                     </span>
                     </button>
                    
+                    {/* Resumen de usuario (avatar, siglas y plan) */}
                     <div className="d-flex align-items-center gap-3 ps-3 border-start border-gray-200">
                         <div className="d-none d-md-block text-end">
                             <p className="small fw-medium mb-0">María Elena Contreras</p>

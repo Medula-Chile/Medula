@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 export default function MedicamentosPage() {
+  // Página que lista los medicamentos prescritos al paciente.
+  // Carga datos desde un mock y permite navegar a la receta asociada.
   const [meds, setMeds] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
@@ -12,6 +14,7 @@ export default function MedicamentosPage() {
   // Cargar recetas para derivar frecuencia/duración desde el folio
   const [recetas, setRecetas] = React.useState([]);
   React.useEffect(() => {
+    // Carga inicial de recetas (mock). Se usa BASE_URL para soportar entornos.
     let mounted = true;
     const base = import.meta.env.BASE_URL || '/';
     axios.get(`${base}mock/recetas.json`)
@@ -20,12 +23,14 @@ export default function MedicamentosPage() {
     return () => { mounted = false; };
   }, []);
   const recetaByFolio = React.useMemo(() => {
+    // Mapa de recetas por id/folio para búsqueda rápida al formatear frecuencia.
     const map = new Map();
     for (const r of recetas) map.set(r.id, r);
     return map;
   }, [recetas]);
 
   const displayFrecuencia = React.useCallback((m) => {
+    // Obtiene frecuencia/duración desde la receta, si existe; si no usa los campos del medicamento.
     const r = recetaByFolio.get(m.folio || m.id);
     if (r && Array.isArray(r.meds)) {
       const rm = r.meds.find(x => (x.nombre || '').toLowerCase() === (m.nombre || '').toLowerCase());
@@ -42,6 +47,7 @@ export default function MedicamentosPage() {
   }, [recetaByFolio]);
 
   React.useEffect(() => {
+    // Carga inicial del listado de medicamentos desde mock.
     let mounted = true;
     setLoading(true);
     const base = import.meta.env.BASE_URL || '/';
@@ -56,6 +62,7 @@ export default function MedicamentosPage() {
   const estadoOrder = { ACTIVO: 1, PENDIENTE: 2, INACTIVO: 3 };
   const toUpper = (s) => (s || '').toString().trim().toUpperCase();
   const ordered = React.useMemo(() => {
+    // Normaliza y ordena por estado (manteniendo el orden de prioridad definido).
     const base = meds.map(m => ({
       id: m.id || 'R-XXX',
       folio: m.folio,
@@ -70,6 +77,7 @@ export default function MedicamentosPage() {
     return [...base].sort((a, b) => (estadoOrder[a.estado] ?? 99) - (estadoOrder[b.estado] ?? 99));
   }, [meds]);
 
+  // Paginación simple
   const [page, setPage] = React.useState(1);
   const pageSize = 8;
   const totalPages = Math.max(1, Math.ceil(ordered.length / pageSize));
@@ -86,6 +94,7 @@ export default function MedicamentosPage() {
             <h5 className="card-title mb-0">Mis Medicamentos</h5>
           </div>
           <div className="card-body px-2 pt-0 pb-3">
+            {/* Cabecera de columnas (solo cuando hay datos y no está cargando) */}
             {!loading && !error && (
             <div className="row gx-2 gy-0 border-bottom small text-muted fw-semibold py-2 px-2 position-sticky top-0 bg-white" style={{ zIndex: 1 }}>
               <div className="col-6 col-md-3">Nombre</div>
@@ -172,6 +181,7 @@ export default function MedicamentosPage() {
           </div>
         </div>
 
+        {/* Resumen de medicamentos activos (top 5) con enlaces a receta */}
         <div className="card mb-3">
           <div className="card-header bg-white pb-2">
             <h6 className="card-title mb-0">Medicamentos Activos</h6>
@@ -192,3 +202,4 @@ export default function MedicamentosPage() {
     </div>
   );
 }
+

@@ -1,10 +1,15 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
+// Menú lateral del Portal del Médico.
+// Props:
+// - isOpen: controla visibilidad (útil en móviles/tablets).
+// - onClose: cierra el menú (se usa en overlay y al hacer click en un link).
+// - onLogout: acción de cierre de sesión.
 export default function Aside({ isOpen, onClose, onLogout }) {
   return (
     <>
-      {/* Overlay móvil */}
+      {/* Overlay móvil: al hacer click cierra el sidebar */}
       <div
         className={`overlay ${isOpen ? 'show' : ''}`}
         onClick={onClose}
@@ -31,6 +36,7 @@ export default function Aside({ isOpen, onClose, onLogout }) {
           </div>
         </div>*/}
 
+        {/* Navegación principal del médico */}
         <nav className="flex-grow-1 px-3 px-md-4" style={{ marginTop: '20px' }}>
           <div className="d-flex flex-column gap-1">
             <NavLink to="/doctor/inicio" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={onClose}>
@@ -61,6 +67,7 @@ export default function Aside({ isOpen, onClose, onLogout }) {
 
           <hr className="my-4" />
 
+          {/* Acción de cierre de sesión */}
           <div className="d-flex flex-column gap-1" style={{ marginBottom: '20px' }}>
             <button className="nav-link btn btn-link text-start p-0" onClick={onLogout}>
               <i className="fas fa-sign-out-alt"></i>
@@ -69,6 +76,7 @@ export default function Aside({ isOpen, onClose, onLogout }) {
           </div>
         </nav>
 
+        {/* Leyendas y sellos informativos al pie del menú */}
         <div className="p-3 p-md-4 border-top border-gray-200">
           <div className="text-center text-muted-foreground small">
             <p className="mb-1">Protegido por Ley 21.668</p>
@@ -82,3 +90,4 @@ export default function Aside({ isOpen, onClose, onLogout }) {
     </>
   );
 }
+
