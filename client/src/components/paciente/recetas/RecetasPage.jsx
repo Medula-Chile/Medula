@@ -5,10 +5,13 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 export default function RecetasPage() {
+  // Página que lista recetas y muestra el detalle de la receta activa seleccionada.
+  // Permite seleccionar la receta desde un parámetro de consulta (?folio=ID).
   const [recetas, setRecetas] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   React.useEffect(() => {
+    // Carga inicial del mock de recetas
     let mounted = true;
     setLoading(true);
     const base = import.meta.env.BASE_URL || '/';
@@ -23,6 +26,7 @@ export default function RecetasPage() {
   const getQueryParam = (name) => new URLSearchParams(location.search).get(name);
   const [activa, setActiva] = React.useState(null);
   React.useEffect(() => {
+    // Cuando hay recetas cargadas, intenta fijar la activa según ?folio=ID; si no, toma la primera.
     if (!recetas || recetas.length === 0) return;
     const folio = getQueryParam('folio');
     if (folio) {
@@ -35,17 +39,21 @@ export default function RecetasPage() {
 
   const printAreaRef = React.useRef(null);
 
+  // Clases para badge de estado de receta (Vigente / Pendiente / Otra)
   const statusBadgeClass = (s) => s === 'Vigente' ? 'custom-badge border-success text-white bg-success' : s === 'Pendiente' ? 'custom-badge border-warning text-dark bg-warning' : 'custom-badge border-secondary text-white bg-secondary';
+  // Genera un código de verificación reproducible a partir de campos clave.
   const computeVerificationCode = React.useCallback((r) => {
     const raw = `${r.id}|${r.fecha}`; let hash = 0; for (let i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
     return `VRF-${Math.abs(hash).toString(16).toUpperCase()}`;
   }, []);
   const paciente = { nombre: 'María Elena Contreras', id: 'RUN 12.345.678-9' };
   const verifCode = React.useMemo(() => (activa ? computeVerificationCode(activa) : ''), [activa, computeVerificationCode]);
+  // Demo: muestra datos clave al verificar
   const handleVerify = () => {
     alert(`Receta ${activa.id}\nEstado: ${activa.status}\nEmitida: ${activa.fechaLabel}\nVálida hasta: ${activa.validaHasta}\nCódigo de verificación: ${verifCode}`);
   };
 
+  // Demo: imprime/descarga renderizando el HTML del área de impresión en una ventana y llamando window.print
   const handleDownloadPdf = () => {
     // Solución simple: abrir ventana con el HTML del área e invocar print
     const content = printAreaRef.current?.innerHTML || '';
@@ -83,6 +91,7 @@ export default function RecetasPage() {
   return (
     <div className="row g-3">
       <div className="col-12 col-lg-5 col-xl-4">
+        {/* Columna izquierda: listado de recetas */}
         <div className="card h-100">
           <div className="card-header bg-white pb-2">
             <h5 className="card-title mb-0">Mis Recetas</h5>
@@ -96,6 +105,7 @@ export default function RecetasPage() {
                       <i className="fas fa-file-prescription text-primary"></i>
                     </div>
                     <div className="flex-grow-1 min-w-0">
+                      {/* Encabezado: título y fecha */}
                       <div className="d-flex justify-content-between align-items-start mb-1">
                         <div className="flex-grow-1 min-w-0">
                           <h6 className="fw-medium mb-0">Receta {r.id}</h6>
@@ -103,6 +113,7 @@ export default function RecetasPage() {
                         </div>
                         <span className="text-muted-foreground small fw-medium ms-2">{r.fechaLabel}</span>
                       </div>
+                      {/* Centro médico y breve resumen de medicamentos */}
                       <p className="text-muted-foreground small mb-1">{r.centro}</p>
                       <p className="small line-clamp-2 mb-0">{r.meds.map(m => `${m.nombre} ${m.dosis}`).join(' • ')}</p>
                     </div>
@@ -115,6 +126,7 @@ export default function RecetasPage() {
       </div>
 
       <div className="col-12 col-lg-7 col-xl-5">
+        {/* Columna central: detalle de la receta activa */}
         <div className="card" ref={printAreaRef}>
           <div className="card-header bg-white">
             <div className="d-flex justify-content-between align-items-center">
@@ -188,6 +200,7 @@ export default function RecetasPage() {
       </div>
 
       <div className="col-12 col-xl-3">
+        {/* Columna derecha: alertas y tarjetas complementarias */}
         <div className="alert border-destructive bg-destructive-5 d-flex align-items-center">
           <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
           <div className="text-destructive small">
@@ -202,3 +215,4 @@ export default function RecetasPage() {
     </div>
   );
 }
+

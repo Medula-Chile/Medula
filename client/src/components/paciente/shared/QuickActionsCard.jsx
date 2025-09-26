@@ -1,12 +1,15 @@
 import React from 'react';
 
 export default function QuickActionsCard() {
+  // Tarjeta de acciones rápidas. En esta demo muestra botones genéricos
+  // que podrían conectarse a flujos como descarga de recetas o telemedicina.
   return (
     <div className="card mb-3">
       <div className="card-header bg-white pb-2">
         <h6 className="card-title mb-0">Acciones</h6>
       </div>
       <div className="card-body">
+        {/* Botones de acción. Cada botón tiene un ícono y un texto descriptivo. */}
         <button className="btn btn-outline-secondary w-100 btn-sm mb-2 d-flex align-items-center">
           <i className="fas fa-download small me-2"></i>
           <span className="small">Descargar Recetas</span>

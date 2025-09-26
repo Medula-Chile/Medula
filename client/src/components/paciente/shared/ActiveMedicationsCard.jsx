@@ -3,12 +3,15 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 export default function ActiveMedicationsCard() {
+  // Tarjeta lateral que muestra un resumen de medicamentos activos del paciente.
+  // Carga datos desde un mock (medicamentos.json) y permite navegar a la receta asociada.
   const [meds, setMeds] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   const navigate = useNavigate();
 
   React.useEffect(() => {
+    // Carga inicial de medicamentos (mock)
     let mounted = true;
     setLoading(true);
     const base = import.meta.env.BASE_URL || '/';
@@ -22,6 +25,7 @@ export default function ActiveMedicationsCard() {
   const estadoOrder = { ACTIVO: 1, PENDIENTE: 2, INACTIVO: 3 };
   const toUpper = (s) => (s || '').toString().trim().toUpperCase();
   const ordered = React.useMemo(() => {
+    // Normaliza estado y aplica una ligera restricción para no sobrecargar la tarjeta.
     const base = meds.map(m => ({
       id: m.id || 'R-XXX',
       folio: m.folio,
@@ -54,8 +58,10 @@ export default function ActiveMedicationsCard() {
         <h6 className="card-title mb-0">Medicamentos Activos</h6>
       </div>
       <div className="card-body active-meds-scroll">
+        {/* Estados de carga y error */}
         {loading && <div className="text-muted small">Cargando…</div>}
         {!!error && !loading && <div className="text-danger small">{error}</div>}
+        {/* Lista de medicamentos activos o texto vacío */}
         {!loading && !error && activos.length === 0 && (
           <div className="text-muted small">Sin activos</div>
         )}
@@ -74,3 +80,4 @@ export default function ActiveMedicationsCard() {
     </div>
   );
 }
+

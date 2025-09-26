@@ -1,6 +1,8 @@
 import './MedicalHeader.css'
 import { useState } from 'react';
-
+// Encabezado del Portal del Médico.
+// Props:
+// - onToggleSidebar: función para abrir/cerrar el menú lateral en dispositivos pequeños.
 function Header({ onToggleSidebar }) {
     const [searchQuery, setSearchQuery] = useState('');
     
@@ -37,7 +39,7 @@ function Header({ onToggleSidebar }) {
                         <div>
                             <h1 className="h5 mb-0 fw-bold text-primary">MEDULA</h1>
                             <p className="text-muted-foreground small mb-0">
-                            Portal Médico
+                            Portal del Médico
                             </p>
                         </div>
                     </div>

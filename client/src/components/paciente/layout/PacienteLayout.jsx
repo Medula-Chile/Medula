@@ -9,10 +9,17 @@ import QuickActionsCard from '../shared/QuickActionsCard';
 import NextAppointmentCard from '../shared/NextAppointmentCard';
 
 export default function PacienteLayout() {
+  // Layout específico de la vista de "Historial" del paciente.
+  // A diferencia de "PacienteShell" (que sólo encierra un Outlet), aquí componemos
+  // directamente tres columnas: Timeline (izquierda), Detalle de consulta (centro),
+  // y tarjetas informativas (derecha). Este componente puede ser usado como una
+  // página concreta, mientras que "PacienteShell" sirve como contenedor común.
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeId, setActiveId] = useState(1);
   const navigate = useNavigate();
 
+  // Datos de ejemplo para el timeline del paciente.
+  // Se utilizan useMemo para evitar recalcular el arreglo en cada render.
   const timelineItems = useMemo(
     () => [
       {
@@ -55,8 +62,10 @@ export default function PacienteLayout() {
     []
   );
 
+  // Consulta activa seleccionada en el Timeline (según activeId).
   const consulta = timelineItems.find((x) => x.id === activeId);
 
+  // Handlers de UI globales
   const handleToggleSidebar = () => setSidebarOpen((s) => !s);
   const handleCloseSidebar = () => setSidebarOpen(false);
   const handleLogout = () => {
@@ -68,21 +77,27 @@ export default function PacienteLayout() {
 
   return (
     <div className="d-flex flex-column min-vh-100">
+      {/* Header superior reutilizable con acciones: toggle sidebar y logout */}
       <Header onToggleSidebar={handleToggleSidebar} onLogout={handleLogout} />
 
       <div className="d-flex flex-grow-1">
+        {/* Aside (menú lateral) con navegación de la sección Paciente */}
         <Aside isOpen={sidebarOpen} onClose={handleCloseSidebar} onLogout={handleLogout} />
 
+        {/* Contenido principal: tres columnas */}
         <main className="flex-grow-1 p-3 p-md-4">
           <div className="row g-3">
+            {/* Columna izquierda: lista de consultas (Timeline) */}
             <div className="col-12 col-lg-5 col-xl-4">
               <Timeline items={timelineItems} activeId={activeId} onSelect={setActiveId} />
             </div>
 
+            {/* Columna central: detalle de la consulta seleccionada */}
             <div className="col-12 col-lg-7 col-xl-5">
               <ConsultationDetail consulta={consulta} />
             </div>
 
+            {/* Columna derecha: alertas y tarjetas informativas/acciones rápidas */}
             <div className="col-12 col-xl-3">
               <div className="alert border-destructive bg-destructive-5 d-flex align-items-center">
                 <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
@@ -105,3 +120,4 @@ export default function PacienteLayout() {
     </div>
   );
 }
+

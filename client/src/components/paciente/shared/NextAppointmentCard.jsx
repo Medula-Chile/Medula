@@ -1,5 +1,12 @@
 import React from 'react';
 
+/**
+ * Tarjeta simple que destaca la próxima cita del paciente.
+ * 
+ * Props:
+ * - fechaHora: cadena legible con fecha y hora de la cita
+ * - medico: nombre del médico a cargo
+ */
 export default function NextAppointmentCard({ fechaHora, medico }) {
   return (
     <div className="card bg-gray-100">

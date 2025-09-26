@@ -1,3 +1,8 @@
+/*
+ * Hoja de estilos base para el Portal del Paciente.
+ * Define variables de color, utilidades y estilos compartidos
+ * para timeline, recetas, sidebar y componentes auxiliares.
+ */
 :root {
     --primary: #3b82f6;
     --primary-foreground: #ffffff;
@@ -9,7 +14,9 @@
     --card: #ffffff;
 }
 
-/* Marca de agua para detalles/imprimir recetas */
+/* ==========================
+   Marca de agua (detalles/impresión recetas)
+   ========================== */
 .watermark-bg {
     position: relative;
     overflow: hidden;
@@ -29,6 +36,9 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
+/* ==========================
+   Utilidades de color
+   ========================== */
 .bg-primary { background-color: var(--primary) !important; }
 .text-primary { color: var(--primary) !important; }
 .text-muted-foreground { color: var(--muted-foreground) !important; }
@@ -44,6 +54,9 @@ body {
 
 .bg-primary-10 { background-color: rgba(59, 130, 246, 0.1) !important; }
 
+/* ==========================
+   Botones
+   ========================== */
 .btn-ghost {
     background-color: transparent;
     border: none;
@@ -64,6 +77,9 @@ body {
     color: white;
 }
 
+/* ==========================
+   Badges personalizadas
+   ========================== */
 .custom-badge {
     display: inline-flex;
     align-items: center;
@@ -74,6 +90,9 @@ body {
     padding: 0.125rem 0.5rem;
 }
 
+/* ==========================
+   Sidebar de navegación
+   ========================== */
 .sidebar {
     width: 16rem;
     background-color: white;
@@ -83,6 +102,9 @@ body {
     height: 100%;
 }
 
+/* ==========================
+   Enlaces de navegación (sidebar)
+   ========================== */
 .nav-link {
     display: flex;
     align-items: center;
@@ -111,6 +133,9 @@ body {
     margin-right: 0.75rem;
 }
 
+/* ==========================
+   Ítems de consulta (Timeline/Recetas)
+   ========================== */
 .consultation-item {
     border-bottom: 1px solid #f3f4f6;
     cursor: pointer;
@@ -127,6 +152,9 @@ body {
     border-left: 4px solid var(--primary);
 }
 
+/* ==========================
+   Helpers
+   ========================== */
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -141,6 +169,9 @@ body {
     overflow-y: auto;
 }
 
+/* ==========================
+   Responsive (sidebar móvil)
+   ========================== */
 @media (max-width: 992px) {
     .sidebar {
         position: fixed;
@@ -169,3 +200,4 @@ body {
         display: block;
     }
 }
+

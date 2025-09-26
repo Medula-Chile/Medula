@@ -2,6 +2,8 @@ import React from 'react';
 import axios from 'axios';
 
 export default function ConsultationDetail({ consulta }) {
+  // Muestra el detalle de una consulta seleccionada desde el Timeline.
+  // Si no hay consulta activa (null/undefined), no renderiza nada.
   if (!consulta) return null;
   const presion = consulta?.vitals?.presion ?? '—';
   const temperatura = consulta?.vitals?.temperatura ?? '—';
@@ -10,6 +12,8 @@ export default function ConsultationDetail({ consulta }) {
   // Cargar recetas para mostrar medicamentos desde la receta vinculada
   const [recetas, setRecetas] = React.useState([]);
   React.useEffect(() => {
+    // Efecto que carga el mock de recetas una sola vez al montar el componente.
+    // Optamos por un flag "mounted" para evitar setState cuando el componente ya se desmontó.
     let mounted = true;
     axios.get('/mock/recetas.json')
       .then(r => { if (mounted) setRecetas(Array.isArray(r.data) ? r.data : []); })
@@ -17,11 +21,13 @@ export default function ConsultationDetail({ consulta }) {
     return () => { mounted = false; };
   }, []);
 
+  // Busca la receta activa asociada a la consulta (por recetaId) dentro de la lista cargada.
   const recetaActiva = React.useMemo(() => {
     if (!consulta?.recetaId || !Array.isArray(recetas)) return null;
     return recetas.find(r => r.id === consulta.recetaId) || null;
   }, [consulta?.recetaId, recetas]);
 
+  // A partir de la receta activa, formatea los medicamentos para mostrarlos uniformemente.
   const medsFromReceta = React.useMemo(() => {
     if (!recetaActiva?.meds) return null;
     return recetaActiva.meds.map(m => {
@@ -42,11 +48,13 @@ export default function ConsultationDetail({ consulta }) {
         </div>
       </div>
       <div className="card-body watermark-bg">
+        {/* Diagnóstico y observaciones (texto principal de la consulta) */}
         <div className="mb-4">
           <h6 className="fw-medium mb-2">Diagnóstico y Observaciones</h6>
           <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{consulta.observaciones}</p>
         </div>
 
+        {/* Bloque de signos vitales. Se muestran placeholders (—) si faltan datos. */}
         <div className="mb-4">
           <h6 className="fw-medium mb-2">Signos Vitales</h6>
           <p className="text-muted-foreground small bg-gray-100 p-3 rounded">
@@ -54,6 +62,7 @@ export default function ConsultationDetail({ consulta }) {
           </p>
         </div>
 
+        {/* Metadatos de la consulta: médico, especialidad, centro, próximo control, y link a receta si existe. */}
         <div className="row mb-4 small">
           <div className="col-6 col-md-6 mb-2">
             <p className="text-muted-foreground mb-0">Especialista</p>
@@ -81,6 +90,7 @@ export default function ConsultationDetail({ consulta }) {
           )}
         </div>
 
+        {/* Lista de medicamentos prescritos. Prioriza los de la receta activa si existe, si no usa los de la consulta. */}
         <div>
           <h6 className="fw-medium mb-2">Medicamentos Prescritos</h6>
           <div className="d-flex flex-column gap-2">
@@ -96,3 +106,4 @@ export default function ConsultationDetail({ consulta }) {
     </div>
   );
 }
+
