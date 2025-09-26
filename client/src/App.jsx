@@ -13,9 +13,11 @@ import RegisterPage from './components/auth/RegisterPage.jsx';
 import DoctorShell from './pages/Doctor/DoctorShell.jsx';
 import DoctorInicio from './pages/Doctor/DoctorInicio.jsx';
 import { AuthProvider } from './contexts/AuthContext';
+import DoctorProfile from './pages/Doctor/DoctorProfile.jsx';
+import DoctorSettings from './pages/Doctor/DoctorSettings.jsx';
 
-function App() {
-  return (
+
+function App() {  return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -40,7 +42,8 @@ function App() {
           <Route path="/doctor" element={<DoctorShell />}> 
             <Route index element={<Navigate to="inicio" replace />} />
             <Route path="inicio" element={<DoctorInicio />} />
-            {/* Rutas futuras del médico: pacientes, agenda, recetas, etc. */}
+            <Route path="perfil" element={<DoctorProfile />} />
+            <Route path="configuracion" element={<DoctorSettings />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/auth/login" replace />} />
