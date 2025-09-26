@@ -77,7 +77,7 @@ export default function PerfilPage() {
                 <p className="text-muted-foreground mb-0">RUN</p>
                 <p className="fw-medium mb-0">{datos.run}</p>
               </div>
-              <div className="col-6 col-md-3">
+               <div className="col-6 col-md-3">
                 <p className="text-muted-foreground mb-0">Nacimiento</p>
                 <p className="fw-medium mb-0">{datos.nacimiento}</p>
               </div>
