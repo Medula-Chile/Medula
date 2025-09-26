@@ -1,11 +1,9 @@
 import './MedicalHeader.css'
 import { useState } from 'react';
-// Encabezado del Portal del Médico.
-// Props:
-// - onToggleSidebar: función para abrir/cerrar el menú lateral en dispositivos pequeños.
+ 
 function Header({ onToggleSidebar }) {
     const [searchQuery, setSearchQuery] = useState('');
-    
+   
     const handleSearch = (e) => {
         e.preventDefault();
         // Aquí puedes agregar la lógica de búsqueda
@@ -13,7 +11,7 @@ function Header({ onToggleSidebar }) {
         // Por ejemplo, podrías llamar a una función de búsqueda pasada como prop
         // if (onSearch) onSearch(searchQuery);
     };
-
+ 
     return (
         <>
         <header className="bg-white border-bottom border-gray-200 px-3 px-md-4 py-3">
@@ -39,7 +37,7 @@ function Header({ onToggleSidebar }) {
                         <div>
                             <h1 className="h5 mb-0 fw-bold text-primary">MEDULA</h1>
                             <p className="text-muted-foreground small mb-0">
-                            Portal del Médico
+                            Portal Médico
                             </p>
                         </div>
                     </div>
@@ -57,8 +55,8 @@ function Header({ onToggleSidebar }) {
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     aria-label="Buscar en el portal médico"
                                 />
-                                <button 
-                                    className="btn btn-primary" 
+                                <button
+                                    className="btn btn-primary"
                                     type="submit"
                                     aria-label="Ejecutar búsqueda"
                                 >
@@ -85,7 +83,7 @@ function Header({ onToggleSidebar }) {
                     <div className="d-flex align-items-center gap-3 ps-3 border-start border-gray-200">
                         <div className="d-none d-md-block text-end">
                             <p className="small fw-medium mb-0">María Elena Contreras</p>
-                            <p className="text-muted-foreground small mb-0">FONASA B</p>
+                            <p className="text-muted-foreground small mb-0">Médico Cirujano</p>
                         </div>
                         <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
                             <span className="text-white fw-medium">MC</span>
@@ -97,5 +95,5 @@ function Header({ onToggleSidebar }) {
         </>
     )
 }
-
+ 
 export default Header
