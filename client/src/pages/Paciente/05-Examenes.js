@@ -31,4 +31,33 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
         });
     });
+
+    // Manejo de botones para ver recetas
+    document.querySelectorAll('.eye-icon-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const imageName = this.getAttribute('image');
+            console.log('Imagen a mostrar:', imageName); // Para debugging
+
+            if (imageName) {
+                Swal.fire({
+                    title: 'Receta Médica',
+                    imageUrl: `../../components/recetas/imágenes/${imageName}`,
+                    imageAlt: 'Receta Médica',
+                    confirmButtonText: 'Cerrar',
+                    width: 600,
+                    showCloseButton: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        console.log('Modal cerrado');
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se encontró la receta.',
+                });
+            }
+        });
+    });
 });
