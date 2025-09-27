@@ -1,22 +1,38 @@
 import './Header.css'
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
- 
+
 function Header({ onToggleSidebar }) {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
- 
+
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                if (token) {
-                    const response = await api.get('/users/profile');
-                    console.log('Datos del usuario:', response.data);
+                console.log('Token encontrado:', token ? 'Sí' : 'No');
+                
+                if (!token) {
+                    console.log('No hay token disponible');
+                    setLoading(false);
+                    return;
+                }
+
+                console.log('Haciendo petición a /users/profile...');
+                const response = await api.get('/users/profile');
+                console.log('Respuesta completa:', response);
+                console.log('Datos del usuario:', response.data);
+                
+                if (response.data) {
                     setUserData(response.data);
+                } else {
+                    console.log('La respuesta no contiene datos');
                 }
             } catch (error) {
                 console.error('Error al obtener datos del usuario:', error);
+                if (error.response) {
+                    console.error('Error response:', error.response.data);
+                }
             } finally {
                 setLoading(false);
             }
@@ -77,10 +93,9 @@ function Header({ onToggleSidebar }) {
                                 2
                             </span>
                         </button>
- 
                         <div className="d-flex align-items-center gap-3 ps-3 border-start border-gray-200">
                             <div className="d-none d-md-block text-end">
-                                <p className="small fw-medium mb-0">María Elena Contreras</p>
+                                <p className="small fw-medium mb-0">{userData?.nombre}</p>
                                 <p className="text-muted-foreground small mb-0">FONASA B</p>
                             </div>
                             <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
@@ -93,6 +108,4 @@ function Header({ onToggleSidebar }) {
         </>
     )
 }
- 
 export default Header
- 

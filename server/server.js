@@ -25,6 +25,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rutas
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 
 // Log de variables de entorno
@@ -47,11 +48,6 @@ app.get('/', (req, res) => {
     timestamp: new Date()
   });
 });
-
-// Importar y usar rutas
-// app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/users', require('./routes/users'));
-// ... otras rutas
 
 // Puerto (usar el de .env o 5000 como fallback)
 const PORT = process.env.PORT || 5000;

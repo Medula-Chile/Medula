@@ -11,19 +11,55 @@ export default function LoginPage() {
   const [password, setPassword] = React.useState('');
   const [accept, setAccept] = React.useState(true);
 
-  // Manejador de envío del formulario: valida datos y redirige según rol
-  const onSubmit = (e) => {
+  // Estado para manejar errores y carga
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  // Manejador de envío del formulario: valida datos y autentica
+  const onSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+
     // Validación simple
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return alert('Por favor, ingresa un correo válido.');
     if (!password) return alert('Por favor, ingresa tu contraseña.');
     if (!accept) return alert('Debes aceptar Términos y Privacidad.');
-    // Redirigir según rol
-    if (role === 'medico') {
-      navigate('/doctor');
-    } else {
-      navigate('/paciente/historial');
+
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          rol: role
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error en la autenticación');
+      }
+
+      // Guardar el token
+      localStorage.setItem('token', data.token);
+
+      // Redirigir según rol
+      if (role === 'medico') {
+        navigate('/doctor');
+      } else {
+        navigate('/paciente/historial');
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Error de login:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,8 +100,20 @@ export default function LoginPage() {
 
           {/* Acción principal: enviar formulario */}
           <div className="auth-actions mb-2">
-            <button type="submit" className="btn btn-primary btn-sm" style={{ minWidth: 140 }}>Iniciar Sesión</button>
+            <button 
+              type="submit" 
+              className="btn btn-primary btn-sm" 
+              style={{ minWidth: 140 }}
+              disabled={loading}
+            >
+              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            </button>
           </div>
+          {error && (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          )}
 
           {/* Enlace para ir a la página de registro */}
           <div className="auth-link">
