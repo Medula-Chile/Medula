@@ -15,6 +15,7 @@ import DoctorInicio from './pages/Doctor/DoctorInicio.jsx';
 import { AuthProvider } from './contexts/AuthContext';
 import DoctorProfile from './pages/Doctor/DoctorProfile.jsx';
 import DoctorSettings from './pages/Doctor/DoctorSettings.jsx';
+import DoctorSchedule from './pages/Doctor/DoctorSchedule.jsx';
 
 
 function App() {  return (
@@ -42,6 +43,7 @@ function App() {  return (
           <Route path="/doctor" element={<DoctorShell />}> 
             <Route index element={<Navigate to="inicio" replace />} />
             <Route path="inicio" element={<DoctorInicio />} />
+            <Route path="agenda" element={<DoctorSchedule />} />
             <Route path="perfil" element={<DoctorProfile />} />
             <Route path="configuracion" element={<DoctorSettings />} />
           </Route>
@@ -54,3 +56,4 @@ function App() {  return (
 }
 
 export default App;
+

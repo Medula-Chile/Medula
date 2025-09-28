@@ -1,25 +1,64 @@
-import React, { useState } from 'react';
-import Timeline from '../../components/paciente/historial/Timeline';
-import ConsultationDetail from '../../components/paciente/historial/ConsultationDetail';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import TimelineMedico from './components/TimelineMedico';
+import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function DoctorInicio() {
-  // Página inicial (dashboard) del Portal del Médico.
-  // Presenta un resumen con métricas, agenda próxima y notificaciones.
-  // Además, sección de trabajo con Timeline y detalle para iniciar atención.
-  const [items, setItems] = useState([
-    { id: 101, especialidad: 'Medicina General', medico: 'Dr. Juan Pérez', fecha: 'Hoy • 10:00', centro: 'Consulta 1', resumen: 'Juan Pérez, control general.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 102, especialidad: 'Resultados', medico: 'Dr. Ricardo Soto', fecha: 'Hoy • 10:30', centro: 'Consulta 2', resumen: 'Pedro Díaz, revisión de resultados.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 103, especialidad: 'Ginecología', medico: 'Dra. Ana Silva', fecha: 'Hoy • 11:00', centro: 'Consulta 3', resumen: 'Control post-tratamiento.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 104, especialidad: 'Cardiología', medico: 'Dra. Paula Contreras', fecha: 'Hoy • 11:30', centro: 'Consulta 4', resumen: 'Chequeo de hipertensión.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 105, especialidad: 'Endocrinología', medico: 'Dr. Marcelo Rivas', fecha: 'Hoy • 12:00', centro: 'Consulta 5', resumen: 'Ajuste terapéutico.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 106, especialidad: 'Hematología', medico: 'Dr. Ricardo Soto', fecha: 'Hoy • 12:30', centro: 'Consulta 6', resumen: 'Control anemia ferropénica.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 107, especialidad: 'Oftalmología', medico: 'Dr. Roberto Sánchez', fecha: 'Hoy • 13:00', centro: 'Consulta 7', resumen: 'Evaluación de agudeza visual.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-  ]);
+  // Vista principal del Médico
+  // Estructura: Timeline (izquierda), Detalle (centro), Panel derecho (métricas/avisos)
+  // Obtener el usuario (doctor) activo de la sesión
+  const { user } = useAuth();
+  const doctorName = (user?.fullName || user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ')).trim() || 'Médico/a';
+  const doctorSpecialty = (user?.specialty || user?.especialidad || user?.profession || user?.titulo || 'Medicina General');
+
+  // Datos base (mock) de atenciones del día. El nombre/especialidad del médico se inyectan abajo.
+  const baseItems = [
+    { id: 101, especialidad: 'Medicina General', fecha: 'Hoy • 10:00', centro: 'Consulta 1', resumen: 'Juan Pérez, control general.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
+    { id: 102, especialidad: 'Resultados', fecha: 'Hoy • 10:30', centro: 'Consulta 2', resumen: 'Pedro Díaz, revisión de resultados.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
+    { id: 103, especialidad: 'Ginecología', fecha: 'Hoy • 11:00', centro: 'Consulta 3', resumen: 'Control post-tratamiento.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
+    { id: 104, especialidad: 'Cardiología', fecha: 'Hoy • 11:30', centro: 'Consulta 4', resumen: 'Chequeo de hipertensión.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
+    { id: 105, especialidad: 'Endocrinología', fecha: 'Hoy • 12:00', centro: 'Consulta 5', resumen: 'Ajuste terapéutico.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
+    { id: 106, especialidad: 'Hematología', fecha: 'Hoy • 12:30', centro: 'Consulta 6', resumen: 'Control anemia ferropénica.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
+    { id: 107, especialidad: 'Oftalmología', fecha: 'Hoy • 13:00', centro: 'Consulta 7', resumen: 'Evaluación de agudeza visual.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
+  ];
+
+  // Estado: items inicializados con nombre y especialidad del médico activo
+  const [items, setItems] = useState(() => baseItems.map(it => ({ ...it, medico: doctorName, especialidad: doctorSpecialty })));
   const [activeId, setActiveId] = useState(101);
   const consulta = items.find(x => x.id === activeId);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ observaciones: '', presion: '', temperatura: '', pulso: '', proximoControl: '', recetaId: '', medicamentos: '' });
+  
+  // Formulario del modal de atención
+  const [form, setForm] = useState({
+    observaciones: '',
+    presion: '',
+    temperatura: '',
+    pulso: '',
+    proximoControl: '',
+    recetaId: '',
+    // Medicamentos detallados (nuevos)
+    medicamentosDet: [],
+    medNombre: '',
+    medDias: '',
+    medFrecuencia: '',
+    // Exámenes solicitados
+    examenes: [],
+    examenNombre: '',
+    // Licencia médica
+    licenciaOtorga: false,
+    licenciaDias: '',
+    licenciaNota: '',
+  });
   const [errors, setErrors] = useState({});
+
+  // Ref para enfocar el primer campo de medicamentos tras agregar
+  const medNombreRef = useRef(null);
+
+  // Mantener nombre/especialidad sincronizados con la sesión activa
+  useEffect(() => {
+    if (!doctorName && !doctorSpecialty) return;
+    setItems(prev => prev.map(it => ({ ...it, medico: doctorName || it.medico, especialidad: doctorSpecialty || it.especialidad })));
+  }, [doctorName, doctorSpecialty]);
 
   const openModal = () => {
     if (consulta) {
@@ -31,13 +70,64 @@ export default function DoctorInicio() {
         proximoControl: consulta.proximoControl && consulta.proximoControl !== '—' ? consulta.proximoControl : '',
         recetaId: consulta.recetaId || '',
         medicamentos: (consulta.medicamentos || []).join('\n'),
+        medicamentosDet: Array.isArray(consulta.medicamentosDet) ? consulta.medicamentosDet : [],
+        medNombre: '',
+        medDias: '',
+        medFrecuencia: '',
+        examenes: Array.isArray(consulta.examenes) ? consulta.examenes : [],
+        examenNombre: '',
+        licenciaOtorga: Boolean(consulta?.licencia?.otorga) || false,
+        licenciaDias: consulta?.licencia?.dias || '',
+        licenciaNota: consulta?.licencia?.nota || '',
       });
       setErrors({});
     }
     setOpen(true);
   };
+
+  // Previsualización en vivo en el detalle: mezclar datos del formulario sobre la consulta activa cuando el modal está abierto
+  const consultaPreview = useMemo(() => {
+    if (!consulta) return null;
+    if (!open) return consulta;
+    return {
+      ...consulta,
+      observaciones: form.observaciones?.trim() || consulta.observaciones,
+      proximoControl: form.proximoControl?.trim() || consulta.proximoControl,
+      recetaId: form.recetaId?.trim() || consulta.recetaId,
+      vitals: {
+        presion: form.presion?.trim() || consulta?.vitals?.presion || null,
+        temperatura: form.temperatura?.trim() || consulta?.vitals?.temperatura || null,
+        pulso: form.pulso?.trim() || consulta?.vitals?.pulso || null,
+      },
+      medicamentos: [],
+      medicamentosDet: Array.isArray(form.medicamentosDet) ? form.medicamentosDet : consulta.medicamentosDet,
+      examenes: Array.isArray(form.examenes) ? form.examenes : consulta.examenes,
+      licencia: {
+        otorga: !!form.licenciaOtorga,
+        dias: form.licenciaOtorga ? (Number(form.licenciaDias) || null) : null,
+        nota: form.licenciaOtorga ? (form.licenciaNota || '') : '',
+      },
+      estado: consulta.estado,
+    };
+  }, [consulta, open, form]);
   const closeModal = () => setOpen(false);
   const validate = () => { const e = {}; setErrors(e); return true; };
+
+  // Handler para agregar medicamento detallado y enfocarse en el siguiente
+  const addMedicamento = () => {
+    const nombre = form.medNombre?.trim();
+    const dias = form.medDias ? Number(form.medDias) : null;
+    const frecuencia = form.medFrecuencia?.trim();
+    if (!nombre) return;
+    const nuevo = { nombre, dias, frecuencia };
+    setForm(prev => ({
+      ...prev,
+      medicamentosDet: [...(prev.medicamentosDet || []), nuevo],
+      medNombre: '', medDias: '', medFrecuencia: ''
+    }));
+    // Reenfocar al primer input para ingresar una nueva línea
+    setTimeout(() => { medNombreRef.current?.focus(); }, 0);
+  };
   const handleSave = (ev) => {
     ev.preventDefault();
     if (!validate()) return;
@@ -47,8 +137,11 @@ export default function DoctorInicio() {
       proximoControl: form.proximoControl?.trim() || '—',
       recetaId: form.recetaId?.trim() || null,
       vitals: { presion: form.presion?.trim() || null, temperatura: form.temperatura?.trim() || null, pulso: form.pulso?.trim() || null },
-      medicamentos: form.medicamentos ? form.medicamentos.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [],
-      estado: 'En progreso',
+      medicamentos: [],
+      medicamentosDet: Array.isArray(form.medicamentosDet) ? form.medicamentosDet : [],
+      examenes: Array.isArray(form.examenes) ? form.examenes : [],
+      licencia: { otorga: !!form.licenciaOtorga, dias: form.licenciaOtorga ? Number(form.licenciaDias) || null : null, nota: form.licenciaOtorga ? (form.licenciaNota || '') : '' },
+      estado: 'Completado',
     })));
     setOpen(false);
   };
@@ -58,15 +151,10 @@ export default function DoctorInicio() {
       <div className="row g-3">
         {/* Nueva disposición: Timeline (izq), Detalle (centro) y Sidebar (der) */}
         <div className="col-12 col-lg-5 col-xl-4">
-          <Timeline items={items} activeId={activeId} onSelect={setActiveId} />
+          <TimelineMedico items={items} activeId={activeId} onSelect={setActiveId} onStart={openModal} />
         </div>
         <div className="col-12 col-lg-7 col-xl-5">
-          <div className="d-flex justify-content-end mb-2">
-            <button className="btn btn-primary btn-sm" onClick={openModal} disabled={!consulta}>
-              <i className="fas fa-stethoscope me-1" /> Iniciar atención
-            </button>
-          </div>
-          <ConsultationDetail consulta={consulta} />
+          <ConsultationDetailDoctor consulta={consultaPreview} />
         </div>
         <div className="col-12 col-xl-3">
           {/* Panel del Médico (métricas) */}
@@ -95,15 +183,7 @@ export default function DoctorInicio() {
                     </div>
                   </div>
                 </div>
-                <div className="col-12">
-                  <div className="p-3 border rounded bg-gray-100 d-flex align-items-center gap-3">
-                    <i className="fas fa-file-prescription text-warning fa-lg" />
-                    <div>
-                      <p className="mb-0 small text-muted">Recetas pendientes</p>
-                      <p className="mb-0 fw-semibold">3</p>
-                    </div>
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>
@@ -144,125 +224,12 @@ export default function DoctorInicio() {
                 <li className="py-2 border-bottom d-flex align-items-center gap-2">
                   <i className="fas fa-shield-alt text-success" /> Sistema conectado de forma segura.
                 </li>
-                <li className="py-2 d-flex align-items-center gap-2">
-                  <i className="fas fa-bell text-warning" /> Tienes 3 recetas por firmar.
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Sección anterior (dashboard) se mantiene abajo por ahora */}
-        <div className="col-12">
-          <div className="card">
-            <div className="card-header bg-white d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Panel del Médico</h5>
-              <span className="custom-badge border-success text-success">Beta</span>
-            </div>
-            <div className="card-body">
-              {/* Descripción breve del panel */}
-              <p className="text-muted-foreground mb-3">
-                Bienvenido/a al panel del profesional. Aquí podrás gestionar tu agenda, pacientes y recetas.
-              </p>
-              {/* Tarjetas de métricas */}
-              <div className="row g-3">
-                <div className="col-12 col-md-4">
-                  <div className="p-3 border rounded bg-gray-100 d-flex align-items-center gap-3">
-                    <i className="fas fa-calendar-check text-primary fa-lg" />
-                    <div>
-                      <p className="mb-0 small text-muted">Citas de hoy</p>
-                      <p className="mb-0 fw-semibold">5</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-12 col-md-4">
-                  <div className="p-3 border rounded bg-gray-100 d-flex align-items-center gap-3">
-                    <i className="fas fa-user-md text-success fa-lg" />
-                    <div>
-                      <p className="mb-0 small text-muted">Pacientes en sala</p>
-                      <p className="mb-0 fw-semibold">2</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-12 col-md-4">
-                  <div className="p-3 border rounded bg-gray-100 d-flex align-items-center gap-3">
-                    <i className="fas fa-file-prescription text-warning fa-lg" />
-                    <div>
-                      <p className="mb-0 small text-muted">Recetas pendientes</p>
-                      <p className="mb-0 fw-semibold">3</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Agenda próxima */}
-        <div className="col-12 col-lg-6">
-          <div className="card">
-            <div className="card-header bg-white">
-              <h6 className="mb-0">Agenda Próxima</h6>
-            </div>
-            <div className="card-body">
-              <ul className="list-unstyled mb-0 small">
-                <li className="d-flex justify-content-between py-2 border-bottom">
-                  <span>10:00 - Juan Pérez</span>
-                  <span className="text-muted">Consulta General</span>
-                </li>
-                <li className="d-flex justify-content-between py-2 border-bottom">
-                  <span>10:30 - María Soto</span>
-                  <span className="text-muted">Controles</span>
-                </li>
-                <li className="d-flex justify-content-between py-2">
-                  <span>11:00 - Pedro Díaz</span>
-                  <span className="text-muted">Resultados</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Notificaciones */}
-        <div className="col-12 col-lg-6">
-          <div className="card">
-            <div className="card-header bg-white">
-              <h6 className="mb-0">Notificaciones</h6>
-            </div>
-            <div className="card-body">
-              <ul className="list-unstyled mb-0 small">
-                <li className="py-2 border-bottom d-flex align-items-center gap-2">
-                  <i className="fas fa-info-circle text-primary" /> Nueva derivación recibida para revisión.
-                </li>
-                <li className="py-2 border-bottom d-flex align-items-center gap-2">
-                  <i className="fas fa-shield-alt text-success" /> Sistema conectado de forma segura.
-                </li>
-                <li className="py-2 d-flex align-items-center gap-2">
-                  <i className="fas fa-bell text-warning" /> Tienes 3 recetas por firmar.
-                </li>
+                
               </ul>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Panel de trabajo: Timeline y Detalle para iniciar atención */}
-      <div className="col-12">
-        <div className="row g-3">
-          <div className="col-12 col-xl-5">
-            <Timeline items={items} activeId={activeId} onSelect={setActiveId} />
-          </div>
-          <div className="col-12 col-xl-7">
-            <div className="d-flex justify-content-end mb-2">
-              <button className="btn btn-primary btn-sm" onClick={openModal} disabled={!consulta}>
-                <i className="fas fa-stethoscope me-1" /> Iniciar atención
-              </button>
-            </div>
-            <ConsultationDetail consulta={consulta} />
-          </div>
-        </div>
-      </div>
-
     </div>
 
     {/* Modal de registro de atención (estilo PerfilPage) */}
@@ -301,10 +268,93 @@ export default function DoctorInicio() {
                   <label className="form-label">Folio de Receta (opcional)</label>
                   <input type="text" className="form-control" value={form.recetaId} onChange={(e)=>setForm({ ...form, recetaId: e.target.value })} placeholder="R-123" />
                 </div>
-                <div className="col-12">
-                  <label className="form-label">Medicamentos (uno por línea)</label>
-                  <textarea className="form-control" rows={3} value={form.medicamentos} onChange={(e)=>setForm({ ...form, medicamentos: e.target.value })} placeholder="Paracetamol 500mg • 1 cada 8h x 3 días
-Ibuprofeno 200mg • 1 cada 12h x 5 días" />
+                {/* Se elimina el textarea legacy de medicamentos para usar solo la sección detallada */}
+                {/* Medicamentos detallados (nuevos): nombre, días, frecuencia */}
+                <div className="col-12 mt-2">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <label className="form-label mb-0">Medicamentos detallados</label>
+                  </div>
+                  <div className="row g-2 align-items-end">
+                    <div className="col-12 col-md-5">
+                      <label className="form-label">Nombre</label>
+                      <input ref={medNombreRef} type="text" className="form-control" value={form.medNombre} onChange={(e)=>setForm({ ...form, medNombre: e.target.value })} onKeyDown={(e)=>{ if (e.key==='Enter'){ e.preventDefault(); addMedicamento(); } }} placeholder="Paracetamol 500mg" />
+                    </div>
+                    <div className="col-6 col-md-3">
+                      <label className="form-label">Días</label>
+                      <input type="number" min="1" className="form-control" value={form.medDias} onChange={(e)=>setForm({ ...form, medDias: e.target.value })} onKeyDown={(e)=>{ if (e.key==='Enter'){ e.preventDefault(); addMedicamento(); } }} placeholder="3" />
+                    </div>
+                    <div className="col-6 col-md-3">
+                      <label className="form-label">Frecuencia</label>
+                      <input type="text" className="form-control" value={form.medFrecuencia} onChange={(e)=>setForm({ ...form, medFrecuencia: e.target.value })} onKeyDown={(e)=>{ if (e.key==='Enter'){ e.preventDefault(); addMedicamento(); } }} placeholder="1 cada 8h" />
+                    </div>
+                    <div className="col-12 col-md-1 d-grid">
+                      <button type="button" className="btn btn-outline-primary btn-sm" onClick={addMedicamento}>Agregar</button>
+                    </div>
+                  </div>
+                  {Array.isArray(form.medicamentosDet) && form.medicamentosDet.length > 0 && (
+                    <ul className="list-group list-group-flush mt-2 small">
+                      {form.medicamentosDet.map((m, idx) => (
+                        <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+                          <span>{m.nombre} {m.dias?`• ${m.dias} días`:''} {m.frecuencia?`• ${m.frecuencia}`:''}</span>
+                          <button type="button" className="btn btn-link btn-sm text-danger" onClick={()=>{
+                            setForm(prev => ({
+                              ...prev,
+                              medicamentosDet: prev.medicamentosDet.filter((_, i)=>i!==idx)
+                            }));
+                          }}>Quitar</button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Exámenes solicitados */}
+                <div className="col-12 mt-3">
+                  <label className="form-label">Solicitar exámenes</label>
+                  <div className="row g-2 align-items-end">
+                    <div className="col-12 col-md-10">
+                      <input type="text" className="form-control" value={form.examenNombre} onChange={(e)=>setForm({ ...form, examenNombre: e.target.value })} placeholder="Hemograma, Radiografía de tórax, etc." />
+                    </div>
+                    <div className="col-12 col-md-2 d-grid">
+                      <button type="button" className="btn btn-outline-primary btn-sm" onClick={()=>{
+                        const nombre = form.examenNombre?.trim();
+                        if (!nombre) return;
+                        setForm(prev => ({ ...prev, examenes: [...(prev.examenes||[]), nombre], examenNombre: '' }));
+                      }}>Agregar</button>
+                    </div>
+                  </div>
+                  {Array.isArray(form.examenes) && form.examenes.length > 0 && (
+                    <ul className="list-group list-group-flush mt-2 small">
+                      {form.examenes.map((ex, idx) => (
+                        <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+                          <span>{ex}</span>
+                          <button type="button" className="btn btn-link btn-sm text-danger" onClick={()=>{
+                            setForm(prev => ({ ...prev, examenes: prev.examenes.filter((_, i)=>i!==idx) }));
+                          }}>Quitar</button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Licencia médica */}
+                <div className="col-12 mt-3">
+                  <div className="form-check form-switch">
+                    <input className="form-check-input" type="checkbox" id="licenciaSwitch" checked={!!form.licenciaOtorga} onChange={(e)=>setForm({ ...form, licenciaOtorga: e.target.checked })} />
+                    <label className="form-check-label" htmlFor="licenciaSwitch">Otorgar licencia médica</label>
+                  </div>
+                  {form.licenciaOtorga && (
+                    <div className="row g-2 mt-1">
+                      <div className="col-12 col-md-3">
+                        <label className="form-label">Días</label>
+                        <input type="number" min="1" className="form-control" value={form.licenciaDias} onChange={(e)=>setForm({ ...form, licenciaDias: e.target.value })} placeholder="7" />
+                      </div>
+                      <div className="col-12 col-md-9">
+                        <label className="form-label">Notas</label>
+                        <input type="text" className="form-control" value={form.licenciaNota} onChange={(e)=>setForm({ ...form, licenciaNota: e.target.value })} placeholder="Motivo y recomendaciones" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="d-flex justify-content-end gap-2 mt-3">
