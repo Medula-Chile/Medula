@@ -1,6 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-
+// Páginas de autenticación
+import LoginPage from './components/auth/LoginPage.jsx';
+import RegisterPage from './components/auth/RegisterPage.jsx';
+// Páginas del Paciente
 import PacienteShell from './components/paciente/layout/PacienteShell';
 import HistorialPage from './components/paciente/historial/HistorialPage';
 import MedicamentosPage from './components/paciente/medicamentos/MedicamentosPage';
@@ -8,8 +11,8 @@ import RecetasPage from './components/paciente/recetas/RecetasPage';
 import PerfilPage from './components/paciente/perfil/PerfilPage';
 import ConfiguracionPage from './components/paciente/configuracion/ConfiguracionPage';
 import PlaceholderPage from './components/paciente/PlaceholderPage';
-import LoginPage from './components/auth/LoginPage.jsx';
-import RegisterPage from './components/auth/RegisterPage.jsx';
+
+// Páginas del Médico
 import DoctorShell from './pages/Doctor/DoctorShell.jsx';
 import DoctorInicio from './pages/Doctor/DoctorInicio.jsx';
 import { AuthProvider } from './contexts/AuthContext';
@@ -27,7 +30,7 @@ function App() {  return (
           {/* Rutas de autenticación */}
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
-
+          {/* Rutas del Paciente */}
           <Route path="/paciente" element={<PacienteShell />}> 
             <Route index element={<Navigate to="historial" replace />} />
             <Route path="historial" element={<HistorialPage />} />
