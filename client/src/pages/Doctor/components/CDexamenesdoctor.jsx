@@ -14,7 +14,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
     let mounted = true;
     axios.get('/mock/recetas.json')
       .then(r => { if (mounted) setRecetas(Array.isArray(r.data) ? r.data : []); })
-      .catch(() => {});
+      .catch(() => { });
     return () => { mounted = false; };
   }, []);
 
@@ -36,11 +36,11 @@ export default function ConsultationDetailDoctor({ consulta }) {
   const legacyMeds = Array.isArray(consulta.medicamentos) ? consulta.medicamentos : [];
   const structMeds = Array.isArray(consulta.medicamentosDet)
     ? consulta.medicamentosDet.map(m => {
-        const parts = [m?.nombre].filter(Boolean);
-        if (m?.dias) parts.push(`${m.dias} días`);
-        if (m?.frecuencia) parts.push(m.frecuencia);
-        return parts.length ? parts.join(' • ') : null;
-      }).filter(Boolean)
+      const parts = [m?.nombre].filter(Boolean);
+      if (m?.dias) parts.push(`${m.dias} días`);
+      if (m?.frecuencia) parts.push(m.frecuencia);
+      return parts.length ? parts.join(' • ') : null;
+    }).filter(Boolean)
     : [];
   const medsToShow = [...legacyMeds, ...structMeds];
 
@@ -68,10 +68,10 @@ export default function ConsultationDetailDoctor({ consulta }) {
         <div className="mb-4">
           <h6 className="fw-medium mb-2">Orden de examen R-001</h6>
           <p className="text-muted-foreground small bg-gray-100 p-3 rounded"><li>Nombre completo:Maria Elene Contreras</li>
-<li>RUT: 12.345.678-9</li>
-<li>Edad: 26 años</li>
-<li>Sexo: Femenino</li>
-<li>Fecha de emisión: 29/09/2025</li>
+            <li>RUT: 12.345.678-9</li>
+            <li>Edad: 26 años</li>
+            <li>Sexo: Femenino</li>
+            <li>Fecha de emisión: 29/09/2025</li>
           </p>
         </div>
 
@@ -86,8 +86,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
 
         <div className="row mb-4 small">
           <div className="col-6 col-md-6 mb-2">
-            <p className="text-muted-foreground mb-0">Nombre del hospital</p>
-            <li>Hospital Felix Bulnes</li>
+            <p className="text-muted-foreground mb-0">Nombre del hospital <li style={{ color: "black", marginLeft: 15 }}>Hospital Felix Bulnes</li></p>
             <p className="fw-medium mb-0"></p>
             <p className="fw-medium mb-0"></p>
           </div>
@@ -105,21 +104,21 @@ export default function ConsultationDetailDoctor({ consulta }) {
           </div>
           <div className="col-6 col-md-6 mb-2">
             <p className="text-muted-foreground mb-0">Lista de exámenes solicitados</p>
-              <li>Hemograma</li>
-              <li>Radiografía de tórax</li>
-              <li>Examen de colesterol</li>
+            <li style={{ color: "black", marginLeft: 15 }}>Hemograma</li>
+            <li style={{ color: "black", marginLeft: 15 }}>Radiografía de tórax</li>
+            <li style={{ color: "black", marginLeft: 15 }}>Examen de colesterol</li>
             <p className="fw-medium mb-0">
-              {consulta.recetaId
+              {/* {consulta.recetaId
                 ? (<a className="link-primary" href={`/doctor/recetas?folio=${encodeURIComponent(consulta.recetaId)}`}>Ver receta {consulta.recetaId}</a>)
-                : '—'}
+                : '—'} */}
             </p>
           </div>
         </div>
 
         <div>
           <h6 className="fw-medium mb-2">Observaciones adicionales</h6>
-          <li>Recomendaciones para el paciente (“no tomar medicamentos antes del examen, Ayuno 9 horas minimo y maximo 12 horas. ”)</li>
-          <div className="d-flex flex-column gap-2">
+          <li style={{ color: "black", marginLeft: 15 }}>Recomendaciones para el paciente (“no tomar medicamentos antes del examen, Ayuno 9 horas minimo y maximo 12 horas. ”)</li>
+          {/* <div className="d-flex flex-column gap-2">
             {((medsFromReceta && medsFromReceta.length > 0) || medsToShow.length > 0)
               ? (
                 <>
@@ -142,11 +141,11 @@ export default function ConsultationDetailDoctor({ consulta }) {
                   <span className="small">—</span>
                 </div>
               )}
-          </div>
+          </div> */}
         </div>
 
         {/* Exámenes solicitados */}
-        <div className="mt-4">
+        {/* <div className="mt-4">
           <h6 className="fw-medium mb-2"></h6>
           <div className="d-flex flex-column gap-2">
             {examenes.length > 0 ? (
@@ -163,7 +162,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
               </div>
             )}
           </div>
-        </div>
+        </div> */}
 
         {/* Licencia médica */}
         <div className="mt-4">
