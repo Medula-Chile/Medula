@@ -11,6 +11,7 @@ import RecetasPage from './components/paciente/recetas/RecetasPage';
 import PerfilPage from './components/paciente/perfil/PerfilPage';
 import ConfiguracionPage from './components/paciente/configuracion/ConfiguracionPage';
 import PlaceholderPage from './components/paciente/PlaceholderPage';
+import ExamenPage from './components/paciente/examenes/Examenes.jsx';
 
 // Páginas del Médico
 import DoctorShell from './pages/Doctor/DoctorShell.jsx';
@@ -19,7 +20,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import DoctorProfile from './pages/Doctor/DoctorProfile.jsx';
 import DoctorSettings from './pages/Doctor/DoctorSettings.jsx';
 import DoctorSchedule from './pages/Doctor/DoctorSchedule.jsx';
-
+import DoctorExamen from './pages/Doctor/Doctorexamenes.jsx';
 
 function App() {  return (
     <AuthProvider>
@@ -38,7 +39,8 @@ function App() {  return (
             <Route path="recetas" element={<RecetasPage />} />
             <Route path="perfil" element={<PerfilPage />} />
             <Route path="configuracion" element={<ConfiguracionPage />} />
-            <Route path="examenes" element={<PlaceholderPage title="Mis Exámenes" description="Vista en desarrollo." />} />
+            {/* <Route path="examenes" element={<PlaceholderPage title="Mis Exámenes" description="Vista en desarrollo." />} /> */}
+            <Route path="examenes" element={<ExamenPage />} />
             <Route path="centro" element={<PlaceholderPage title="Centro Médico" description="Vista en desarrollo." />} />
           </Route>
 
@@ -47,6 +49,7 @@ function App() {  return (
             <Route index element={<Navigate to="inicio" replace />} />
             <Route path="inicio" element={<DoctorInicio />} />
             <Route path="agenda" element={<DoctorSchedule />} />
+            <Route path="examenes" element={<DoctorExamen />} />
             <Route path="perfil" element={<DoctorProfile />} />
             <Route path="configuracion" element={<DoctorSettings />} />
           </Route>
