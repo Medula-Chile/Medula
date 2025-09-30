@@ -12,6 +12,7 @@ import PerfilPage from './components/paciente/perfil/PerfilPage';
 import ConfiguracionPage from './components/paciente/configuracion/ConfiguracionPage';
 import PlaceholderPage from './components/paciente/PlaceholderPage';
 import ExamenPage from './components/paciente/examenes/Examenes.jsx';
+import CentroPage from './components/paciente/centro/centros.jsx';
 
 // Páginas del Médico
 import DoctorShell from './pages/Doctor/DoctorShell.jsx';
@@ -39,9 +40,8 @@ function App() {  return (
             <Route path="recetas" element={<RecetasPage />} />
             <Route path="perfil" element={<PerfilPage />} />
             <Route path="configuracion" element={<ConfiguracionPage />} />
-            {/* <Route path="examenes" element={<PlaceholderPage title="Mis Exámenes" description="Vista en desarrollo." />} /> */}
             <Route path="examenes" element={<ExamenPage />} />
-            <Route path="centro" element={<PlaceholderPage title="Centro Médico" description="Vista en desarrollo." />} />
+            <Route path="centro" element={<CentroPage/>} />
           </Route>
 
           {/* Rutas del Médico */}
