@@ -1,14 +1,14 @@
-import express from 'express';
-import {
+const express = require('express');
+const router = express.Router();
+const {
     crearHistorial,
     obtenerHistorial,
     obtenerHistorialPorId,
     obtenerHistorialPorPaciente,
     actualizarHistorial,
     eliminarHistorial
-} from '../controllers/historialController.js';
+} = require('../controllers/historialController.js');
 
-const router = express.Router();
 
 router.post('/', crearHistorial);
 router.get('/', obtenerHistorial);
@@ -17,4 +17,4 @@ router.get('/:id', obtenerHistorialPorId);
 router.put('/:id', actualizarHistorial);
 router.delete('/:id', eliminarHistorial);
 
-export default router;
+module.exports = router;

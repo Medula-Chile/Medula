@@ -1,8 +1,8 @@
-import Usuario from '../models/User.js';
-import bcrypt from 'bcryptjs';
+const Usuario = require('../models/User');
+const bcrypt = require('bcryptjs');
 
 // Crear usuario
-export const crearUsuario = async (req, res) => {
+exports.crearUsuario = async (req, res) => {
     try {
         const { nombre, email, contraseña, rol, Rut } = req.body;
 
@@ -51,7 +51,7 @@ export const crearUsuario = async (req, res) => {
 };
 
 // Obtener todos los usuarios
-export const obtenerUsuarios = async (req, res) => {
+exports.obtenerUsuarios = async (req, res) => {
     try {
         const { pagina = 1, limite = 10, rol } = req.query;
         const skip = (pagina - 1) * limite;
@@ -82,7 +82,7 @@ export const obtenerUsuarios = async (req, res) => {
 };
 
 // Obtener usuario por ID
-export const obtenerUsuarioPorId = async (req, res) => {
+exports.obtenerUsuarioPorId = async (req, res) => {
     try {
         const usuario = await Usuario.findById(req.params.id)
             .select('-contraseña_hash');
@@ -101,7 +101,7 @@ export const obtenerUsuarioPorId = async (req, res) => {
 };
 
 // Actualizar usuario
-export const actualizarUsuario = async (req, res) => {
+exports.actualizarUsuario = async (req, res) => {
     try {
         const { nombre, email, rol, Rut } = req.body;
 
@@ -128,7 +128,7 @@ export const actualizarUsuario = async (req, res) => {
 };
 
 // Eliminar usuario
-export const eliminarUsuario = async (req, res) => {
+exports.eliminarUsuario = async (req, res) => {
     try {
         const usuarioEliminado = await Usuario.findByIdAndDelete(req.params.id);
 

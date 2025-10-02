@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const medicoSchema = new mongoose.Schema({
     usuario_id: {
@@ -49,7 +49,7 @@ const medicoSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'Medicos' // Especificamos el nombre exacto de la colección en MongoDB
+    collection: 'Medicos'
 });
 
 medicoSchema.index({ usuario_id: 1 });
@@ -57,4 +57,4 @@ medicoSchema.index({ centro_id: 1 });
 medicoSchema.index({ especialidad: 1 });
 medicoSchema.index({ activo: 1 });
 
-export default mongoose.model('Medico', medicoSchema);
+module.exports = mongoose.model('Medico', medicoSchema);

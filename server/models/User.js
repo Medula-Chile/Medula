@@ -1,46 +1,48 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
+const usuarioSchema = new mongoose.Schema({
     nombre: {
         type: String,
-        required: [true, 'El nombre es requerido'],
-        trim: true
+        required: [true, 'El nombre es obligatorio'],
+        trim: true,
+        maxlength: [100, 'El nombre no puede exceder los 100 caracteres']
     },
     email: {
         type: String,
-        required: [true, 'El email es requerido'],
+        required: [true, 'El email es obligatorio'],
         unique: true,
+        lowercase: true,
         trim: true,
-        lowercase: true
+        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Por favor ingrese un email válido']
     },
     contraseña_hash: {
         type: String,
-        required: [true, 'La contraseña es requerida']
+        required: [true, 'La contraseña es obligatoria'],
+        minlength: [6, 'La contraseña debe tener al menos 6 caracteres']
     },
     rol: {
         type: String,
-        enum: ['paciente', 'medico', 'admin'],
+        required: true,
+        enum: ['paciente', 'medico', 'administrador'],
         default: 'paciente'
     },
-    rut: {
+    Rut: {
         type: String,
-        required: [true, 'El RUT es requerido'],
+        required: [true, 'El RUT es obligatorio'],
         unique: true,
         trim: true
     },
     fecha_registro: {
         type: Date,
         default: Date.now
-    },
-    estado: {
-        type: Boolean,
-        default: true
     }
 }, {
     timestamps: true,
-    collection: 'Usuarios' // Especificamos el nombre exacto de la colección en MongoDB
+    collection: 'Usuarios'
 });
 
-const User = mongoose.model('User', userSchema);
+usuarioSchema.index({ email: 1 });
+usuarioSchema.index({ Rut: 1 });
+usuarioSchema.index({ rol: 1 });
 
-module.exports = User;
+module.exports = mongoose.model('Usuario', usuarioSchema);

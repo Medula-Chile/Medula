@@ -1,5 +1,6 @@
-import express from 'express';
-import {
+const express = require('express');
+const router = express.Router();
+const {
     crearMedicamento,
     obtenerMedicamentos,
     obtenerMedicamentoPorId,
@@ -7,9 +8,8 @@ import {
     actualizarMedicamento,
     eliminarMedicamento,
     desactivarMedicamento
-} from '../controllers/medicamentoController.js';
+} =  require('../controllers/medicamentoController.js');
 
-const router = express.Router();
 
 router.post('/', crearMedicamento);
 router.get('/', obtenerMedicamentos);
@@ -19,4 +19,4 @@ router.put('/:id', actualizarMedicamento);
 router.delete('/:id', eliminarMedicamento);
 router.patch('/:id/desactivar', desactivarMedicamento);
 
-export default router;
+module.exports = router;

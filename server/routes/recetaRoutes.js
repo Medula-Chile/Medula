@@ -1,14 +1,14 @@
-import express from 'express';
-import {
+const express = require('express');
+const router = express.Router();
+const {
     crearReceta,
     obtenerRecetas,
     obtenerRecetaPorId,
     obtenerRecetasPorPaciente,
     actualizarReceta,
     eliminarReceta
-} from '../controllers/recetaController.js';
+}=require('../controllers/recetaController.js');
 
-const router = express.Router();
 
 router.post('/', crearReceta);
 router.get('/', obtenerRecetas);
@@ -17,4 +17,4 @@ router.get('/:id', obtenerRecetaPorId);
 router.put('/:id', actualizarReceta);
 router.delete('/:id', eliminarReceta);
 
-export default router;
+module.exports = router;

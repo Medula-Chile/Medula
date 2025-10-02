@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const citaMedicaSchema = new mongoose.Schema({
   paciente_id: {
@@ -38,7 +38,7 @@ const citaMedicaSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  collection: 'Citas' // Especificamos el nombre exacto de la colección en MongoDB
+  collection: 'Citas'
 });
 
 citaMedicaSchema.index({ paciente_id: 1 });
@@ -47,4 +47,4 @@ citaMedicaSchema.index({ centro_id: 1 });
 citaMedicaSchema.index({ fecha_hora: 1 });
 citaMedicaSchema.index({ estado: 1 });
 
-export default mongoose.model('CitaMedica', citaMedicaSchema);
+module.exports = mongoose.model('CitaMedica', citaMedicaSchema);

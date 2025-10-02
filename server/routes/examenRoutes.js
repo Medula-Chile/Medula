@@ -1,14 +1,14 @@
-import express from 'express';
-import {
+const express = require('express');
+const router = express.Router();
+const {
     crearExamen,
     obtenerExamenes,
     obtenerExamenPorId,
     obtenerExamenesPorPaciente,
     actualizarExamen,
     eliminarExamen
-} from '../controllers/examenController.js';
+} = require('../controllers/examenController.js');
 
-const router = express.Router();
 
 router.post('/', crearExamen);
 router.get('/', obtenerExamenes);
@@ -17,4 +17,4 @@ router.get('/:id', obtenerExamenPorId);
 router.put('/:id', actualizarExamen);
 router.delete('/:id', eliminarExamen);
 
-export default router;
+module.exports = router;

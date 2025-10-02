@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const pacienteSchema = new mongoose.Schema({
     usuario_id: {
@@ -43,10 +43,10 @@ const pacienteSchema = new mongoose.Schema({
     }]
 }, {
     timestamps: true,
-    collection: 'Pacientes' // Especificamos el nombre exacto de la colección en MongoDB
+    collection: 'Pacientes'
 });
 
 pacienteSchema.index({ usuario_id: 1 });
 pacienteSchema.index({ prevision: 1 });
 
-export default mongoose.model('Paciente', pacienteSchema);
+module.exports = mongoose.model('Paciente', pacienteSchema);
