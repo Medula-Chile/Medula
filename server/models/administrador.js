@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const administradorSchema = new mongoose.Schema({
     usuario_id: {
@@ -28,11 +28,11 @@ const administradorSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'Administradores' // Especificamos el nombre exacto de la colección en MongoDB
+    collection: 'administradores'
 });
 
 administradorSchema.index({ usuario_id: 1 });
 administradorSchema.index({ nivel_acceso: 1 });
 administradorSchema.index({ activo: 1 });
 
-export default mongoose.model('Administrador', administradorSchema);
+module.exports = mongoose.model('Administrador', administradorSchema);

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const examenSchema = new mongoose.Schema({
     paciente_id: {
@@ -28,7 +28,7 @@ const examenSchema = new mongoose.Schema({
         trim: true
     },
     archivo_adjunto: {
-        type: String, // URL o path del archivo
+        type: String,
         trim: true
     },
     estado: {
@@ -43,7 +43,7 @@ const examenSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'Examen' // Especificamos el nombre exacto de la colección en MongoDB
+    collection: 'Examen'
 });
 
 examenSchema.index({ paciente_id: 1 });
@@ -52,4 +52,4 @@ examenSchema.index({ tipo_examen: 1 });
 examenSchema.index({ estado: 1 });
 examenSchema.index({ fecha_solicitud: -1 });
 
-export default mongoose.model('Examen', examenSchema);
+module.exports = mongoose.model('Examen', examenSchema);

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const historialMedicoSchema = new mongoose.Schema({
     paciente_id: {
@@ -25,34 +25,11 @@ const historialMedicoSchema = new mongoose.Schema({
         trim: true
     },
     medicamentos: [{
-        medicamento_id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Medicamento'
-        },
-        nombre: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        dosis: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        frecuencia: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        duracion: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        instrucciones: {
-            type: String,
-            trim: true
-        }
+        nombre: String,
+        dosis: String,
+        frecuencia: String,
+        duracion: String,
+        instrucciones: String
     }],
     notas: {
         type: String,
@@ -61,11 +38,11 @@ const historialMedicoSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'Historial' // Nombre exacto de la colección en MongoDB
+    collection: 'historial'
 });
 
 historialMedicoSchema.index({ paciente_id: 1 });
 historialMedicoSchema.index({ profesional_id: 1 });
 historialMedicoSchema.index({ fecha: -1 });
 
-export default mongoose.model('HistorialMedico', historialMedicoSchema);
+module.exports = mongoose.model('HistorialMedico', historialMedicoSchema);

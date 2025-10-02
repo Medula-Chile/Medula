@@ -6,8 +6,7 @@ const {
     obtenerCitaPorId,
     actualizarCita,
     eliminarCita
-} = require ('../controllers/citaController.js');
-
+} = require('../controllers/citaController');
 
 router.post('/', crearCita);
 router.get('/', obtenerCitas);

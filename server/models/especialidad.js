@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const especialidadSchema = new mongoose.Schema({
     nombre: {
@@ -27,11 +27,11 @@ const especialidadSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'Especialidades' // Especificamos el nombre exacto de la colección en MongoDB
+    collection: 'especialidades'
 });
 
 especialidadSchema.index({ nombre: 1 });
 especialidadSchema.index({ area_clinica: 1 });
 especialidadSchema.index({ activo: 1 });
 
-export default mongoose.model('Especialidad', especialidadSchema);
+module.exports = mongoose.model('Especialidad', especialidadSchema);

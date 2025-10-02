@@ -32,14 +32,14 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/usuarioRoutes'));
 app.use('/api/pacientes', require('./routes/pacienteroutes'));
 app.use('/api/medicos', require('./routes/medicoRoutes'));
-// app.use('/api/citas', require('./routes/citaRoutes'));
-// app.use('/api/historial', require('./routes/historialRoutes'));
-// app.use('/api/centros', require('./routes/centroRoutes'));
-// app.use('/api/especialidades', require('./routes/especialidadRoutes'));
-// app.use('/api/recetas', require('./routes/recetaRoutes'));
-// app.use('/api/administradores', require('./routes/administradorRoutes'));
-// app.use('/api/examenes', require('./routes/examenRoutes'));
-// app.use('/api/medicamentos', require('./routes/medicamentoRoutes'));
+app.use('/api/administradores', require('./routes/administradorRoutes'));
+app.use('/api/citas', require('./routes/citaRoutes'));
+app.use('/api/historial', require('./routes/historialRoutes'));
+app.use('/api/centros', require('./routes/centroRoutes'));
+app.use('/api/especialidades', require('./routes/especialidadRoutes'));
+app.use('/api/recetas', require('./routes/recetaRoutes'));
+app.use('/api/examenes', require('./routes/examenRoutes'));
+app.use('/api/medicamentos', require('./routes/medicamentoRoutes'));
 
 // Log de variables de entorno
 console.log('\n=== Variables de Entorno Cargadas ===');

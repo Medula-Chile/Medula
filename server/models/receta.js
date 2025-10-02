@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const recetaSchema = new mongoose.Schema({
     paciente_id: {
@@ -52,7 +52,7 @@ const recetaSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection:'Recetas' // Especificamos el nombre exacto de la colección en MongoDB
+    collection: 'Recetas'
 });
 
 recetaSchema.index({ paciente_id: 1 });
@@ -60,4 +60,4 @@ recetaSchema.index({ medico_id: 1 });
 recetaSchema.index({ fecha_emision: -1 });
 recetaSchema.index({ activa: 1 });
 
-export default mongoose.model('Receta', recetaSchema);
+module.exports = mongoose.model('Receta', recetaSchema);

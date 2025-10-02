@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const medicamentoSchema = new mongoose.Schema({
     nombre: {
@@ -46,7 +46,7 @@ const medicamentoSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'Medicamentos' // Especificamos el nombre exacto de la colección en MongoDB
+    collection: 'medicamentos'
 });
 
 medicamentoSchema.index({ nombre: 1 });
@@ -54,4 +54,4 @@ medicamentoSchema.index({ principio_activo: 1 });
 medicamentoSchema.index({ laboratorio: 1 });
 medicamentoSchema.index({ activo: 1 });
 
-export default mongoose.model('Medicamento', medicamentoSchema);
+module.exports = mongoose.model('Medicamento', medicamentoSchema);

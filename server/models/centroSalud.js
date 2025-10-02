@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const centroSaludSchema = new mongoose.Schema({
     nombre: {
@@ -33,11 +33,11 @@ const centroSaludSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'CentrosSalud' // Especificamos el nombre exacto de la colección en MongoDB
+    collection: 'centrosSalud'
 });
 
 centroSaludSchema.index({ nombre: 1 });
 centroSaludSchema.index({ comuna: 1 });
 centroSaludSchema.index({ activo: 1 });
 
-export default mongoose.model('CentroSalud', centroSaludSchema);
+module.exports = mongoose.model('CentroSalud', centroSaludSchema);
