@@ -1,0 +1,171 @@
+:root{
+  --brand-1:#29A5FF;
+  --brand-2:#1560FF;
+  --ink:#0f1b2d;
+  --ink-2:#346bc4;
+  --bg-start:#f3f9ff;
+  --bg-end:#e1efff;
+  --border:#e6eef9;
+  --hero-title:#0d2351;
+  --hero-sub:#747884;
+  --feature-title:#2f6ef7;
+  --feature-desc:#354765;
+}
+
+body{
+  background: linear-gradient(180deg,var(--bg-start),var(--bg-end));
+  color:var(--ink);
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+}
+
+.logo-lg{ height:82px; width:auto; }
+@media (min-width:992px){ .logo-lg{ height:92px; } }
+
+.hero-title{
+  font-weight:1000;
+  font-size: clamp(2.2rem, 1.6rem + 2.6vw, 3.8rem);
+  line-height:1.05;
+  letter-spacing:-.02em;
+  color:var(--hero-title);
+}
+
+.hero-sub{
+  color:var(--hero-sub);
+  font-size: clamp(1.05rem, 1rem + .5vw, 1.3rem);
+  font-weight:800;
+}
+
+.btn-grad{
+  display:inline-block;
+  text-decoration:none;
+  color:#fff !important;
+  font-weight:900;
+  padding:12px 22px;
+  border-radius:14px;
+  background: linear-gradient(90deg,var(--brand-1),var(--brand-2));
+  box-shadow:0 10px 24px rgba(21,96,255,.22);
+}
+.btn-grad:hover{ filter:brightness(.98); color:#fff; }
+.btn-xl{ padding:16px 28px; font-size:1.15rem; border-radius:16px; }
+
+.feature{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:22px 20px;
+  box-shadow:0 8px 24px rgba(14, 42, 97, 0.06);
+  text-align:center;
+}
+.feature-icon img{
+  width:44px; height:44px; object-fit:contain;
+  margin-bottom:14px;
+}
+.feature-title{
+  font-weight:1000;
+  color:var(--feature-title);
+  margin:6px 0 6px;
+}
+.feature-desc{
+  color:var(--feature-desc);
+  font-weight:700;
+  margin:0;
+}
+
+.quote{
+  background: linear-gradient(180deg,#d0e2ff,#deebff);
+  border:1px solid #cfe7ff;
+  border-radius:16px;
+  padding:22px 22px;
+  box-shadow: 0 8px 24px rgba(8,23,54,.06);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.quote blockquote{
+  margin:0;
+  font-weight:900;
+  color:#0f315f;
+  font-size: clamp(1.05rem, 1rem + .4vw, 1.25rem);
+  line-height:1.35;
+}
+.quote blockquote + figcaption{
+  margin-top:12px;
+  padding-top:6px;
+  border-top:1px dashed #b9d8ff;
+}
+.quote figcaption{
+  color:#244a83; font-weight:800
+}
+
+.checklist{
+  list-style:none;
+  padding:0; margin:0;
+  display:grid; gap:12px;
+}
+.checklist li{
+  padding-left:28px;
+  position:relative;
+  font-weight:1000;
+  color:#0f315f;
+  font-size: clamp(1.05rem, 1rem + .3vw, 1.25rem);
+}
+.checklist li::before{
+  content:"✓";
+  position:absolute; left:0; top:0;
+  color:#0b4de2; font-weight:1000;
+}
+
+#checklist{ margin-top: 10px; }
+@media (min-width:992px){
+  #checklist{ margin-top: 18px; }
+}
+
+.section-title{ font-size:1.7rem; font-weight:1000; color:#0d2351 }
+.accordion-button{ font-weight:800 }
+
+.slogan-cta{ display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; text-align:center; }
+.slogan{
+  color:#0d2351; font-weight:1000; font-size: clamp(1.2rem, 1rem + .6vw, 1.6rem);
+}
+
+footer .logos img{
+  height:36px; width:auto; object-fit:contain; margin:0 8px;
+}
+
+.menu-pop{ width:86vw; max-width:340px; }
+/* --- FIX móviles: títulos y descripciones dentro de las tarjetas --- */
+.feature {
+  padding: 18px 16px;              /* un poco menos de padding en mobile */
+}
+
+.feature-icon img{
+  width: 40px; height: 40px;       /* icono apenas más pequeño en mobile */
+}
+
+/* Permite cortes y guiones automáticos en palabras largas (ej: Recordatorios) */
+.feature-title,
+.feature-desc {
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Ajuste de tamaños responsivos más conservadores */
+.feature-title{
+  font-size: clamp(0.95rem, 0.80rem + 1.0vw, 1.15rem);
+  font-weight: 900;                 /* deja fuerte pero no tan extremo */
+}
+
+.feature-desc{
+  font-size: clamp(0.92rem, 0.84rem + 0.6vw, 1.05rem);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* En pantallas muy pequeñas, baja un poco más */
+@media (max-width: 360px){
+  .feature { padding: 16px 14px; }
+  .feature-title{ font-size: 1rem; }
+  .feature-desc{ font-size: 0.95rem; }
+}

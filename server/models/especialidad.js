@@ -1,0 +1,37 @@
+import mongoose from 'mongoose';
+
+const especialidadSchema = new mongoose.Schema({
+    nombre: {
+        type: String,
+        required: [true, 'El nombre de la especialidad es obligatorio'],
+        unique: true,
+        trim: true,
+        maxlength: [100, 'El nombre no puede exceder los 100 caracteres']
+    },
+    descripcion: {
+        type: String,
+        required: [true, 'La descripción es obligatoria'],
+        trim: true
+    },
+    area_clinica: {
+        type: String,
+        trim: true
+    },
+    codigo_estandar: {
+        type: String,
+        trim: true
+    },
+    activo: {
+        type: Boolean,
+        default: true
+    }
+}, {
+    timestamps: true,
+    collection: 'Especialidades' // Especificamos el nombre exacto de la colección en MongoDB
+});
+
+especialidadSchema.index({ nombre: 1 });
+especialidadSchema.index({ area_clinica: 1 });
+especialidadSchema.index({ activo: 1 });
+
+export default mongoose.model('Especialidad', especialidadSchema);

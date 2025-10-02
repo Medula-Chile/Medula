@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+//Página de Inicio
+import LandingPage from './pages/landingPage.jsx';
 // Páginas de autenticación
 import LoginPage from './components/auth/LoginPage.jsx';
 import RegisterPage from './components/auth/RegisterPage.jsx';
@@ -27,7 +29,7 @@ function App() {  return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/auth/login" replace />} />
+          <Route path="/" element={<LandingPage />} />
 
           {/* Rutas de autenticación */}
           <Route path="/auth/login" element={<LoginPage />} />
@@ -54,7 +56,7 @@ function App() {  return (
             <Route path="configuracion" element={<DoctorSettings />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/auth/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
