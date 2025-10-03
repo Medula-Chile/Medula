@@ -46,10 +46,9 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Verificar contraseña
-        // En este ejemplo, estamos comparando directamente ya que mencionaste que tienes "hash123"
-        // En producción, deberías usar bcrypt.compare
-        if (user.contraseña_hash !== password) {
+        // Verificar contraseña usando bcrypt.compare
+        const isPasswordValid = await bcrypt.compare(password, user.contraseña_hash);
+        if (!isPasswordValid) {
             return res.status(401).json({
                 message: 'Credenciales inválidas'
             });

@@ -2,7 +2,7 @@ import { useLang } from '../../contexts/LangContext'
 
 export default function Features() {
   const { t } = useLang()
-  const B = import.meta.env.BASE_URL // '/medula-react/' en Pages, '/' en dev
+  const B = import.meta.env.BASE_URL + 'mock/'
 
   return (
     <section className="py-4 py-lg-5">
@@ -42,7 +42,7 @@ export default function Features() {
           <div className="col-6 col-md-6 col-lg-3">
             <article className="feature h-100 text-center">
               <div className="feature-icon">
-                <img src={B + 'calendario.svg'} alt="" />
+                <img src={B + 'recordatorio.svg'} alt="" />
               </div>
               <h3 className="feature-title">{t('feat_rem_title').text}</h3>
               <p className="feature-desc">{t('feat_rem_desc').text}</p>

@@ -214,3 +214,45 @@ body {
     justify-content: center;
     font-weight: 500;
 }
+
+/* New styles for header navigation links */
+nav a {
+    color: var(--foreground);
+    font-weight: 500;
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: var(--primary);
+}
+
+/* Language selector button */
+.btn-outline-primary {
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 0.25rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-outline-primary i {
+    font-size: 1rem;
+}
+
+/* Adjust spacing for header actions */
+.d-flex.align-items-center.gap-3 > nav {
+    margin-right: 1rem;
+}
