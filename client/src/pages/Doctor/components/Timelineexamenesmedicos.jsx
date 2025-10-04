@@ -39,15 +39,9 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
                         <p className="text-muted-foreground small mb-0">{item.medico}</p>
                       </div>
                       <div className="d-flex align-items-center gap-2 ms-2">
-                        <span className={`badge rounded-pill ${estadoClass}`}>{estado}</span>
+                        {/* <span className={`badge rounded-pill ${estadoClass}`}>{estado}</span> */}
                         <span className="text-muted-foreground small fw-medium">{item.fecha}</span>
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary btn-sm py-0 px-2"
-                          onClick={(e) => { e.stopPropagation(); onSelect(item.id); onStart && onStart(); }}
-                        >
-                          Iniciar atención
-                        </button>
+
                       </div>
                     </div>
 

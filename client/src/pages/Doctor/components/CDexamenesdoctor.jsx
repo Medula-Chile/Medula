@@ -2,13 +2,11 @@ import React from 'react';
 import axios from 'axios';
 
 export default function ConsultationDetailDoctor({ consulta }) {
-  // Detalle de consulta para el flujo del Médico.
   if (!consulta) return null;
   const presion = consulta?.vitals?.presion ?? '—';
   const temperatura = consulta?.vitals?.temperatura ?? '—';
   const pulso = consulta?.vitals?.pulso ?? '—';
 
-  // Cargar recetas para mostrar medicamentos desde la receta vinculada (mock actual)
   const [recetas, setRecetas] = React.useState([]);
   React.useEffect(() => {
     let mounted = true;
@@ -32,7 +30,6 @@ export default function ConsultationDetailDoctor({ consulta }) {
     });
   }, [recetaActiva]);
 
-  // Construir listas seguras para mostrar
   const legacyMeds = Array.isArray(consulta.medicamentos) ? consulta.medicamentos : [];
   const structMeds = Array.isArray(consulta.medicamentosDet)
     ? consulta.medicamentosDet.map(m => {
@@ -43,8 +40,9 @@ export default function ConsultationDetailDoctor({ consulta }) {
     }).filter(Boolean)
     : [];
   const medsToShow = [...legacyMeds, ...structMeds];
-
+  const printAreaRef = React.useRef(null);
   const examenes = Array.isArray(consulta.examenes) ? consulta.examenes : [];
+  const statusBadgeClass = (s) => s === 'Vigente' ? 'custom-badge border-success text-white bg-success' : s === 'Pendiente' ? 'custom-badge border-warning text-dark bg-warning' : 'custom-badge border-secondary text-white bg-secondary';
   const licOtorga = !!consulta?.licencia?.otorga;
   const licDias = licOtorga ? (consulta?.licencia?.dias ?? '—') : '—';
   const licNota = licOtorga ? (consulta?.licencia?.nota || '—') : '—';
@@ -56,25 +54,63 @@ export default function ConsultationDetailDoctor({ consulta }) {
       ? 'custom-badge border-warning text-dark bg-warning'
       : 'custom-badge border-secondary text-white bg-secondary');
 
+  const handleVerify = () => { };
+
+  // Nueva función para descargar/imprimir PDF
+  const handleDownloadPdf = () => {
+    const content = printAreaRef.current?.innerHTML || '';
+    const w = window.open('', '_blank', 'width=800,height=600');
+    if (!w) return;
+    w.document.open();
+    w.document.write(`<!doctype html><html><head><title>Orden de Examen</title>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+      <style>
+        @media print {
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        .watermark-bg { position: relative; overflow: hidden; }
+        .watermark-bg::after {
+          content: "";
+          position: absolute; inset: 0;
+          background: url('/medula_icono.png') no-repeat center center;
+          background-size: contain;
+          opacity: 0.06; pointer-events: none;
+        }
+      </style>
+    </head><body>
+      <div class="container p-3">${content}</div>
+      <script>window.onload = function(){ window.print(); window.close(); }</script>
+    </body></html>`);
+    w.document.close();
+  };
+
   return (
-    <div className="card">
+    <div className="card" ref={printAreaRef}>
       <div className="card-header bg-white">
         <div className="d-flex justify-content-between align-items-center">
-          <h5 className="card-title mb-0">Ordenes de examenes</h5>
-          <span className={estadoClass}>{estado}</span>
+          <h5 className="card-title mb-0">Ordenes de examen</h5>
+          <div className="d-flex align-items-center gap-2">
+            {/* <span className={estadoClass}>{estado}</span> */}
+            <button className="btn btn-outline-secondary btn-sm" title="Descargar PDF" onClick={handleDownloadPdf}>
+              <i className="fas fa-file-pdf me-1"></i> PDF
+            </button>
+            <button className={statusBadgeClass('Vigente')} disabled>
+              Vigente
+            </button>
+          </div>
         </div>
       </div>
       <div className="card-body watermark-bg">
         <div className="mb-4">
           <h6 className="fw-medium mb-2">Orden de examen R-001</h6>
-          <p className="text-muted-foreground small bg-gray-100 p-3 rounded"><li>Nombre completo:Maria Elene Contreras</li>
+          <p className="text-muted-foreground small bg-gray-100 p-3 rounded">
+            <li>Nombre completo: Maria Elene Contreras</li>
             <li>RUT: 12.345.678-9</li>
             <li>Edad: 26 años</li>
             <li>Sexo: Femenino</li>
             <li>Fecha de emisión: 29/09/2025</li>
           </p>
         </div>
-
         <div className="mb-4">
           <h6 className="fw-medium mb-2">Datos del médico</h6>
           <p className="text-muted-foreground small bg-gray-100 p-3 rounded">
@@ -83,103 +119,26 @@ export default function ConsultationDetailDoctor({ consulta }) {
             <li>Especialidad: Medicina General </li>
           </p>
         </div>
-
-        <div className="row mb-4 small">
-          <div className="col-6 col-md-6 mb-2">
-            <p className="text-muted-foreground mb-0">Nombre del hospital <li style={{ color: "black", marginLeft: 15 }}>Hospital Felix Bulnes</li></p>
-            <p className="fw-medium mb-0"></p>
-            <p className="fw-medium mb-0"></p>
-          </div>
-          <div className="col-6 col-md-6 mb-2">
-            <p className="text-muted-foreground mb-0"></p>
-            <p className="fw-medium mb-0"></p>
-          </div>
-          <div className="col-6 col-md-6 mb-2">
-            <p className="text-muted-foreground mb-0"></p>
-            <p className="fw-medium mb-0"></p>
-          </div>
-          <div className="col-6 col-md-6 mb-2">
-            <p className="text-muted-foreground mb-0"></p>
-            <p className="fw-medium mb-0"></p>
-          </div>
-          <div className="col-6 col-md-6 mb-2">
-            <p className="text-muted-foreground mb-0">Lista de exámenes solicitados</p>
-            <li style={{ color: "black", marginLeft: 15 }}>Hemograma</li>
-            <li style={{ color: "black", marginLeft: 15 }}>Radiografía de tórax</li>
-            <li style={{ color: "black", marginLeft: 15 }}>Examen de colesterol</li>
-            <p className="fw-medium mb-0">
-              {/* {consulta.recetaId
-                ? (<a className="link-primary" href={`/doctor/recetas?folio=${encodeURIComponent(consulta.recetaId)}`}>Ver receta {consulta.recetaId}</a>)
-                : '—'} */}
+        <div className="mb-4">
+          <div>
+            <h6 className="fw-medium mb-2">Nombre del hospital </h6>
+            <p className="text-muted-foreground small bg-gray-100 p-3 rounded">
+              <li>Hospital Felix Bulnes</li>
             </p>
           </div>
-        </div>
-
-        <div>
-          <h6 className="fw-medium mb-2">Observaciones adicionales</h6>
-          <li style={{ color: "black", marginLeft: 15 }}>Recomendaciones para el paciente (“no tomar medicamentos antes del examen, Ayuno 9 horas minimo y maximo 12 horas. ”)</li>
-          {/* <div className="d-flex flex-column gap-2">
-            {((medsFromReceta && medsFromReceta.length > 0) || medsToShow.length > 0)
-              ? (
-                <>
-                  {(medsFromReceta || []).map((m, idx) => (
-                    <div key={`med-receta-${idx}`} className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
-                      <i className="fas fa-pills text-success"></i>
-                      <span className="small">{m}</span>
-                    </div>
-                  ))}
-                  {medsToShow.map((m, idx) => (
-                    <div key={`med-any-${idx}`} className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
-                      <i className="fas fa-pills text-success"></i>
-                      <span className="small">{m}</span>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <div className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
-                  <i className="fas fa-pills text-muted"></i>
-                  <span className="small">—</span>
-                </div>
-              )}
-          </div> */}
-        </div>
-
-        {/* Exámenes solicitados */}
-        {/* <div className="mt-4">
-          <h6 className="fw-medium mb-2"></h6>
-          <div className="d-flex flex-column gap-2">
-            {examenes.length > 0 ? (
-              examenes.map((ex, idx) => (
-                <div key={`ex-${idx}`} className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
-                  <i className="fas fa-vials text-primary"></i>
-                  <span className="small">{ex}</span>
-                </div>
-              ))
-            ) : (
-              <div className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
-                <i className="fas fa-vials text-muted"></i>
-                <span className="small">—</span>
-              </div>
-            )}
+          <div className="mb-4">
           </div>
-        </div> */}
-
-        {/* Licencia médica */}
-        <div className="mt-4">
-          <h6 className="fw-medium mb-2"></h6>
-          <div className="row small">
-            <div className="col-12 col-md-4 mb-2">
-              <p className="text-muted-foreground mb-0"></p>
-              <p className="fw-medium mb-0"> </p>
-            </div>
-            <div className="col-12 col-md-4 mb-2">
-              <p className="text-muted-foreground mb-0"></p>
-              <p className="fw-medium mb-0"></p>
-            </div>
-            <div className="col-12 col-md-4 mb-2">
-              <p className="text-muted-foreground mb-0"></p>
-              <p className="fw-medium mb-0"></p>
-            </div>
+          <h6 className="fw-medium mb-2"> Lista de exámenes solicitados </h6>
+          <p className="text-muted-foreground small bg-gray-100 p-3 rounded">
+            <li> Hemograma</li>
+            <li> Radiografía de tórax</li>
+            <li>Examen de colesterol</li>
+          </p>
+          <div className="mb-4">
+            <h6 className="fw-medium mb-2" >Observaciones adicionales</h6>
+            <p className="text-muted-foreground small bg-gray-100 p-3 rounded">
+              <li> Recomendaciones para el paciente no tomar medicamentos antes del examen, Ayuno 9 horas minimo y maximo 12 horas.</li>
+            </p>
           </div>
         </div>
       </div>
