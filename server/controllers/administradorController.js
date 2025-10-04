@@ -1,4 +1,4 @@
-const Administrador = require('../models/Administrador');
+const Administrador = require('../models/administrador');
 
 exports.crearAdministrador = async (req, res) => {
   try {

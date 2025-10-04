@@ -31,7 +31,7 @@ connectDB();
 // Rutas
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/usuarioRoutes'));
-app.use('/api/pacientes', require('./routes/pacienteroutes'));
+app.use('/api/pacientes', require('./routes/pacienteRoutes'));
 app.use('/api/medicos', require('./routes/medicoRoutes'));
 app.use('/api/administradores', require('./routes/administradorRoutes'));
 app.use('/api/citas', require('./routes/citaRoutes'));

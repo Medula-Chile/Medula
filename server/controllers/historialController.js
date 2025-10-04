@@ -1,4 +1,4 @@
-const HistorialMedico = require('../models/HistorialMedico');
+const HistorialMedico = require('../models/historialMedico');
 
 exports.crearHistorial = async (req, res) => {
     try {

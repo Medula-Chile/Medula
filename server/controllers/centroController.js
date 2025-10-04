@@ -1,4 +1,4 @@
-const CentroSalud = require('../models/CentroSalud');
+const CentroSalud = require('../models/centroSalud');
 
 exports.crearCentro = async (req, res) => {
     try {

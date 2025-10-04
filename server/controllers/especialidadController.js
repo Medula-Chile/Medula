@@ -1,4 +1,4 @@
-const Especialidad = require('../models/Especialidad');
+const Especialidad = require('../models/especialidad');
 
 exports.crearEspecialidad = async (req, res) => {
   try {

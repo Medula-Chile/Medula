@@ -45,7 +45,8 @@ export default function LoginPage() {
         navigate('/paciente/historial');
       }
     } catch (err) {
-      setError(err.message);
+      const serverMsg = err?.response?.data?.message;
+      setError(serverMsg || err.message);
       console.error('Error de login:', err);
     } finally {
       setLoading(false);

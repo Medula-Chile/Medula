@@ -46,7 +46,7 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Verificar contraseña usando bcrypt.compare
+        // Verificar contraseña usando bcrypt.compare (producción)
         const isPasswordValid = await bcrypt.compare(password, user.contraseña_hash);
         if (!isPasswordValid) {
             return res.status(401).json({
@@ -54,8 +54,8 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Verificar si la cuenta está activa
-        if (!user.estado) {
+        // Verificar si la cuenta está activa (solo bloquear si es explícitamente false)
+        if (user.estado === false) {
             return res.status(401).json({
                 message: 'Cuenta desactivada'
             });
