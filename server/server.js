@@ -3,6 +3,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const connectDB = require('./config/database');
@@ -47,7 +48,6 @@ console.log('PORT:', process.env.PORT || '5000 (default)');
 console.log('NODE_ENV:', process.env.NODE_ENV || 'development (default)');
 console.log('MONGO_URI:', process.env.MONGO_URI ? '✅ Cargada' : '❌ No cargada');
 console.log('JWT_SECRET:', process.env.JWT_SECRET ? '✅ Cargada' : '❌ No cargada');
-console.log('FRONTEND_URL:', process.env.FRONTEND_URL || 'http://localhost:5173 (default)');
 console.log('=====================================\n');
 
 // Rutas base
@@ -92,31 +92,85 @@ app.get('/api/test', async (req, res) => {
 
 // Puerto (usar el de .env o 5000 como fallback)
 const PORT = process.env.PORT || 5000;
+// Iniciar servidor con re intentos si el puerto está en uso (útil en desarrollo)
+let server;
+const MAX_RETRIES = 5;
 
-const server = app.listen(PORT, () => {
-  console.log(`
-    🚀 Servidor corriendo en ${process.env.NODE_ENV || 'development'}
-    📡 Puerto: ${PORT}
-    🌐 URL: http://localhost:${PORT}
+async function listenOnce(httpServer, port) {
+  return new Promise((resolve, reject) => {
+    const onError = (err) => {
+      httpServer.removeListener('listening', onListening);
+      reject(err);
+    };
+    const onListening = () => {
+      httpServer.removeListener('error', onError);
+      resolve(undefined);
+    };
+    httpServer.once('error', onError);
+    httpServer.once('listening', onListening);
+    httpServer.listen(port);
+  });
+}
+
+async function startServer(startPort) {
+  let portToTry = Number(startPort);
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    server = http.createServer(app);
+    try {
+      await listenOnce(server, portToTry);
+      console.log(`
+     Servidor corriendo en ${process.env.NODE_ENV || 'development'}
+     Puerto: ${portToTry}
+     URL: http://localhost:${portToTry}
     `);
-});
+      return portToTry;
+    } catch (err) {
+      if (err && err.code === 'EADDRINUSE') {
+        console.error(`  Puerto ${portToTry} en uso.`);
+        try { server.removeAllListeners(); server.close(); } catch (_) {}
+        portToTry += 1; // probar siguiente puerto
+        console.log(`  Reintentando en puerto ${portToTry}...`);
+        continue;
+      }
+      console.error('  Error iniciando el servidor:', err);
+      throw err;
+    }
+  }
+  console.error(`  No fue posible iniciar el servidor tras ${MAX_RETRIES + 1} intentos.`);
+  process.exit(1);
+}
+
+startServer(PORT);
 
 // Manejo de errores no capturados
 process.on('unhandledRejection', (err) => {
-  console.log('UNHANDLED REJECTION! 💥 Cerrando servidor...');
+  console.log('UN HANDLED REJECTION!  Cerrando servidor...');
   console.log(err.name, err.message);
-  server.close(() => {
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  } else {
     process.exit(1);
-  });
+  }
 });
 
 // Manejo de SIGTERM
 process.on('SIGTERM', () => {
-  console.log('👋 SIGTERM RECEIVED. Cerrando servidor...');
-  server.close(() => {
+  console.log('  SIGTERM RECEIVED. Cerrando servidor...');
+  if (server) {
+    server.close(() => {
+      mongoose.connection.close(false, () => {
+        console.log('💾 Conexión MongoDB cerrada.');
+        process.exit(0);
+      });
+    });
+  } else if (mongoose.connection) {
     mongoose.connection.close(false, () => {
       console.log('💾 Conexión MongoDB cerrada.');
       process.exit(0);
     });
-  });
+  } else {
+    process.exit(0);
+  }
 });

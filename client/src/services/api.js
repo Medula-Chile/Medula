@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Prefer environment variable from Vite, fallback to localhost:5000
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api'
+    baseURL
 });
 
 // Interceptor para incluir el token en las peticiones

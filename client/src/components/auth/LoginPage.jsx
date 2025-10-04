@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Auth.css';
+import api from '../../services/api';
 // Página de inicio de sesión (Login)
 // Maneja selección de rol, validación básica y redirección según el rol seleccionado.
 export default function LoginPage() {
@@ -28,23 +29,11 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          rol: role
-        })
+      const { data } = await api.post('/auth/login', {
+        email,
+        password,
+        rol: role
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en la autenticación');
-      }
 
       // Guardar el token
       localStorage.setItem('token', data.token);
