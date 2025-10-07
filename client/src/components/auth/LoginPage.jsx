@@ -37,6 +37,8 @@ export default function LoginPage() {
 
       // Guardar el token
       localStorage.setItem('token', data.token);
+      // Notificar al resto de la app que hubo login
+      try { window.dispatchEvent(new Event('auth:login')); } catch {}
 
       // Redirigir según rol
       if (role === 'medico') {

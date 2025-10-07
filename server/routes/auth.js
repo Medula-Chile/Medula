@@ -38,16 +38,22 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Verificar si el rol coincide
-        if (user.rol !== rol) {
-            console.log('Rol no coincide. Esperado:', rol, 'Actual:', user.rol);
-            return res.status(401).json({
-                message: 'Tipo de usuario incorrecto'
-            });
+        // Verificar si el rol coincide (normalizando valores y aceptando alias)
+        const incomingRol = (rol || '').toString().toLowerCase();
+        const normalizedRol = incomingRol === 'doctor' ? 'medico' : incomingRol;
+        const userRol = (user.rol || '').toString().toLowerCase();
+        if (userRol !== normalizedRol) {
+            console.log('Rol no coincide. Esperado:', normalizedRol, 'Actual:', userRol);
+            return res.status(401).json({ message: 'Tipo de usuario incorrecto' });
         }
 
-        // Verificar contraseña usando bcrypt.compare (producción)
-        const isPasswordValid = await bcrypt.compare(password, user.contraseña_hash);
+        // Verificar contraseña: bcrypt si hay hash; fallback (dev) a texto plano si existe user.password
+        let isPasswordValid = false;
+        if (user.contraseña_hash) {
+            isPasswordValid = await bcrypt.compare(password, user.contraseña_hash);
+        } else if (user.password) {
+            isPasswordValid = password === user.password;
+        }
         if (!isPasswordValid) {
             return res.status(401).json({
                 message: 'Credenciales inválidas'

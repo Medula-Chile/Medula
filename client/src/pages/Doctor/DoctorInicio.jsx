@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import TimelineMedico from './components/TimelineMedico';
 import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
 import { useAuth } from '../../contexts/AuthContext';
+import { subscribe, getAssignments, seedIfEmpty, upsertAssignment } from './data/assignmentsStore';
 
 export default function DoctorInicio() {
   // Vista principal del Médico
@@ -11,21 +12,46 @@ export default function DoctorInicio() {
   const doctorName = (user?.fullName || user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ')).trim() || 'Médico/a';
   const doctorSpecialty = (user?.specialty || user?.especialidad || user?.profession || user?.titulo || 'Medicina General');
 
-  // Datos base (mock) de atenciones del día. El nombre/especialidad del médico se inyectan abajo.
-  const baseItems = [
-    { id: 101, especialidad: 'Medicina General', fecha: 'Hoy • 10:00', centro: 'Consulta 1', resumen: 'Juan Pérez, control general.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 102, especialidad: 'Resultados', fecha: 'Hoy • 10:30', centro: 'Consulta 2', resumen: 'Pedro Díaz, revisión de resultados.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 103, especialidad: 'Ginecología', fecha: 'Hoy • 11:00', centro: 'Consulta 3', resumen: 'Control post-tratamiento.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 104, especialidad: 'Cardiología', fecha: 'Hoy • 11:30', centro: 'Consulta 4', resumen: 'Chequeo de hipertensión.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 105, especialidad: 'Endocrinología', fecha: 'Hoy • 12:00', centro: 'Consulta 5', resumen: 'Ajuste terapéutico.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 106, especialidad: 'Hematología', fecha: 'Hoy • 12:30', centro: 'Consulta 6', resumen: 'Control anemia ferropénica.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 107, especialidad: 'Oftalmología', fecha: 'Hoy • 13:00', centro: 'Consulta 7', resumen: 'Evaluación de agudeza visual.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-  ];
+  // Fuente de datos: store maestro de asignaciones
+  const [allItems, setAllItems] = useState(() => getAssignments());
+  const [activeId, setActiveId] = useState(allItems[0]?.id ?? null);
+  // Seed inicial si está vacío
+  useEffect(() => { seedIfEmpty({ doctorName, doctorSpecialty }); }, [doctorName, doctorSpecialty]);
+  // Suscripción al store
+  useEffect(() => {
+    const unsub = subscribe((arr) => {
+      // Mantener nombre/especialidad sincronizados del usuario
+      const merged = arr.map(it => ({
+        ...it,
+        medico: doctorName || it.medico,
+        especialidad: doctorSpecialty || it.especialidad,
+      }));
+      setAllItems(merged);
+      if (!merged.find(it => String(it.id) === String(activeId))) {
+        setActiveId(merged[0]?.id ?? null);
+      }
+    });
+    // Inicial
+    const init = getAssignments();
+    setAllItems(init.map(it => ({ ...it, medico: doctorName || it.medico, especialidad: doctorSpecialty || it.especialidad })));
+    return () => unsub();
+  }, [doctorName, doctorSpecialty]);
 
-  // Estado: items inicializados con nombre y especialidad del médico activo
-  const [items, setItems] = useState(() => baseItems.map(it => ({ ...it, medico: doctorName, especialidad: doctorSpecialty })));
-  const [activeId, setActiveId] = useState(101);
-  const consulta = items.find(x => x.id === activeId);
+  // Filtrar solo las atenciones de hoy para el timeline
+  const todayItems = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+    const start = new Date(y, m, d, 0, 0, 0, 0);
+    const end = new Date(y, m, d, 23, 59, 59, 999);
+    const inToday = (iso) => {
+      if (!iso) return false;
+      const dt = new Date(iso);
+      return dt >= start && dt <= end;
+    };
+    const byTime = (a, b) => new Date(a.when || 0) - new Date(b.when || 0);
+    return allItems.filter(it => inToday(it.when)).slice().sort(byTime);
+  }, [allItems]);
+  const consulta = useMemo(() => (todayItems.find(x => String(x.id) === String(activeId)) || null), [todayItems, activeId]);
   const [open, setOpen] = useState(false);
   
   // Formulario del modal de atención
@@ -54,10 +80,10 @@ export default function DoctorInicio() {
   // Ref para enfocar el primer campo de medicamentos tras agregar
   const medNombreRef = useRef(null);
 
-  // Mantener nombre/especialidad sincronizados con la sesión activa
+  // Mantener nombre/especialidad en store cuando cambie el usuario (opcional)
   useEffect(() => {
     if (!doctorName && !doctorSpecialty) return;
-    setItems(prev => prev.map(it => ({ ...it, medico: doctorName || it.medico, especialidad: doctorSpecialty || it.especialidad })));
+    // No mutamos todos en bloque, ya que el store emitirá y sincronizará en la suscripción superior
   }, [doctorName, doctorSpecialty]);
 
   const openModal = () => {
@@ -131,8 +157,11 @@ export default function DoctorInicio() {
   const handleSave = (ev) => {
     ev.preventDefault();
     if (!validate()) return;
-    setItems(prev => prev.map(it => it.id !== activeId ? it : ({
-      ...it,
+    if (!activeId) return;
+    const current = allItems.find(it => String(it.id) === String(activeId));
+    if (!current) return;
+    upsertAssignment({
+      ...current,
       observaciones: form.observaciones?.trim() || '—',
       proximoControl: form.proximoControl?.trim() || '—',
       recetaId: form.recetaId?.trim() || null,
@@ -142,7 +171,7 @@ export default function DoctorInicio() {
       examenes: Array.isArray(form.examenes) ? form.examenes : [],
       licencia: { otorga: !!form.licenciaOtorga, dias: form.licenciaOtorga ? Number(form.licenciaDias) || null : null, nota: form.licenciaOtorga ? (form.licenciaNota || '') : '' },
       estado: 'Completado',
-    })));
+    });
     setOpen(false);
   };
 
@@ -151,7 +180,7 @@ export default function DoctorInicio() {
       <div className="row g-3">
         {/* Nueva disposición: Timeline (izq), Detalle (centro) y Sidebar (der) */}
         <div className="col-12 col-lg-5 col-xl-4">
-          <TimelineMedico items={items} activeId={activeId} onSelect={setActiveId} onStart={openModal} />
+          <TimelineMedico items={todayItems} activeId={activeId} onSelect={setActiveId} onStart={openModal} />
         </div>
         <div className="col-12 col-lg-7 col-xl-5">
           <ConsultationDetailDoctor consulta={consultaPreview} />

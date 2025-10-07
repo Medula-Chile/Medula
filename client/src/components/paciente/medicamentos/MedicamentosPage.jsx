@@ -8,6 +8,8 @@ export default function MedicamentosPage() {
   const [meds, setMeds] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
+  // Búsqueda por ID o nombre de medicamento
+  const [query, setQuery] = React.useState('');
   const navigate = useNavigate();
   const goToReceta = (idOrFolio, folio) => navigate(`/paciente/recetas?folio=${encodeURIComponent(folio || idOrFolio)}`);
 
@@ -80,9 +82,18 @@ export default function MedicamentosPage() {
   // Paginación simple
   const [page, setPage] = React.useState(1);
   const pageSize = 8;
-  const totalPages = Math.max(1, Math.ceil(ordered.length / pageSize));
+  // Filtrado por búsqueda (ID o nombre)
+  const orderedFiltered = React.useMemo(() => {
+    const q = (query || '').trim().toLowerCase();
+    if (!q) return ordered;
+    return ordered.filter(m =>
+      (m.id || '').toLowerCase().includes(q) ||
+      (m.nombre || '').toLowerCase().includes(q)
+    );
+  }, [ordered, query]);
+  const totalPages = Math.max(1, Math.ceil(orderedFiltered.length / pageSize));
   const start = (page - 1) * pageSize;
-  const current = ordered.slice(start, start + pageSize);
+  const current = orderedFiltered.slice(start, start + pageSize);
   const canPrev = page > 1;
   const canNext = page < totalPages;
 
@@ -91,66 +102,92 @@ export default function MedicamentosPage() {
       <div className="col-12 col-md-12 col-lg-9">
         <div className="card h-100">
           <div className="card-header bg-white pb-2">
-            <h5 className="card-title mb-0">Mis Medicamentos</h5>
+            <div className="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-md-center">
+              <h5 className="card-title mb-0">Mis Medicamentos</h5>
+              <form
+                className="d-flex align-items-center gap-2"
+                role="search"
+                onSubmit={(e) => { e.preventDefault(); setPage(1); }}
+                aria-label="Buscar medicamentos por ID o nombre"
+              >
+                <div className="input-group input-group-sm" style={{ minWidth: 240 }}>
+                  <span className="input-group-text"><i className="fas fa-search" /></span>
+                  <input
+                    type="search"
+                    className="form-control"
+                    placeholder="Buscar por ID o nombre"
+                    value={query}
+                    onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                    aria-label="Buscar por ID o nombre de medicamento"
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary btn-sm">
+                  Buscar
+                </button>
+              </form>
+            </div>
           </div>
           <div className="card-body px-2 pt-0 pb-3">
             {/* Cabecera de columnas (solo cuando hay datos y no está cargando) */}
             {!loading && !error && (
-            <div className="row gx-2 gy-0 border-bottom small text-muted fw-semibold py-2 px-2 position-sticky top-0 bg-white" style={{ zIndex: 1 }}>
-              <div className="col-6 col-md-3">Nombre</div>
-              <div className="col-6 col-md-2">Dosis</div>
-              <div className="col-12 col-md-3 d-none d-md-block">Frecuencia</div>
-              <div className="col-6 col-md-2 d-none d-md-block">Inicio</div>
-              <div className="col-6 col-md-1 d-none d-md-block">Receta</div>
-              <div className="col-6 col-md-1 d-none d-md-block text-end pe-2">Estado</div>
-            </div>)}
-
+              <div className="row gx-2 gy-0 border-bottom small text-muted fw-semibold py-2 px-2 position-sticky top-0 bg-white" style={{ zIndex: 1 }}>
+                <div className="col-6 col-md-3">Nombre</div>
+                <div className="col-6 col-md-2">Dosis</div>
+                <div className="col-12 col-md-3 d-none d-md-block">Frecuencia</div>
+                <div className="col-6 col-md-2 d-none d-md-block">Inicio</div>
+                <div className="col-6 col-md-1 d-none d-md-block">Receta</div>
+                <div className="col-6 col-md-1 d-none d-md-block text-end pe-2">Estado</div>
+              </div>
+            )}
             {loading && <div className="p-3 text-center text-muted small">Cargando medicamentos…</div>}
             {!!error && !loading && <div className="alert alert-danger my-2" role="alert">{error}</div>}
 
             {!loading && !error && (
-            <div className="px-2">
-              {current.map(m => (
-                <div key={`${m.id}-${m.nombre}`} className="row gx-2 gy-2 py-2 border-bottom align-items-center small">
-                  <div className="col-6 col-md-3 fw-medium">{m.nombre}</div>
-                  <div className="col-6 col-md-2">{m.dosis}</div>
-                  <div className="col-12 col-md-3 d-none d-md-block">{displayFrecuencia(m)}</div>
-                  <div className="col-6 col-md-2 d-none d-md-block">{m.inicio}</div>
-                  <div className="col-6 col-md-1 d-none d-md-block">
-                    <button
-                      className="btn btn-link p-0"
-                      title="Ver receta"
-                      aria-label={`Ver receta ${m.folio || m.id}`}
-                      onClick={() => goToReceta(m.id, m.folio)}
-                    >
-                      {m.folio || m.id}
-                    </button>
+              <div className="px-2">
+                {current.map(m => (
+                  <div key={`${m.id}-${m.nombre}`} className="row gx-2 gy-2 py-2 border-bottom align-items-center small">
+                    <div className="col-6 col-md-3 fw-medium">{m.nombre}</div>
+                    <div className="col-6 col-md-2">{m.dosis}</div>
+                    <div className="col-12 col-md-3 d-none d-md-block">{displayFrecuencia(m)}</div>
+                    <div className="col-6 col-md-2 d-none d-md-block">{m.inicio}</div>
+                    <div className="col-6 col-md-1 d-none d-md-block">
+                      <button
+                        className="btn btn-link p-0"
+                        title="Ver receta"
+                        aria-label={`Ver receta ${m.folio || m.id}`}
+                        onClick={() => goToReceta(m.id, m.folio)}
+                      >
+                        {m.folio || m.id}
+                      </button>
+                    </div>
+                    <div className="col-6 col-md-1 d-none d-md-block text-end pe-2">
+                      <span className={`badge ${m.estado === 'ACTIVO' ? 'bg-success' : m.estado === 'PENDIENTE' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                        {m.estado.charAt(0)}{m.estado.slice(1).toLowerCase()}
+                      </span>
+                    </div>
+                    {/* Resumen móvil */}
+                    <div className="col-12 d-md-none small text-muted mt-1">
+                      {displayFrecuencia(m)} • {m.inicio} • 
+                      <button
+                        className="btn btn-link p-0 align-baseline ms-1 me-1"
+                        title="Ver receta"
+                        aria-label={`Ver receta ${m.folio || m.id}`}
+                        onClick={() => goToReceta(m.id, m.folio)}
+                      >
+                        {m.folio || m.id}
+                      </button>
+                      • {m.estado.charAt(0)}{m.estado.slice(1).toLowerCase()}
+                    </div>
                   </div>
-                  <div className="col-6 col-md-1 d-none d-md-block text-end pe-2">
-                    <span className={`badge ${m.estado === 'ACTIVO' ? 'bg-success' : m.estado === 'PENDIENTE' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
-                      {m.estado.charAt(0)}{m.estado.slice(1).toLowerCase()}
-                    </span>
-                  </div>
-                  {/* Resumen móvil */}
-                  <div className="col-12 d-md-none small text-muted mt-1">
-                    {displayFrecuencia(m)} • {m.inicio} • 
-                    <button
-                      className="btn btn-link p-0 align-baseline ms-1 me-1"
-                      title="Ver receta"
-                      aria-label={`Ver receta ${m.folio || m.id}`}
-                      onClick={() => goToReceta(m.id, m.folio)}
-                    >
-                      {m.folio || m.id}
-                    </button>
-                    • {m.estado.charAt(0)}{m.estado.slice(1).toLowerCase()}
-                  </div>
-                </div>
-              ))}
-            </div>)}
+                ))}
+                {orderedFiltered.length === 0 && (
+                  <div className="p-3 text-center text-muted small">Sin resultados para "{query}"</div>
+                )}
+              </div>)}
 
             {!loading && !error && (
               <div className="d-flex justify-content-between align-items-center pt-2 px-2">
-                <small className="text-muted">Mostrando {start + 1}-{Math.min(start + pageSize, ordered.length)} de {ordered.length}</small>
+                <small className="text-muted">Mostrando {orderedFiltered.length === 0 ? 0 : start + 1}-{Math.min(start + pageSize, orderedFiltered.length)} de {orderedFiltered.length}</small>
                 <nav aria-label="Paginación de medicamentos">
                   <ul className="pagination pagination-sm mb-0">
                     <li className={`page-item ${!canPrev ? 'disabled' : ''}`}>

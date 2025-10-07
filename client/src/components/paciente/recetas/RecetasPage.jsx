@@ -15,10 +15,29 @@ export default function RecetasPage() {
     let mounted = true;
     setLoading(true);
     const base = import.meta.env.BASE_URL || '/';
-    axios.get(`${base}mock/recetas.json`)
-      .then(r => { if (mounted) { setRecetas(Array.isArray(r.data) ? r.data : []); setError(''); }})
-      .catch(() => { if (mounted) setError('No se pudo cargar la lista de recetas.'); })
-      .finally(() => { if (mounted) setLoading(false); });
+    // Fallback automático: si recetas.json no existe (renombrado a examenes.json), intenta examenes.json
+    const fetchRecetas = async () => {
+      try {
+        const urlRecetas = `${base}mock/recetas.json`;
+        const r = await axios.get(urlRecetas);
+        if (!mounted) return;
+        setRecetas(Array.isArray(r.data) ? r.data : []);
+        setError('');
+      } catch (e1) {
+        try {
+          const urlExamenes = `${base}mock/examenes.json`;
+          const r2 = await axios.get(urlExamenes);
+          if (!mounted) return;
+          setRecetas(Array.isArray(r2.data) ? r2.data : []);
+          setError('');
+        } catch (e2) {
+          if (mounted) setError('No se pudo cargar la lista de recetas (recetas.json / examenes.json).');
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchRecetas();
     return () => { mounted = false; };
   }, []);
 

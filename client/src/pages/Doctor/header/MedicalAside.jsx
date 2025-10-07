@@ -59,10 +59,6 @@ export default function Aside({ isOpen, onClose, onLogout }) {
               <i className="fas fa-vials"></i>
               <span>Exámenes</span>
             </NavLink>
-            <NavLink to="/doctor/historial" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={onClose}>
-              <i className="fas fa-file-medical-alt"></i>
-              <span>Historial Médico</span>
-            </NavLink>
             <NavLink to="/doctor/perfil" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={onClose}>
               <i className="fas fa-user"></i>
               <span>Mi Perfil</span>
