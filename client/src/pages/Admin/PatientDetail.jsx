@@ -119,3 +119,6 @@ export default function PatientDetail({ patientId, onClose, onUpdate }) {
       if (onClose) onClose();
     } catch (err) {
       setError('Error al guardar los datos');
+    };
+}
+}
