@@ -34,7 +34,7 @@ export default function RegisterPage() {
         nombre: name,
         email,
         password,
-        Rut: rut
+        rut: rut
       });
       alert('¡Registro exitoso!');
       navigate('/auth/login');

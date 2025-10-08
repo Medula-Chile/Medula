@@ -4,11 +4,11 @@ const bcrypt = require('bcryptjs');
 // Crear usuario
 exports.crearUsuario = async (req, res) => {
     try {
-        const { nombre, email, contraseña, rol, Rut } = req.body;
+        const { nombre, email, contraseña, rol, rut } = req.body;
 
         // Verificar si el usuario ya existe
         const usuarioExistente = await Usuario.findOne({
-            $or: [{ email }, { Rut }]
+            $or: [{ email }, { rut }]
         });
 
         if (usuarioExistente) {
@@ -26,7 +26,7 @@ exports.crearUsuario = async (req, res) => {
             email,
             contraseña_hash,
             rol,
-            Rut
+            rut
         });
 
         const usuarioGuardado = await nuevoUsuario.save();
@@ -38,7 +38,7 @@ exports.crearUsuario = async (req, res) => {
                 nombre: usuarioGuardado.nombre,
                 email: usuarioGuardado.email,
                 rol: usuarioGuardado.rol,
-                Rut: usuarioGuardado.Rut,
+                rut: usuarioGuardado.rut,
                 fecha_registro: usuarioGuardado.fecha_registro
             }
         });
@@ -103,11 +103,11 @@ exports.obtenerUsuarioPorId = async (req, res) => {
 // Actualizar usuario
 exports.actualizarUsuario = async (req, res) => {
     try {
-        const { nombre, email, rol, Rut } = req.body;
+        const { nombre, email, rol, rut } = req.body;
 
         const usuarioActualizado = await Usuario.findByIdAndUpdate(
             req.params.id,
-            { nombre, email, rol, Rut },
+            { nombre, email, rol, rut },
             { new: true, runValidators: true }
         ).select('-contraseña_hash');
 

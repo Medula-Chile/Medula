@@ -4,6 +4,39 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
+// GET /api/auth/me - retorna el usuario autenticado (id, nombre, email, rol)
+router.get('/me', async (req, res) => {
+    try {
+        const auth = req.headers.authorization || '';
+        const parts = auth.split(' ');
+        if (parts.length !== 2 || parts[0] !== 'Bearer') {
+            return res.status(401).json({ message: 'No autenticado' });
+        }
+        const token = parts[1];
+        let payload;
+        try {
+            payload = jwt.verify(token, process.env.JWT_SECRET || 'tu_secreto_temporal');
+        } catch (e) {
+            return res.status(401).json({ message: 'Token inválido' });
+        }
+
+        const user = await User.findById(payload.id).select('nombre email rol');
+        if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+        return res.json({
+            user: {
+                id: user._id,
+                nombre: user.nombre,
+                email: user.email,
+                rol: user.rol
+            }
+        });
+    } catch (error) {
+        console.error('Error en /auth/me:', error);
+        return res.status(500).json({ message: 'Error en el servidor', error: error.message });
+    }
+});
+
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
     try {
@@ -22,7 +55,7 @@ router.post('/register', async (req, res) => {
         // Comprobar duplicados
         const [existsEmail, existsRut] = await Promise.all([
             User.findOne({ email: finalEmail }, '_id').lean(),
-            User.findOne({ Rut: finalRut }, '_id').lean()
+            User.findOne({ rut: finalRut }, '_id').lean()
         ]);
 
         if (existsEmail) return res.status(409).json({ message: 'El email ya está registrado' });
@@ -38,7 +71,7 @@ router.post('/register', async (req, res) => {
             email: finalEmail,
             contraseña_hash,
             rol: 'paciente',
-            Rut: finalRut
+            rut: finalRut
         });
 
         return res.status(201).json({

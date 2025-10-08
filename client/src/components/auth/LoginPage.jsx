@@ -32,7 +32,7 @@ export default function LoginPage() {
       const { data } = await api.post('/auth/login', {
         email,
         password,
-        rol: 'paciente'
+        rol: role
       });
 
       // Guardar el token
