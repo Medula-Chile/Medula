@@ -1,8 +1,7 @@
 import React from 'react';
 import PacienteLayout from './PacienteLayout';
 
-// Importa estilos globales existentes
-import '../../../pages/Paciente/plantilla.css';
+// Estilos globales ya se cargan en main.jsx (styles.css)
 
 export default function PacientePage() {
   // Componente contenedor simple para renderizar el layout concreto del paciente.

@@ -1,0 +1,61 @@
+[
+  {
+    "id": "PAC-001",
+    "nombre": "María Elena Contreras",
+    "run": "12.345.678-9",
+    "centro": "Centro Salud Norte",
+    "alergias": ["Penicilina"],
+    "recetas": [
+      {
+        "id": "R-1001",
+        "doctor": "Dr. Juan Pérez",
+        "centro": "Centro Salud Norte",
+        "fecha": "2025-09-25T10:30:00.000Z",
+        "fechaLabel": "25 Sep 2025",
+        "validaHasta": "25 Oct 2025",
+        "status": "Vigente",
+        "notas": "Tomar con abundante agua y no conducir si presenta somnolencia.",
+        "meds": [
+          { "nombre": "Amoxicilina", "dosis": "500mg", "frecuencia": "cada 8h", "duracionDias": 7 },
+          { "nombre": "Paracetamol", "dosis": "1g", "frecuencia": "cada 12h", "duracionDias": 5 }
+        ]
+      },
+      {
+        "id": "R-1002",
+        "doctor": "Dra. Paula Díaz",
+        "centro": "Clínica Central",
+        "fecha": "2025-08-14T15:00:00.000Z",
+        "fechaLabel": "14 Ago 2025",
+        "validaHasta": "14 Sep 2025",
+        "status": "Pendiente",
+        "notas": "Iniciar si reaparecen síntomas respiratorios.",
+        "meds": [
+          { "nombre": "Salbutamol Inhalador", "dosis": "2 puff", "frecuencia": "a demanda", "duracionDias": 14 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "PAC-002",
+    "nombre": "Pedro Álvarez",
+    "run": "9.876.543-2",
+    "centro": "Consultorio Sur",
+    "alergias": [],
+    "recetas": [
+      {
+        "id": "R-2001",
+        "doctor": "Dr. Ricardo Soto",
+        "centro": "Consultorio Sur",
+        "fecha": "2025-10-01T09:00:00.000Z",
+        "fechaLabel": "01 Oct 2025",
+        "validaHasta": "01 Nov 2025",
+        "status": "Vigente",
+        "notas": "Controlar presión arterial diariamente.",
+        "meds": [
+          { "nombre": "Losartán", "dosis": "50mg", "frecuencia": "diario", "duracionDias": 30 },
+          { "nombre": "Aspirina", "dosis": "81mg", "frecuencia": "diario", "duracionDias": 30 }
+        ]
+      }
+    ]
+  }
+]

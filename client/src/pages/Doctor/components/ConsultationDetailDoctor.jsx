@@ -3,7 +3,22 @@ import axios from 'axios';
 
 export default function ConsultationDetailDoctor({ consulta }) {
   // Detalle de consulta para el flujo del Médico.
-  if (!consulta) return null;
+  if (!consulta) {
+    return (
+      <div className="card">
+        <div className="card-header bg-white">
+          <h5 className="card-title mb-0">Detalle de atención</h5>
+        </div>
+        <div className="card-body">
+          <div className="text-center text-muted-foreground">
+            <i className="fas fa-notes-medical fa-2x mb-3"></i>
+            <p className="mb-1">No hay una atención seleccionada.</p>
+            <p className="small mb-0">Selecciona un paciente del listado de la izquierda o inicia una nueva atención.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const presion = consulta?.vitals?.presion ?? '—';
   const temperatura = consulta?.vitals?.temperatura ?? '—';
   const pulso = consulta?.vitals?.pulso ?? '—';

@@ -68,39 +68,36 @@ export default function PerfilPage() {
           </div>
           <div className="card-body">
             <div className="row small g-3">
-              {/* Datos generales */}
-              <div className="col-12 col-md-6">
+              {/* Columnas consistentes en md+: 3 columnas */}
+              <div className="col-12 col-md-4">
                 <p className="text-muted-foreground mb-0">Nombre</p>
-                <p className="fw-medium mb-0">{datos.nombre}</p>
-              </div>
-              <div className="col-6 col-md-3">
-                <p className="text-muted-foreground mb-0">RUN</p>
-                <p className="fw-medium mb-0">{datos.run}</p>
-              </div>
-              <div className="col-6 col-md-3">
-                <p className="text-muted-foreground mb-0">Nacimiento</p>
-                <p className="fw-medium mb-0">{datos.nacimiento}</p>
-              </div>
+                <p className="fw-medium mb-2">{datos.nombre}</p>
 
-              <div className="col-6 col-md-3">
                 <p className="text-muted-foreground mb-0">FONASA</p>
-                <p className="fw-medium mb-0">{datos.fonasa}</p>
-              </div>
-              <div className="col-6 col-md-3">
+                <p className="fw-medium mb-2">{datos.fonasa}</p>
+                
                 <p className="text-muted-foreground mb-0">Grupo sanguíneo</p>
                 <p className="fw-medium mb-0">{datos.sangre}</p>
+
               </div>
-              <div className="col-6 col-md-3">
+
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">RUN</p>
+                <p className="fw-medium mb-2">{datos.run}</p>
+
+                <p className="text-muted-foreground mb-0">Dirección</p>
+                <p className="fw-medium mb-2">{datos.direccion}</p>
+
                 <p className="text-muted-foreground mb-0">Teléfono</p>
                 <p className="fw-medium mb-0">{datos.telefono}</p>
               </div>
-              <div className="col-6 col-md-3">
+
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Nacimiento</p>
+                <p className="fw-medium mb-2">{datos.nacimiento}</p>
+
                 <p className="text-muted-foreground mb-0">Email</p>
                 <p className="fw-medium mb-0">{datos.email}</p>
-              </div>
-              <div className="col-12 col-md-6">
-                <p className="text-muted-foreground mb-0">Dirección</p>
-                <p className="fw-medium mb-0">{datos.direccion}</p>
               </div>
 
               {/* Contacto de emergencia */}

@@ -134,21 +134,20 @@ const CentrosMedicos = () => {
     };
 
     const abrirGoogleMaps = (direccion, comuna) => {
-        const direccionCompleta = `${direccion}, ${comuna}, Chile`;
         const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionCompleta)}`;
         window.open(url, '_blank');
     };
 
     return (
-        <div className="flex-grow-1 p-3 p-md-4">
-            <div className="row g-3">
-                <div className="col-12 main-content p-4">
-                    <div className="content-wrapper">
-                        <div className="section-content active">
-                            <div className="section-header mb-4">
-                                <h1>Centros Médicos Públicos</h1>
-                                <p className="text-muted">Encuentra centros de salud públicos cerca de ti</p>
-                            </div>
+      <div className="flex-grow-1 p-3 p-md-4">
+          <div className="row g-3">
+              <div className="col-12 main-content p-4">
+                  <div className="content-wrapper">
+                      <div className="section-content active">
+                          <div className="section-header mb-4">
+                              <h5 className="card-title mb-1">Centros Médicos Públicos</h5>
+                              <p className="text-muted small mb-0">Encuentra centros de salud públicos cerca de ti</p>
+                          </div>
 
                             {/* Barra de búsqueda y filtros */}
                             <div className="card mb-4">
@@ -242,7 +241,7 @@ const CentrosMedicos = () => {
                                         </div>
                                     ) : (
                                         <div className="table-responsive">
-                                            <table className="table table-hover mb-0">
+                                            <table className="table table-hover mb-0 align-middle">
                                                 <thead className="table-light">
                                                     <tr>
                                                         <th>Centro Médico</th>
@@ -258,14 +257,14 @@ const CentrosMedicos = () => {
                                                     {centrosFiltrados.map(centro => (
                                                         <tr key={centro.id}>
                                                             <td>
-                                                                <div>
-                                                                    <strong>{centro.nombre}</strong>
+                                                                <div className="d-flex flex-column">
+                                                                    <span className="fw-medium">{centro.nombre}</span>
                                                                     <div>
-                                                                        <small className={`badge ${centro.nivel === 'Terciario' ? 'bg-primary' :
+                                                                        <span className={`badge ${centro.nivel === 'Terciario' ? 'bg-primary' :
                                                                                 centro.nivel === 'Secundario' ? 'bg-warning text-dark' : 'bg-success'
                                                                             }`}>
                                                                             {centro.nivel}
-                                                                        </small>
+                                                                        </span>
                                                                     </div>
                                                                 </div>
                                                             </td>

@@ -135,14 +135,14 @@ export default function DoctorSchedule() {
  
     content = (
       <div className="calendar-grid">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <button className="btn btn-outline-primary" onClick={handlePrev}>Anterior</button>
-          <h3 className="mb-0">{formatMonthYear(currentDate)}</h3>
-          <button className="btn btn-outline-primary" onClick={handleNext}>Siguiente</button>
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <button className="btn btn-outline-primary btn-sm" onClick={handlePrev}>Anterior</button>
+          <h6 className="mb-0 fw-semibold">{formatMonthYear(currentDate)}</h6>
+          <button className="btn btn-outline-primary btn-sm" onClick={handleNext}>Siguiente</button>
         </div>
-        <div className="row g-0 mb-2">
+        <div className="row row-cols-5 g-0 mb-2">
           {['Lun', 'Mar', 'Mié', 'Jue', 'Vie'].map(day => (
-            <div key={day} className="col-2 text-center fw-bold bg-light p-2 border-bottom border-end">
+            <div key={day} className="col text-center fw-semibold small bg-light p-2 border-bottom border-end">
               {day}
             </div>
           ))}
@@ -151,15 +151,15 @@ export default function DoctorSchedule() {
           const weekDays = days.slice(weekIndex * 5, (weekIndex + 1) * 5);
           if (weekDays.length === 0) return null;
           return (
-            <div key={weekIndex} className="row g-0 mb-1">
+            <div key={weekIndex} className="row row-cols-5 g-0 mb-1">
               {weekDays.map((day, dayIndex) => {
                 const dayStr = formatDate(day);
                 const dayApps = appointments.filter(app => app.date === dayStr);
                 const isCurrentMonth = isSameMonth(day, currentDate);
-                const dayClass = `col-2 p-2 border border-end-0 border-bottom-0 h-100 d-flex flex-column ${!isCurrentMonth ? 'opacity-50 bg-light' : ''} ${isToday(day) ? 'bg-info text-white' : ''} ${isSelected(day) ? 'bg-light border border-primary' : ''}`;
+                const dayClass = `col p-2 border border-end-0 border-bottom-0 h-100 d-flex flex-column ${!isCurrentMonth ? 'opacity-50 bg-light' : ''} ${isToday(day) ? 'bg-info text-white' : ''} ${isSelected(day) ? 'bg-light border border-primary' : ''}`;
                 return (
                   <div key={dayIndex} className={dayClass} onClick={() => handleDayClick(day)} style={{ cursor: 'pointer' }}>
-                    <div className="day-number fw-bold mb-auto p-1">{day.getDate()}</div>
+                    <div className="day-number fw-semibold small mb-auto p-1">{day.getDate()}</div>
                     <div className="flex-grow-1">
                       {dayApps.map(app => (
                         <div key={app.id} className={`appointment small rounded p-1 mb-1 text-white ${app.status === 'pending' ? 'bg-primary' : 'bg-secondary'}`}>
@@ -171,7 +171,7 @@ export default function DoctorSchedule() {
                 );
               })}
               {weekDays.length < 5 && Array.from({ length: 5 - weekDays.length }, (_, i) => (
-                <div key={`empty-${i}`} className="col-2 p-2 border border-end-0 border-bottom-0 bg-light"></div>
+                <div key={`empty-${i}`} className="col p-2 border border-end-0 border-bottom-0 bg-light"></div>
               ))}
             </div>
           );
@@ -189,10 +189,10 @@ export default function DoctorSchedule() {
  
     content = (
       <div className="week-view">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <button className="btn btn-outline-primary" onClick={handlePrev}>Anterior</button>
-          <h3 className="mb-0">Semana del {weekStart.getDate()}/{weekStart.getMonth() + 1}</h3>
-          <button className="btn btn-outline-primary" onClick={handleNext}>Siguiente</button>
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <button className="btn btn-outline-primary btn-sm" onClick={handlePrev}>Anterior</button>
+          <h6 className="mb-0 fw-semibold">Semana del {weekStart.getDate()}/{weekStart.getMonth() + 1}</h6>
+          <button className="btn btn-outline-primary btn-sm" onClick={handleNext}>Siguiente</button>
         </div>
         <div className="table-responsive">
           <table className="table table-sm table-bordered">
@@ -200,8 +200,8 @@ export default function DoctorSchedule() {
               <tr>
                 <th>Hora</th>
                 {weekDays.map((day, index) => (
-                  <th key={index} className={`text-center ${isToday(day) ? 'bg-info text-white' : ''} ${isSelected(day) ? 'border-primary' : ''}`}>
-                    {formatDay(day)}<br />{day.getDate()}
+                  <th key={index} className={`text-center small ${isToday(day) ? 'bg-info text-white' : ''} ${isSelected(day) ? 'border-primary' : ''}`}>
+                    {formatDay(day)}<br /><span className="fw-semibold">{day.getDate()}</span>
                   </th>
                 ))}
               </tr>
@@ -209,12 +209,12 @@ export default function DoctorSchedule() {
             <tbody>
               {hours.map(hour => (
                 <tr key={hour}>
-                  <th className="text-end">{hour}:00</th>
+                  <th className="text-end small">{hour}:00</th>
                   {weekDays.map((day, index) => {
                     const dayStr = formatDate(day);
                     const app = appointments.find(a => a.date === dayStr && parseInt(a.time.split(':')[0]) === hour);
                     const isCurrent = new Date().getHours() === hour && isToday(day);
-                    const cellClass = `p-1 small text-center ${app ? (app.status === 'pending' ? 'bg-primary text-white' : 'bg-secondary text-white') : 'bg-success text-white'} ${isCurrent ? 'bg-warning text-dark fw-bold' : ''} ${isSelected(day) ? 'border-primary' : ''}`;
+                    const cellClass = `p-1 small text-center ${app ? (app.status === 'pending' ? 'bg-primary text-white' : 'bg-secondary text-white') : 'bg-success text-white'} ${isCurrent ? 'bg-warning text-dark fw-semibold' : ''} ${isSelected(day) ? 'border-primary' : ''}`;
                     return (
                       <td key={index} className={cellClass} onClick={() => handleDayClick(day)} style={{ cursor: 'pointer' }}>
                         {app ? `${app.patient}` : 'disponible'}
@@ -235,10 +235,10 @@ export default function DoctorSchedule() {
  
     content = (
       <div className="day-view">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <button className="btn btn-outline-primary" onClick={handlePrev}>Anterior</button>
-          <h3 className="mb-0">{selectedDate.getDate()}/{selectedDate.getMonth() + 1}/{selectedDate.getFullYear()}</h3>
-          <button className="btn btn-outline-primary" onClick={handleNext}>Siguiente</button>
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <button className="btn btn-outline-primary btn-sm" onClick={handlePrev}>Anterior</button>
+          <h6 className="mb-0 fw-semibold">{selectedDate.getDate()}/{selectedDate.getMonth() + 1}/{selectedDate.getFullYear()}</h6>
+          <button className="btn btn-outline-primary btn-sm" onClick={handleNext}>Siguiente</button>
         </div>
         <div className="table-responsive">
           <table className="table table-sm table-bordered">
@@ -249,7 +249,7 @@ export default function DoctorSchedule() {
                 const rowClass = ` ${app ? (app.status === 'pending' ? 'table-primary' : 'table-secondary') : 'table-success'} ${isCurrent ? 'table-warning' : ''}`;
                 return (
                   <tr key={hour} className={rowClass}>
-                    <td className="p-2 fw-bold" style={{ cursor: 'pointer' }} onClick={() => handleSlotClick(selectedDate, hour)}>
+                    <td className="p-2 small fw-semibold" style={{ cursor: 'pointer' }} onClick={() => handleSlotClick(selectedDate, hour)}>
                       {hour}:00 - {app ? `${app.patient} - ${app.time}` : 'hora disponible'}
                     </td>
                   </tr>
@@ -263,14 +263,26 @@ export default function DoctorSchedule() {
   }
  
   return (
-    <div className="container-fluid p-3">
-      <h2 className="mb-4">Agenda del Médico</h2>
-      <div className="d-flex gap-2 mb-4">
-        <button className="btn btn-primary" onClick={() => handleViewChange('month')}>Mensual</button>
-        <button className="btn btn-primary" onClick={() => handleViewChange('week')}>Semanal</button>
-        <button className="btn btn-primary" onClick={() => handleViewChange('day')}>Diaria</button>
+    <div className="row g-3">
+      <div className="col-12">
+        <div className="card">
+          <div className="card-header bg-white pb-2">
+            <div className="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-md-center">
+              <h5 className="card-title mb-0">Agenda del Médico</h5>
+              <div className="btn-group btn-group-sm" role="group" aria-label="Cambiar vista de agenda">
+                <button className="btn btn-primary" onClick={() => handleViewChange('month')}>Mensual</button>
+                <button className="btn btn-primary" onClick={() => handleViewChange('week')}>Semanal</button>
+                <button className="btn btn-primary" onClick={() => handleViewChange('day')}>Diaria</button>
+              </div>
+            </div>
+          </div>
+          <div className="card-body p-2">
+            <div className="calendar-wrap" style={{ maxHeight: 'calc(100vh - 260px)', overflow: 'auto', padding: '0.5rem' }}>
+              {content}
+            </div>
+          </div>
+        </div>
       </div>
-      {content}
     </div>
   );
 }

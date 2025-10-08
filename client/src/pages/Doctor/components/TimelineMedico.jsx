@@ -14,6 +14,12 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
       </div>
       <div className="card-body p-0">
         <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+          {Array.isArray(items) && items.length === 0 && (
+            <div className="p-3 text-center text-muted-foreground">
+              <i className="fas fa-users-slash fa-lg mb-2"></i>
+              <p className="mb-0 small">No hay atenciones para hoy.</p>
+            </div>
+          )}
           {items.map((item) => {
             const isActive = activeId === item.id;
             const estado = item?.estado || 'En espera';

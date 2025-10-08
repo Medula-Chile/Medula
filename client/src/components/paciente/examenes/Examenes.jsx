@@ -11,17 +11,16 @@ const MisExamenes = () => {
     };
 
     return (
-        <div className="flex-grow-1 p-3 p-md-4">
-            <div className="row g-3">
-                <div className="col-md-9 col-lg-10 main-content p-4">
+        <div className="row g-3">
+                <div className="col-md-9 col-lg-10 main-content p-3">
                     <div className="content-wrapper">
-                        {/* Historial Exámenes */}
-                        <div className="section-content active" id="historial">
-                            <div className="section-header mb-4">
-                                <h1>Mis Exámenes</h1>
-                                <p className="text-muted">Consulta y descarga tus resultados de exámenes médicos</p>
-                            </div>
-
+                        {/* Contenedor unificado como otras vistas de Paciente */}
+                        <div className="card h-100">
+                          <div className="card-header bg-white pb-2">
+                            <h5 className="card-title mb-0">Mis Exámenes</h5>
+                            <p className="text-muted small mb-0">Consulta y descarga tus resultados de exámenes médicos</p>
+                          </div>
+                          <div className="card-body px-2 pt-0 pb-3">
                             <div className="history-list">
                                 {/* Examen 1 - Hemograma */}
                                 <div className="card history-card mb-3">
@@ -35,11 +34,11 @@ const MisExamenes = () => {
                                                 </div>
                                                 <div className="history-details">
                                                     <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <h3 className="mb-0">Hemograma Completo</h3>
+                                                        <h6 className="mb-0">Hemograma Completo</h6>
                                                         <span className="badge bg-success">Completado</span>
                                                     </div>
                                                     <p className="doctor mb-1"><strong>Laboratorio Central</strong></p>
-                                                    <p className="diagnosis text-muted">Examen de sangre - Perfil hematológico completo</p>
+                                                    <p className="diagnosis text-muted small mb-0 d-none d-md-block">Examen de sangre - Perfil hematológico completo</p>
                                                     <div className="d-flex gap-3 mt-2">
                                                         <span className="text-muted small"><i className="fas fa-calendar me-1"></i>15 Nov 2024</span>
                                                         <span className="text-muted small"><i className="fas fa-file-pdf me-1"></i>PDF - 2.3 MB</span>
@@ -47,14 +46,14 @@ const MisExamenes = () => {
                                                 </div>
                                             </div>
                                             <div className="d-flex flex-column align-items-end">
-                                                <button className="btn btn-primary mb-2" onClick={solicitarDescargable}>
+                                                <button className="btn btn-primary btn-sm mb-2" onClick={solicitarDescargable}>
                                                     <svg className="icon me-1" viewBox="0 0 24 24" width="18" height="18">
                                                         <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
                                                     </svg>
                                                     Descargar PDF
                                                 </button>
                                                 <button
-                                                    className="btn btn-outline-secondary eye-icon-btn"
+                                                    className="btn btn-outline-secondary btn-sm eye-icon-btn"
                                                     onClick={() => verExamen('Hemograma Completo')}
                                                     aria-label="Ver examen de hemograma"
                                                 >
@@ -80,11 +79,11 @@ const MisExamenes = () => {
                                                 </div>
                                                 <div className="history-details">
                                                     <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <h3 className="mb-0">Perfil Bioquímico</h3>
+                                                        <h6 className="mb-0">Perfil Bioquímico</h6>
                                                         <span className="badge bg-success">Completado</span>
                                                     </div>
                                                     <p className="doctor mb-1"><strong>Laboratorio Clínico</strong></p>
-                                                    <p className="diagnosis text-muted">Glucosa, colesterol, triglicéridos, función hepática y renal</p>
+                                                    <p className="diagnosis text-muted small mb-0 d-none d-md-block">Glucosa, colesterol, triglicéridos, función hepática y renal</p>
                                                     <div className="d-flex gap-3 mt-2">
                                                         <span className="text-muted small"><i className="fas fa-calendar me-1"></i>10 Nov 2024</span>
                                                         <span className="text-muted small"><i className="fas fa-file-pdf me-1"></i>PDF - 1.8 MB</span>
@@ -92,14 +91,14 @@ const MisExamenes = () => {
                                                 </div>
                                             </div>
                                             <div className="d-flex flex-column align-items-end">
-                                                <button className="btn btn-primary mb-2" onClick={solicitarDescargable}>
+                                                <button className="btn btn-primary btn-sm mb-2" onClick={solicitarDescargable}>
                                                     <svg className="icon me-1" viewBox="0 0 24 24" width="18" height="18">
                                                         <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
                                                     </svg>
                                                     Descargar PDF
                                                 </button>
                                                 <button
-                                                    className="btn btn-outline-secondary eye-icon-btn"
+                                                    className="btn btn-outline-secondary btn-sm eye-icon-btn"
                                                     onClick={() => verExamen('Perfil Bioquímico')}
                                                     aria-label="Ver perfil bioquímico"
                                                 >
@@ -125,11 +124,11 @@ const MisExamenes = () => {
                                                 </div>
                                                 <div className="history-details">
                                                     <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <h3 className="mb-0">Radiografía de Tórax</h3>
+                                                        <h6 className="mb-0">Radiografía de Tórax</h6>
                                                         <span className="badge bg-success">Completado</span>
                                                     </div>
                                                     <p className="doctor mb-1"><strong>Servicio de Imagenología</strong></p>
-                                                    <p className="diagnosis text-muted">Radiografía PA y lateral de tórax</p>
+                                                    <p className="diagnosis text-muted small mb-0 d-none d-md-block">Radiografía PA y lateral de tórax</p>
                                                     <div className="d-flex gap-3 mt-2">
                                                         <span className="text-muted small"><i className="fas fa-calendar me-1"></i>05 Nov 2024</span>
                                                         <span className="text-muted small"><i className="fas fa-image me-1"></i>DICOM - 15.2 MB</span>
@@ -137,14 +136,14 @@ const MisExamenes = () => {
                                                 </div>
                                             </div>
                                             <div className="d-flex flex-column align-items-end">
-                                                <button className="btn btn-primary mb-2" onClick={solicitarDescargable}>
+                                                <button className="btn btn-primary btn-sm mb-2" onClick={solicitarDescargable}>
                                                     <svg className="icon me-1" viewBox="0 0 24 24" width="18" height="18">
                                                         <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
                                                     </svg>
                                                     Descargar Imágenes
                                                 </button>
                                                 <button
-                                                    className="btn btn-outline-secondary eye-icon-btn"
+                                                    className="btn btn-outline-secondary btn-sm eye-icon-btn"
                                                     onClick={() => verExamen('Radiografía de Tórax')}
                                                     aria-label="Ver radiografía"
                                                 >
@@ -159,7 +158,7 @@ const MisExamenes = () => {
                                 </div>
 
                                 {/* Examen 4 - Pendiente */}
-                                <div className="card history-card mb-3">
+                                <div className="card history-card mb-0">
                                     <div className="card-body">
                                         <div className="d-flex justify-content-between align-items-start">
                                             <div className="d-flex">
@@ -170,11 +169,11 @@ const MisExamenes = () => {
                                                 </div>
                                                 <div className="history-details">
                                                     <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <h3 className="mb-0">Ecografía Abdominal</h3>
-                                                        <span className="badge bg-warning">Pendiente</span>
+                                                        <h6 className="mb-0">Ecografía Abdominal</h6>
+                                                        <span className="badge bg-warning text-dark">Pendiente</span>
                                                     </div>
                                                     <p className="doctor mb-1"><strong>Servicio de Ecografía</strong></p>
-                                                    <p className="diagnosis text-muted">Ecografía completa de abdomen y pelvis</p>
+                                                    <p className="diagnosis text-muted small mb-0 d-none d-md-block">Ecografía completa de abdomen y pelvis</p>
                                                     <div className="d-flex gap-3 mt-2">
                                                         <span className="text-muted small"><i className="fas fa-calendar me-1"></i>Agendado: 20 Nov 2024</span>
                                                         <span className="text-muted small"><i className="fas fa-clock me-1"></i>10:30 AM</span>
@@ -182,13 +181,13 @@ const MisExamenes = () => {
                                                 </div>
                                             </div>
                                             <div className="d-flex flex-column align-items-end">
-                                                <button className="btn btn-outline-secondary mb-2" disabled>
+                                                <button className="btn btn-outline-secondary btn-sm mb-2" disabled>
                                                     <svg className="icon me-1" viewBox="0 0 24 24" width="18" height="18">
                                                         <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
                                                     </svg>
                                                     Pendiente
                                                 </button>
-                                                <button className="btn btn-outline-secondary eye-icon-btn" disabled>
+                                                <button className="btn btn-outline-secondary btn-sm eye-icon-btn" disabled>
                                                     <svg className="icon me-1" viewBox="0 0 24 24" width="18" height="18">
                                                         <path fill="currentColor" d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
                                                     </svg>
@@ -204,7 +203,7 @@ const MisExamenes = () => {
                 </div>
             </div>
         </div>
-    );
+        );
 };
 
 export default MisExamenes;

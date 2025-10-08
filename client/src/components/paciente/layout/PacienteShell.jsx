@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Header from '../../header/Header';
 import Aside from '../../header/Aside';
-import '../../../pages/Paciente/plantilla.css';
+ 
 
 export default function PacienteShell() {
   // "PacienteShell" es el layout base del Portal del Paciente.

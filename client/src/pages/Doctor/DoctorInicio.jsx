@@ -53,6 +53,16 @@ export default function DoctorInicio() {
   }, [allItems]);
   const consulta = useMemo(() => (todayItems.find(x => String(x.id) === String(activeId)) || null), [todayItems, activeId]);
   const [open, setOpen] = useState(false);
+
+  // Asegurar selección válida dentro de los items de hoy
+  useEffect(() => {
+    if (!Array.isArray(todayItems)) return;
+    if (todayItems.length === 0) return; // no forzar nada si no hay atenciones hoy
+    const belongs = todayItems.some(it => String(it.id) === String(activeId));
+    if (!belongs) {
+      setActiveId(todayItems[0]?.id ?? null);
+    }
+  }, [todayItems, activeId]);
   
   // Formulario del modal de atención
   const [form, setForm] = useState({
