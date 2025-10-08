@@ -38,7 +38,7 @@ const historialMedicoSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'historial'
+    collection: 'Historial'
 });
 
 historialMedicoSchema.index({ paciente_id: 1 });

@@ -4,6 +4,58 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
+// POST /api/auth/register
+router.post('/register', async (req, res) => {
+    try {
+        const { nombre, name, email, password, rut, Rut } = req.body;
+
+        // Normalizar/aceptar alias desde el cliente
+        const finalNombre = (nombre || name || '').toString().trim();
+        const finalEmail = (email || '').toString().toLowerCase().trim();
+        const finalRut = (Rut || rut || '').toString().trim();
+
+        // Validaciones básicas
+        if (!finalNombre || !finalEmail || !password || !finalRut) {
+            return res.status(400).json({ message: 'Todos los campos son requeridos' });
+        }
+
+        // Comprobar duplicados
+        const [existsEmail, existsRut] = await Promise.all([
+            User.findOne({ email: finalEmail }, '_id').lean(),
+            User.findOne({ Rut: finalRut }, '_id').lean()
+        ]);
+
+        if (existsEmail) return res.status(409).json({ message: 'El email ya está registrado' });
+        if (existsRut) return res.status(409).json({ message: 'El RUT ya está registrado' });
+
+        // Hash de contraseña
+        const salt = await bcrypt.genSalt(10);
+        const contraseña_hash = await bcrypt.hash(password, salt);
+
+        // Crear usuario con rol por defecto 'paciente'
+        const user = await User.create({
+            nombre: finalNombre,
+            email: finalEmail,
+            contraseña_hash,
+            rol: 'paciente',
+            Rut: finalRut
+        });
+
+        return res.status(201).json({
+            message: 'Usuario registrado correctamente',
+            user: {
+                id: user._id,
+                nombre: user.nombre,
+                email: user.email,
+                rol: user.rol
+            }
+        });
+    } catch (error) {
+        console.error('Error en registro:', error);
+        return res.status(500).json({ message: 'Error en el servidor', error: error.message });
+    }
+});
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
     try {

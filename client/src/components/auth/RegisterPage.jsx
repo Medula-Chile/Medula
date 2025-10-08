@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Auth.css';
+import api from '../../services/api';
 
 // Página de registro de usuarios
 // Realiza validaciones básicas y redirige al login tras un registro exitoso (modo demo)
@@ -12,9 +13,12 @@ export default function RegisterPage() {
   const [password, setPassword] = React.useState('');
   const [confirm, setConfirm] = React.useState('');
   const [accept, setAccept] = React.useState(false);
+  const [rut, setRut] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
 
   // Manejador del formulario: valida campos y simula registro
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return alert('Ingresa tu nombre completo.');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,9 +26,25 @@ export default function RegisterPage() {
     if (!password) return alert('Por favor, crea una contraseña.');
     if (password !== confirm) return alert('Las contraseñas no coinciden.');
     if (!accept) return alert('Debes aceptar Términos y Privacidad.');
-    // Demo: redirigir a login tras registro
-    alert('¡Registro exitoso!');
-    navigate('/auth/login');
+    // Enviar datos al backend para crear el usuario
+    try {
+      setLoading(true);
+      setError('');
+      await api.post('/auth/register', {
+        nombre: name,
+        email,
+        password,
+        Rut: rut
+      });
+      alert('¡Registro exitoso!');
+      navigate('/auth/login');
+    } catch (err) {
+      const serverMsg = err?.response?.data?.message;
+      setError(serverMsg || err.message);
+      console.error('Error de registro:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Render del formulario de registro
@@ -43,6 +63,10 @@ export default function RegisterPage() {
             {/* Campo: nombre completo */}
             <label className="auth-label" htmlFor="inName">Nombre completo</label>
             <input id="inName" className="auth-input" type="text" value={name} onChange={(e)=>setName(e.target.value)} placeholder="Ingresa tu nombre completo" required />
+
+            {/* Campo: rut */}
+            <label className="auth-label" htmlFor="inRut">Rut</label>
+            <input id="inRut" className="auth-input" type="text" value={rut} onChange={(e)=>setRut(e.target.value)} placeholder="Ingresa tu rut" required />
 
             {/* Campo: email */}
             <label className="auth-label" htmlFor="inEmail">Email</label>
@@ -64,8 +88,17 @@ export default function RegisterPage() {
               </label>
             </div>
 
+            {/* Mensaje de error */}
+            {error && (
+              <div className="auth-error" role="alert" style={{ color: '#b00020', marginBottom: 10 }}>
+                {error}
+              </div>
+            )}
+
             {/* Acción principal: enviar formulario de registro */}
-            <button type="submit" className="btn btn-primary btn-sm" style={{ width: '100%' }}>Registrarse</button>
+            <button type="submit" className="btn btn-primary btn-sm" style={{ width: '100%' }} disabled={loading}>
+              {loading ? 'Registrando…' : 'Registrarse'}
+            </button>
 
             {/* Separador de opciones */}
             <div className="auth-divider"><span>o</span></div>

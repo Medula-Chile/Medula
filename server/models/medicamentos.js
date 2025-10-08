@@ -46,7 +46,7 @@ const medicamentoSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'medicamentos'
+    collection: 'Medicamentos'
 });
 
 medicamentoSchema.index({ nombre: 1 });

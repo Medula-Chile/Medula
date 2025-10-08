@@ -27,7 +27,7 @@ const especialidadSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'especialidades'
+    collection: 'Especialidades'
 });
 
 especialidadSchema.index({ nombre: 1 });

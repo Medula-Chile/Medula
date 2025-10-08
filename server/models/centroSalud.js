@@ -33,7 +33,7 @@ const centroSaludSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'centrosSalud'
+    collection: 'CentrosSalud'
 });
 
 centroSaludSchema.index({ nombre: 1 });

@@ -28,7 +28,7 @@ const administradorSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'administradores'
+    collection: 'Administradores'
 });
 
 administradorSchema.index({ usuario_id: 1 });

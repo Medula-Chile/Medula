@@ -38,7 +38,7 @@ const citaMedicaSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  collection: 'citas'
+  collection: 'Citas'
 });
 
 citaMedicaSchema.index({ paciente_id: 1 });
