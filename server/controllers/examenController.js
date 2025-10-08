@@ -35,3 +35,22 @@ exports.obtenerExamenes = async (req, res) => {
     });
   }
 };
+
+// Obtener exámenes de un paciente específico
+exports.obtenerExamenesPorPaciente = async (req, res) => {
+  try {
+    const { pacienteId } = req.params;
+
+    const examenes = await Examen.find({ paciente_id: pacienteId })
+      .populate('paciente_id', 'nombre usuario_id')
+      .populate('medico_solicitante', 'nombre especialidad')
+      .sort({ fecha_solicitud: -1 });
+
+    res.json(examenes);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error al obtener exámenes del paciente',
+      error: error.message
+    });
+  }
+};

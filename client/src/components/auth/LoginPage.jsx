@@ -43,6 +43,8 @@ export default function LoginPage() {
       // Redirigir según rol
       if (role === 'medico') {
         navigate('/doctor');
+      } else if (role === 'administrador') {
+        navigate('/admin');
       } else {
         navigate('/paciente/historial');
       }

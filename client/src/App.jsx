@@ -27,6 +27,15 @@ import DoctorExamen from './pages/Doctor/Doctorexamenes.jsx';
 import DoctorPacientes from './pages/Doctor/DoctorPacientes.jsx';
 import DoctorRecetas from './pages/Doctor/DoctorRecetas.jsx';
 
+// Importar nuevas páginas y layout para Admin
+import AdminShell from './pages/Admin/AdminShell.jsx';
+import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
+import AdminPacientes from './pages/Admin/AdminPacientes.jsx';
+import AdminMedicos from './pages/Admin/AdminMedicos.jsx';
+import AdminRecetas from './pages/Admin/AdminRecetas.jsx';
+import AdminCitas from './pages/Admin/AdminCitas.jsx';
+import AdminExamenes from './pages/Admin/AdminExamenes.jsx';
+
 function App() {  return (
     <AuthProvider>
       <BrowserRouter>
@@ -58,6 +67,16 @@ function App() {  return (
             <Route path="examenes" element={<DoctorExamen />} />
             <Route path="perfil" element={<DoctorProfile />} />
             <Route path="configuracion" element={<DoctorSettings />} />
+          </Route>
+
+          {/* Rutas del Administrador */}
+          <Route path="/admin" element={<AdminShell />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="pacientes" element={<AdminPacientes />} />
+            <Route path="medicos" element={<AdminMedicos />} />
+            <Route path="recetas" element={<AdminRecetas />} />
+            <Route path="citas" element={<AdminCitas />} />
+            <Route path="examenes" element={<AdminExamenes />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
