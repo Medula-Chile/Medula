@@ -35,6 +35,7 @@ import AdminMedicos from './pages/Admin/AdminMedicos.jsx';
 import AdminRecetas from './pages/Admin/AdminRecetas.jsx';
 import AdminCitas from './pages/Admin/AdminCitas.jsx';
 import AdminExamenes from './pages/Admin/AdminExamenes.jsx';
+import AdminUsers from './pages/admin/AdminUsers';
 
 function App() {  return (
     <AuthProvider>
@@ -77,6 +78,8 @@ function App() {  return (
             <Route path="recetas" element={<AdminRecetas />} />
             <Route path="citas" element={<AdminCitas />} />
             <Route path="examenes" element={<AdminExamenes />} />
+
+            <Route path="usuarios" element={<AdminUsers />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

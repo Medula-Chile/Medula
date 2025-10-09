@@ -1,5 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+
+const mockAsignaciones = [
+  { paciente_id: 'p1', medico_id: 'm1', paciente: 'Juan Perez', medico: 'Dr. Carlos Gomez', fecha: new Date().toISOString(), estado: 'Activo' },
+  { paciente_id: 'p2', medico_id: 'm2', paciente: 'Maria Lopez', medico: 'Dra. Ana Torres', fecha: new Date().toISOString(), estado: 'Activo' },
+];
+
+
+
+const mockPacientes = [
+  { _id: 'p1', usuario_id: { nombre: 'Juan Perez', email: 'juan.perez@example.com', Rut: '12.345.678-9' } },
+  { _id: 'p2', usuario_id: { nombre: 'Maria Lopez', email: 'maria.lopez@example.com', Rut: '98.765.432-1' } },
+];
+
+const mockMedicos = [
+  { _id: 'm1', usuario_id: { nombre: 'Dr. Carlos Gomez' } },
+  { _id: 'm2', usuario_id: { nombre: 'Dra. Ana Torres' } },
+];
+
+const mockCentros = [
+  { _id: 'c1', nombre: 'Centro Salud Norte' },
+  { _id: 'c2', nombre: 'Clinica Central' },
+];
+
+
+
 
 export default function AdminPacientes() {
   const [asignaciones, setAsignaciones] = useState([]);
@@ -20,76 +44,60 @@ export default function AdminPacientes() {
   const [pacientesPorMedico, setPacientesPorMedico] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [asignacionesRes, pacientesRes, medicosRes, centrosRes] = await Promise.all([
-          axios.get('/api/administradores/pacientes-asignados'),
-          axios.get('/api/pacientes'),
-          axios.get('/api/medicos'),
-          axios.get('/api/centros')
-        ]);
-        setAsignaciones(asignacionesRes.data);
-        setPacientes(pacientesRes.data);
-        setMedicos(medicosRes.data);
-        setCentros(centrosRes.data);
-      } catch (err) {
-        setError('Error al cargar datos');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // Simulate data loading with mock data
+    setTimeout(() => {
+      setAsignaciones(mockAsignaciones);
+      setPacientes(mockPacientes);
+      setMedicos(mockMedicos);
+      setCentros(mockCentros);
+      setLoading(false);
+    }, 500);
   }, []);
 
-  const handleAssign = async (e) => {
+  const handleAssign = (e) => {
     e.preventDefault();
-    try {
-      await axios.post('/api/administradores/asignar-paciente', form);
-      setShowForm(false);
-      setForm({ paciente_id: '', medico_id: '', centro_id: '', fecha_hora: '', motivo: '' });
-      // Refresh asignaciones
-      const res = await axios.get('/api/administradores/pacientes-asignados');
-      setAsignaciones(res.data);
-    } catch (err) {
-      setError('Error al asignar paciente');
-    }
+    // For demo, just add to asignaciones state
+    const paciente = pacientes.find(p => p._id === form.paciente_id);
+    const medico = medicos.find(m => m._id === form.medico_id);
+    const newAsignacion = {
+      paciente_id: form.paciente_id,
+      medico_id: form.medico_id,
+      paciente: paciente ? paciente.usuario_id.nombre : '',
+      medico: medico ? medico.usuario_id.nombre : '',
+      fecha: form.fecha_hora,
+      estado: 'Activo'
+    };
+    setAsignaciones([...asignaciones, newAsignacion]);
+    setShowForm(false);
+    setForm({ paciente_id: '', medico_id: '', centro_id: '', fecha_hora: '', motivo: '' });
   };
 
-  const handleUnassign = async (paciente_id, medico_id) => {
+  const handleUnassign = (paciente_id, medico_id) => {
     if (!window.confirm('¿Desasignar este paciente del médico?')) return;
-    try {
-      await axios.post('/api/administradores/desasignar-paciente', { paciente_id, medico_id });
-      // Refresh asignaciones
-      const res = await axios.get('/api/administradores/pacientes-asignados');
-      setAsignaciones(res.data);
-    } catch (err) {
-      setError('Error al desasignar paciente');
-    }
+    setAsignaciones(asignaciones.filter(a => !(a.paciente_id === paciente_id && a.medico_id === medico_id)));
   };
 
   if (loading) return <p>Cargando...</p>;
-  if (error) return <p>{error}</p>;
+  if (error) return <p className="text-danger">{error}</p>;
 
   return (
-    <div>
-      <h2>Gestionar Pacientes</h2>
+    <div className="container mt-4">
+      <h2 className="mb-4">Gestionar Pacientes</h2>
 
       <div className="mb-3">
-        <label>Filtrar pacientes por médico:</label>
+        <label className="form-label">Filtrar pacientes por médico:</label>
         <select
           className="form-select"
           value={selectedMedicoId}
-          onChange={async (e) => {
+          onChange={(e) => {
             const medicoId = e.target.value;
             setSelectedMedicoId(medicoId);
             if (medicoId) {
-              try {
-                const res = await axios.get(`/api/administradores/pacientes-por-medico/${medicoId}`);
-                setPacientesPorMedico(res.data);
-              } catch (err) {
-                setError('Error al cargar pacientes por médico');
-              }
+              const pacientesFiltrados = asignaciones
+                .filter(a => a.medico_id === medicoId)
+                .map(a => pacientes.find(p => p._id === a.paciente_id))
+                .filter(Boolean);
+              setPacientesPorMedico(pacientesFiltrados);
             } else {
               setPacientesPorMedico([]);
             }
@@ -107,48 +115,87 @@ export default function AdminPacientes() {
       </button>
 
       {showForm && (
-        <form onSubmit={handleAssign} className="card p-3 mb-3">
-          <div className="row g-2">
+        <form onSubmit={handleAssign} className="card p-3 mb-4">
+          <div className="row g-3">
             <div className="col-md-6">
-              <label>Paciente</label>
-              <select className="form-select" value={form.paciente_id} onChange={(e) => setForm({ ...form, paciente_id: e.target.value })} required>
+              <label htmlFor="pacienteSelect" className="form-label">Paciente</label>
+              <select
+                id="pacienteSelect"
+                className="form-select"
+                value={form.paciente_id}
+                onChange={(e) => setForm({ ...form, paciente_id: e.target.value })}
+                required
+              >
                 <option value="">Seleccionar paciente</option>
-                {pacientes.map(p => <option key={p._id} value={p._id}>{p.usuario_id.nombre}</option>)}
+                {pacientes.map(p => (
+                  <option key={p._id} value={p._id}>{p.usuario_id.nombre}</option>
+                ))}
               </select>
             </div>
             <div className="col-md-6">
-              <label>Médico</label>
-              <select className="form-select" value={form.medico_id} onChange={(e) => setForm({ ...form, medico_id: e.target.value })} required>
+              <label htmlFor="medicoSelect" className="form-label">Médico</label>
+              <select
+                id="medicoSelect"
+                className="form-select"
+                value={form.medico_id}
+                onChange={(e) => setForm({ ...form, medico_id: e.target.value })}
+                required
+              >
                 <option value="">Seleccionar médico</option>
-                {medicos.map(m => <option key={m._id} value={m.usuario_id}>{m.usuario_id.nombre}</option>)}
+                {medicos.map(m => (
+                  <option key={m._id} value={m._id}>{m.usuario_id.nombre}</option>
+                ))}
               </select>
             </div>
             <div className="col-md-6">
-              <label>Centro</label>
-              <select className="form-select" value={form.centro_id} onChange={(e) => setForm({ ...form, centro_id: e.target.value })} required>
+              <label htmlFor="centroSelect" className="form-label">Centro</label>
+              <select
+                id="centroSelect"
+                className="form-select"
+                value={form.centro_id}
+                onChange={(e) => setForm({ ...form, centro_id: e.target.value })}
+                required
+              >
                 <option value="">Seleccionar centro</option>
-                {centros.map(c => <option key={c._id} value={c._id}>{c.nombre}</option>)}
+                {centros.map(c => (
+                  <option key={c._id} value={c._id}>{c.nombre}</option>
+                ))}
               </select>
             </div>
             <div className="col-md-6">
-              <label>Fecha y Hora</label>
-              <input type="datetime-local" className="form-control" value={form.fecha_hora} onChange={(e) => setForm({ ...form, fecha_hora: e.target.value })} required />
+              <label htmlFor="fechaHora" className="form-label">Fecha y Hora</label>
+              <input
+                type="datetime-local"
+                id="fechaHora"
+                className="form-control"
+                value={form.fecha_hora}
+                onChange={(e) => setForm({ ...form, fecha_hora: e.target.value })}
+                required
+              />
             </div>
             <div className="col-12">
-              <label>Motivo</label>
-              <input type="text" className="form-control" value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value })} placeholder="Motivo de la asignación" />
+              <label htmlFor="motivo" className="form-label">Motivo</label>
+              <input
+                type="text"
+                id="motivo"
+                className="form-control"
+                value={form.motivo}
+                onChange={(e) => setForm({ ...form, motivo: e.target.value })}
+                placeholder="Motivo de la asignación"
+              />
             </div>
             <div className="col-12">
-              <button type="submit" className="btn btn-success">Asignar</button>
+              <button type="submit" className="btn btn-success" disabled={loading}>
+                {loading ? 'Asignando...' : 'Asignar'}
+              </button>
             </div>
           </div>
         </form>
       )}
-
       <h3>Asignaciones Actuales</h3>
-      <table className="table table-striped">
-        <thead>
-          <tr>
+      <table className="table table-bordered">
+    <thead>
+      <tr>
             <th>Paciente</th>
             <th>Médico</th>
             <th>Fecha</th>
