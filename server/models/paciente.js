@@ -40,7 +40,11 @@ const pacienteSchema = new mongoose.Schema({
     enfermedades_cronicas: [{
         type: String,
         trim: true
-    }]
+    }],
+        activo: {
+        type: Boolean,
+        default: true
+    }
 }, {
     timestamps: true,
     collection: 'Pacientes'
@@ -48,5 +52,6 @@ const pacienteSchema = new mongoose.Schema({
 
 pacienteSchema.index({ usuario_id: 1 });
 pacienteSchema.index({ prevision: 1 });
+pacienteSchema.index({ activo: 1 });
 
 module.exports = mongoose.model('Paciente', pacienteSchema);

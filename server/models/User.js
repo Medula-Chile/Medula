@@ -35,6 +35,10 @@ const usuarioSchema = new mongoose.Schema({
     fecha_registro: {
         type: Date,
         default: Date.now
+    },
+    activo: {
+        type: Boolean,
+        default: true
     }
 }, {
     timestamps: true,
@@ -44,5 +48,6 @@ const usuarioSchema = new mongoose.Schema({
 usuarioSchema.index({ email: 1 });
 usuarioSchema.index({ rut: 1 });
 usuarioSchema.index({ rol: 1 });
+usuarioSchema.index({ activo: 1 });
 
 module.exports = mongoose.model('Usuario', usuarioSchema);

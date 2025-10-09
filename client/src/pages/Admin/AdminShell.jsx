@@ -15,11 +15,14 @@ export default function AdminShell() {
 
   const navItems = [
     { path: '/admin', label: 'Inicio' },
+    {path: '/admin/usuarios', label: 'Gestionar Usuarios' },
     { path: '/admin/pacientes', label: 'Gestionar Pacientes' },
     { path: '/admin/medicos', label: 'Gestionar Médicos' },
     { path: '/admin/recetas', label: 'Crear Recetas' },
     { path: '/admin/citas', label: 'Crear Citas' },
     { path: '/admin/examenes', label: 'Ver/Exámenes' },
+    { path: '/admin/especialidades', label: 'Gestionar Especialidades' },
+    { path: '/admin/centros', label: 'Gestionar Centros de Salud' }
   ];
 
   return (

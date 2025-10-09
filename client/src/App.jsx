@@ -36,6 +36,8 @@ import AdminRecetas from './pages/Admin/AdminRecetas.jsx';
 import AdminCitas from './pages/Admin/AdminCitas.jsx';
 import AdminExamenes from './pages/Admin/AdminExamenes.jsx';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminEspecialidades from './pages/Admin/AdminEspecialidades.jsx';
+import AdminCentrosSalud from './pages/Admin/AdminCentrosSalud.jsx';
 
 function App() {  return (
     <AuthProvider>
@@ -73,13 +75,15 @@ function App() {  return (
           {/* Rutas del Administrador */}
           <Route path="/admin" element={<AdminShell />}>
             <Route index element={<AdminDashboard />} />
+            <Route path="usuarios" element={<AdminUsers />} />
             <Route path="pacientes" element={<AdminPacientes />} />
             <Route path="medicos" element={<AdminMedicos />} />
             <Route path="recetas" element={<AdminRecetas />} />
             <Route path="citas" element={<AdminCitas />} />
             <Route path="examenes" element={<AdminExamenes />} />
+            <Route path="especialidades" element={<AdminEspecialidades />} />
+            <Route path="centros" element={<AdminCentrosSalud />} />
 
-            <Route path="usuarios" element={<AdminUsers />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

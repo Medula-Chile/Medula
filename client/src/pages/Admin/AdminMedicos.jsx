@@ -4,246 +4,473 @@ import axios from 'axios';
 export default function AdminMedicos() {
   const [medicos, setMedicos] = useState([]);
   const [selectedMedico, setSelectedMedico] = useState(null);
-  const [pacientes, setPacientes] = useState([]);
-  const [selectedPaciente, setSelectedPaciente] = useState(null);
-  const [pacienteData, setPacienteData] = useState({});
-  const [examenes, setExamenes] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editing, setEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
+  // Nuevos estados para las opciones
+  const [usuarios, setUsuarios] = useState([]);
+  const [especialidades, setEspecialidades] = useState([]);
+  const [centrosSalud, setCentrosSalud] = useState([]);
+
+  // Estado para el formulario
+  const [formData, setFormData] = useState({
+    usuario_id: '',
+    especialidad: '',
+    centro_id: '',
+    titulo_profesional: '',
+    institucion_formacion: '',
+    años_experiencia: '',
+    disponibilidad_horaria: '',
+    contacto_directo: ''
+  });
+
+  // Cargar datos al iniciar
   useEffect(() => {
-    const fetchMedicos = async () => {
-      try {
-        const res = await axios.get('/api/medicos');
-        setMedicos(res.data);
-      } catch (err) {
-        setError('Error al cargar médicos');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMedicos();
+    fetchUsuariosMedicos();
+    fetchEspecialidades();
+    fetchCentrosSalud();
   }, []);
 
-  const handleSelectMedico = async (medico) => {
+  // Obtener todos los médicos
+  const fetchMedicos = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get('http://localhost:5000/api/medicos');
+      setMedicos(res.data.medicos || res.data);
+    } catch (err) {
+      setError('Error al cargar médicos');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Obtener usuarios con rol médico
+  const fetchUsuariosMedicos = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/users?rol=medico');
+      setUsuarios(response.data.usuarios || response.data);
+    } catch (err) {
+      console.error('Error cargando usuarios médicos:', err);
+    }
+  };
+
+  // Obtener especialidades
+  const fetchEspecialidades = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/especialidades');
+      setEspecialidades(response.data);
+    } catch (err) {
+      console.error('Error cargando especialidades:', err);
+    }
+  };
+
+  // Obtener centros de salud
+  const fetchCentrosSalud = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/centros-salud');
+      setCentrosSalud(response.data);
+    } catch (err) {
+      console.error('Error cargando centros de salud:', err);
+    }
+  };
+
+  // Buscar médicos
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      fetchMedicos();
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await axios.get(`http://localhost:5000/api/medicos/buscar?q=${searchTerm}`);
+      setMedicos(res.data.medicos || res.data);
+    } catch (err) {
+      setError('Error al buscar médicos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Seleccionar médico para ver/editar
+  const handleSelectMedico = (medico) => {
     setSelectedMedico(medico);
-    setSelectedPaciente(null);
-    try {
-      const res = await axios.get(`/api/administradores/pacientes-por-medico/${medico.usuario_id}`);
-      setPacientes(res.data);
-    } catch (err) {
-      setError('Error al cargar pacientes del médico');
-    }
-  };
-
-  const handleSelectPaciente = async (paciente) => {
-    setSelectedPaciente(paciente);
-    setPacienteData({ ...paciente.usuario_id });
+    setShowForm(false);
     setEditing(false);
-    try {
-      const res = await axios.get(`/api/examenes/paciente/${paciente.usuario_id._id}`);
-      setExamenes(res.data);
-    } catch (err) {
-      setError('Error al cargar exámenes del paciente');
-    }
   };
 
-  const handleEditPaciente = () => {
+  // Abrir formulario para crear nuevo médico
+  const handleNewMedico = () => {
+    setFormData({
+      usuario_id: '',
+      especialidad: '',
+      centro_id: '',
+      titulo_profesional: '',
+      institucion_formacion: '',
+      años_experiencia: '',
+      disponibilidad_horaria: '',
+      contacto_directo: ''
+    });
+    setShowForm(true);
+    setEditing(false);
+    setSelectedMedico(null);
+  };
+
+  // Abrir formulario para editar médico
+  const handleEditMedico = (medico) => {
+    setFormData({
+      usuario_id: medico.usuario_id._id,
+      especialidad: medico.especialidad,
+      centro_id: medico.centro_id._id,
+      titulo_profesional: medico.titulo_profesional,
+      institucion_formacion: medico.institucion_formacion,
+      años_experiencia: medico.años_experiencia,
+      disponibilidad_horaria: medico.disponibilidad_horaria,
+      contacto_directo: medico.contacto_directo
+    });
+    setShowForm(true);
     setEditing(true);
+    setSelectedMedico(medico);
   };
 
-  const handleSavePaciente = async () => {
+  // Guardar médico (crear o actualizar)
+  const handleSaveMedico = async () => {
     try {
-      await axios.put(`/api/pacientes/${selectedPaciente.usuario_id._id}`, pacienteData);
+      setError(null);
+      
+      // Validaciones básicas
+      if (!formData.usuario_id || !formData.especialidad || !formData.centro_id) {
+        setError('Usuario, especialidad y centro de salud son requeridos');
+        return;
+      }
+
+      if (editing && selectedMedico) {
+        // Actualizar médico existente
+        await axios.put(`http://localhost:5000/api/medicos/${selectedMedico._id}`, formData);
+        alert('Médico actualizado exitosamente');
+      } else {
+        // Crear nuevo médico
+        await axios.post('http://localhost:5000/api/medicos', formData);
+        alert('Médico creado exitosamente');
+      }
+
+      // Limpiar y recargar
+      setShowForm(false);
       setEditing(false);
-      // Refresh paciente data
-      const updatedPaciente = { ...selectedPaciente, usuario_id: pacienteData };
-      setSelectedPaciente(updatedPaciente);
-      alert('Datos del paciente actualizados');
+      setSelectedMedico(null);
+      fetchMedicos();
+      
     } catch (err) {
-      setError('Error al actualizar paciente');
+      setError(err.response?.data?.message || 'Error al guardar médico');
+      console.error('Error:', err);
     }
   };
 
-  const handleCancelEdit = () => {
-    setPacienteData({ ...selectedPaciente.usuario_id });
-    setEditing(false);
+  // Eliminar médico
+  const handleDeleteMedico = async (medicoId) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este médico?')) {
+      return;
+    }
+    try {
+      await axios.delete(`http://localhost:5000/api/medicos/${medicoId}`);
+      alert('Médico eliminado exitosamente');
+      fetchMedicos();
+    } catch (err) {
+      setError('Error al eliminar médico');
+    }
   };
 
-  if (loading) return <p>Cargando...</p>;
-  if (error) return <p>{error}</p>;
+  // Activar/desactivar médico
+  const handleToggleMedico = async (medicoId, currentStatus) => {
+    try {
+      await axios.patch(`http://localhost:5000/api/medicos/${medicoId}/toggle`);
+      alert(`Médico ${currentStatus ? 'desactivado' : 'activado'} exitosamente`);
+      fetchMedicos();
+    } catch (err) {
+      setError('Error al cambiar estado del médico');
+    }
+  };
 
+  // Cancelar edición/creación
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditing(false);
+    setSelectedMedico(null);
+    setError(null);
+  };
+
+  // Función auxiliar para obtener nombre seguro del médico
+  const getMedicoNombre = (medico) => {
+    return medico.usuario_id?.nombre || 'N/A';
+  };
+
+  // Función auxiliar para obtener email seguro del médico
+  const getMedicoEmail = (medico) => {
+    return medico.usuario_id?.email || 'N/A';
+  };
+
+  // Función auxiliar para obtener RUT seguro del médico
+  const getMedicoRut = (medico) => {
+    return medico.usuario_id?.rut || 'N/A';
+  };
+
+  if (loading) return <div className="text-center mt-4"><p>Cargando médicos...</p></div>;
+  
   return (
-    <div>
-      <h2>Gestionar Médicos</h2>
-
+    <div className="container-fluid">
       <div className="row">
-        <div className="col-md-4">
-          <h3>Seleccionar Médico</h3>
-          <ul className="list-group">
-            {medicos.map((medico) => (
-              <li
-                key={medico._id}
-                className={`list-group-item ${selectedMedico && selectedMedico._id === medico._id ? 'active' : ''}`}
-                onClick={() => handleSelectMedico(medico)}
-                style={{ cursor: 'pointer' }}
-              >
-                {medico.usuario_id.nombre}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <div className="col-12">
+          <h2 className="mb-4">Gestión de Médicos</h2>
 
-        {selectedMedico && (
-          <div className="col-md-8">
-            <h3>Pacientes de {selectedMedico.usuario_id.nombre}</h3>
-            <table className="table table-striped">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Email</th>
-                  <th>RUT</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pacientes.map((paciente) => (
-                  <tr key={paciente._id}>
-                    <td>{paciente.usuario_id.nombre}</td>
-                    <td>{paciente.usuario_id.email}</td>
-                    <td>{paciente.usuario_id.Rut}</td>
-                    <td>
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => handleSelectPaciente(paciente)}
-                      >
-                        Ver/Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {selectedPaciente && (
-        <div className="mt-4">
-          <h3>Datos del Paciente: {selectedPaciente.usuario_id.nombre}</h3>
-          <div className="row">
+          {/* Barra de búsqueda y botones */}
+          <div className="row mb-4">
             <div className="col-md-6">
-              <div className="card p-3">
-                <h4>Información Personal</h4>
-                {editing ? (
-                  <form>
-                    <div className="mb-2">
-                      <label>Nombre</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={pacienteData.nombre || ''}
-                        onChange={(e) => setPacienteData({ ...pacienteData, nombre: e.target.value })}
-                      />
-                    </div>
-                    <div className="mb-2">
-                      <label>Email</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        value={pacienteData.email || ''}
-                        onChange={(e) => setPacienteData({ ...pacienteData, email: e.target.value })}
-                      />
-                    </div>
-                    <div className="mb-2">
-                      <label>RUT</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={pacienteData.Rut || ''}
-                        onChange={(e) => setPacienteData({ ...pacienteData, Rut: e.target.value })}
-                      />
-                    </div>
-                    <div className="mb-2">
-                      <label>Fecha de Nacimiento</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={pacienteData.fecha_nacimiento ? pacienteData.fecha_nacimiento.split('T')[0] : ''}
-                        onChange={(e) => setPacienteData({ ...pacienteData, fecha_nacimiento: e.target.value })}
-                      />
-                    </div>
-                    <div className="mb-2">
-                      <label>Teléfono</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={pacienteData.telefono || ''}
-                        onChange={(e) => setPacienteData({ ...pacienteData, telefono: e.target.value })}
-                      />
-                    </div>
-                    <div className="mb-2">
-                      <label>Dirección</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={pacienteData.direccion || ''}
-                        onChange={(e) => setPacienteData({ ...pacienteData, direccion: e.target.value })}
-                      />
-                    </div>
-                    <button type="button" className="btn btn-success me-2" onClick={handleSavePaciente}>
-                      Guardar
-                    </button>
-                    <button type="button" className="btn btn-secondary" onClick={handleCancelEdit}>
-                      Cancelar
-                    </button>
-                  </form>
-                ) : (
-                  <div>
-                    <p><strong>Nombre:</strong> {pacienteData.nombre}</p>
-                    <p><strong>Email:</strong> {pacienteData.email}</p>
-                    <p><strong>RUT:</strong> {pacienteData.Rut}</p>
-                    <p><strong>Fecha de Nacimiento:</strong> {pacienteData.fecha_nacimiento ? new Date(pacienteData.fecha_nacimiento).toLocaleDateString() : 'N/A'}</p>
-                    <p><strong>Teléfono:</strong> {pacienteData.telefono}</p>
-                    <p><strong>Dirección:</strong> {pacienteData.direccion}</p>
-                    <button className="btn btn-warning" onClick={handleEditPaciente}>
-                      Editar
-                    </button>
-                  </div>
-                )}
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Buscar por nombre o especialidad..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <button className="btn btn-outline-secondary" onClick={handleSearch}>
+                  🔍
+                </button>
               </div>
             </div>
-            <div className="col-md-6">
-              <div className="card p-3">
-                <h4>Exámenes del Paciente</h4>
-                {examenes.length > 0 ? (
-                  <table className="table table-sm">
+            <div className="col-md-6 text-end">
+              <button className="btn btn-success" onClick={handleNewMedico}>
+                + Agregar Médico
+              </button>
+              <button className="btn btn-outline-secondary ms-2" onClick={fetchMedicos}>
+                🔄 Actualizar
+              </button>
+            </div>
+          </div>
+
+          {/* Mensaje de error */}
+          {error && (
+            <div className="alert alert-danger alert-dismissible fade show" role="alert">
+              {error}
+              <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+            </div>
+          )}
+
+          {/* Formulario de creación/edición */}
+          {showForm && (
+            <div className="card mb-4">
+              <div className="card-header">
+                <h5>{editing ? 'Editar Médico' : 'Nuevo Médico'}</h5>
+              </div>
+              <div className="card-body">
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label">Usuario *</label>
+                      <select
+                        className="form-select"
+                        value={formData.usuario_id}
+                        onChange={(e) => setFormData({ ...formData, usuario_id: e.target.value })}
+                        disabled={editing} // No permitir cambiar usuario en edición
+                      >
+                        <option value="">Seleccionar usuario</option>
+                        {usuarios.map(usuario => (
+                          <option key={usuario._id} value={usuario._id}>
+                            {usuario.nombre} - {usuario.email} - {usuario.rut}
+                          </option>
+                        ))}
+                      </select>
+                      <small className="text-muted">
+                        {editing 
+                          ? 'No se puede cambiar el usuario asociado' 
+                          : 'Selecciona un usuario con rol médico'
+                        }
+                      </small>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Especialidad *</label>
+                      <select
+                        className="form-select"
+                        value={formData.especialidad}
+                        onChange={(e) => setFormData({ ...formData, especialidad: e.target.value })}
+                      >
+                        <option value="">Seleccionar especialidad</option>
+                        {especialidades.map(especialidad => (
+                          <option key={especialidad._id} value={especialidad.nombre}>
+                            {especialidad.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Centro de Salud *</label>
+                      <select
+                        className="form-select"
+                        value={formData.centro_id}
+                        onChange={(e) => setFormData({ ...formData, centro_id: e.target.value })}
+                      >
+                        <option value="">Seleccionar centro de salud</option>
+                        {centrosSalud.map(centro => (
+                          <option key={centro._id} value={centro._id}>
+                            {centro.nombre} - {centro.comuna}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Título Profesional</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.titulo_profesional}
+                        onChange={(e) => setFormData({ ...formData, titulo_profesional: e.target.value })}
+                        placeholder="Ej: Médico Cirujano"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label">Institución de Formación</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.institucion_formacion}
+                        onChange={(e) => setFormData({ ...formData, institucion_formacion: e.target.value })}
+                        placeholder="Ej: Universidad de Chile"
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Años de Experiencia</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={formData.años_experiencia}
+                        onChange={(e) => setFormData({ ...formData, años_experiencia: e.target.value })}
+                        placeholder="0-60"
+                        min="0"
+                        max="60"
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Disponibilidad Horaria</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.disponibilidad_horaria}
+                        onChange={(e) => setFormData({ ...formData, disponibilidad_horaria: e.target.value })}
+                        placeholder="Ej: Lunes a Viernes 8:00-18:00"
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Contacto Directo</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.contacto_directo}
+                        onChange={(e) => setFormData({ ...formData, contacto_directo: e.target.value })}
+                        placeholder="Teléfono o email de contacto"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-end">
+                  <button className="btn btn-primary me-2" onClick={handleSaveMedico}>
+                    {editing ? 'Actualizar' : 'Crear'} Médico
+                  </button>
+                  <button className="btn btn-secondary" onClick={handleCancel}>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Lista de médicos */}
+          <div className="card">
+            <div className="card-header">
+              <h5>Lista de Médicos ({medicos.length})</h5>
+            </div>
+            <div className="card-body">
+              {medicos.length === 0 ? (
+                <p className="text-center text-muted">No hay médicos registrados</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-striped table-hover">
                     <thead>
                       <tr>
-                        <th>Tipo</th>
-                        <th>Fecha</th>
-                        <th>Resultado</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>RUT</th>
+                        <th>Especialidad</th>
+                        <th>Centro</th>
+                        <th>Estado</th>
+                        <th style={{ width: 180 }}>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {examenes.map((examen) => (
-                        <tr key={examen._id}>
-                          <td>{examen.tipo}</td>
-                          <td>{new Date(examen.fecha).toLocaleDateString()}</td>
-                          <td>{examen.resultado}</td>
+                      {medicos.map((medico) => (
+                        <tr key={medico._id} className={!medico.activo ? 'table-secondary' : ''}>
+                          <td>
+                            {getMedicoNombre(medico)}
+                            {!medico.activo && <span className="badge bg-warning ms-1">Inactivo</span>}
+                          </td>
+                          <td>{getMedicoEmail(medico)}</td>
+                          <td>{getMedicoRut(medico)}</td>
+                          <td>{medico.especialidad}</td>
+                          <td>{medico.centro_id?.nombre || 'N/A'}</td>
+                          <td>
+                            <span className={`badge ${medico.activo ? 'bg-success' : 'bg-danger'}`}>
+                              {medico.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-outline-primary"
+                                onClick={() => handleEditMedico(medico)}
+                                title="Editar"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                className="btn btn-outline-warning"
+                                onClick={() => handleToggleMedico(medico._id, medico.activo)}
+                                title={medico.activo ? 'Desactivar' : 'Activar'}
+                              >
+                                {medico.activo ? '⏸️' : '▶️'}
+                              </button>
+                              <button
+                                className="btn btn-outline-danger"
+                                onClick={() => handleDeleteMedico(medico._id)}
+                                title="Eliminar"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                ) : (
-                  <p>No hay exámenes registrados.</p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
