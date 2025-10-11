@@ -151,8 +151,9 @@ export default function AdminMedicos() {
       }
 
       if (editing && selectedMedico) {
-        // Actualizar médico existente
-        await axios.put(`http://localhost:5000/api/medicos/${selectedMedico._id}`, formData);
+        // Actualizar médico existente: NO enviar usuario_id
+        const { usuario_id, ...partial } = formData;
+        await axios.put(`http://localhost:5000/api/medicos/${selectedMedico._id}`, partial);
         alert('Médico actualizado exitosamente');
       } else {
         // Crear nuevo médico

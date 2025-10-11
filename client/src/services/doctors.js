@@ -20,3 +20,11 @@ export async function getDoctorById(id) {
   const { data } = await api.get(`/medicos/${id}`);
   return data; // medico
 }
+
+// Busca el registro de médico del usuario autenticado
+export async function findDoctorByUserId(userId) {
+  if (!userId) return null;
+  const { data } = await api.get('/medicos', { params: { pagina: 1, limite: 500 } });
+  const medicos = Array.isArray(data?.medicos) ? data.medicos : (Array.isArray(data) ? data : []);
+  return medicos.find(m => (m?.usuario_id?._id === userId) || (m?.usuario_id?.id === userId) || (m?.usuario_id === userId)) || null;
+}

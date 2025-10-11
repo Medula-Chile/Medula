@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { listSpecialties } from '../../services/specialties';
 import { listCenters } from '../../services/centers';
-import { createDoctor } from '../../services/doctors';
+import { createDoctor, updateDoctor, findDoctorByUserId } from '../../services/doctors';
 
 export default function DoctorProfile() {
   const { user } = useAuth();
@@ -36,6 +36,27 @@ export default function DoctorProfile() {
   const [especialidades, setEspecialidades] = React.useState([]);
   const [centros, setCentros] = React.useState([]);
   const [saving, setSaving] = React.useState(false);
+  const [doctorRecord, setDoctorRecord] = React.useState(null);
+
+  // Nombre del centro desde catálogo por id
+  const centerName = React.useMemo(() => {
+    const c = centros.find((x) => x._id === datos.centroId);
+    return c ? c.nombre : 'N/A';
+  }, [centros, datos.centroId]);
+  const centerComuna = React.useMemo(() => {
+    const c = centros.find((x) => x._id === datos.centroId);
+    return c ? (c.comuna || '') : '';
+  }, [centros, datos.centroId]);
+
+  // Datos del usuario (nombre, rut, email) preferentemente desde doctorRecord.usuario_id
+  const displayUser = React.useMemo(() => {
+    const u = doctorRecord?.usuario_id || {};
+    return {
+      nombre: u.nombre || user?.nombre || datos.nombre,
+      rut: u.rut || datos.run || '',
+      email: u.email || user?.email || datos.email,
+    };
+  }, [doctorRecord, user, datos.nombre, datos.run, datos.email]);
 
   React.useEffect(() => {
     try {
@@ -47,6 +68,36 @@ export default function DoctorProfile() {
   React.useEffect(() => {
     localStorage.setItem('medula_doctor_profile', JSON.stringify(datos));
   }, [datos]);
+
+  // Cargar datos reales del médico para el usuario autenticado
+  React.useEffect(() => {
+    const loadMedico = async () => {
+      const userId = user?.id || user?._id;
+      if (!userId) return;
+      try {
+        const rec = await findDoctorByUserId(userId);
+        setDoctorRecord(rec || null);
+        if (rec) {
+          // Prefill datos visibles con lo que viene del server
+          setDatos((prev) => ({
+            ...prev,
+            especialidad: rec.especialidad || prev.especialidad,
+            telefono: rec.contacto_directo || prev.telefono,
+            añosExperiencia: String(rec.años_experiencia ?? prev.añosExperiencia),
+            tituloProfesional: rec.titulo_profesional || prev.tituloProfesional,
+            institucionFormacion: rec.institucion_formacion || prev.institucionFormacion,
+            disponibilidadHoraria: rec.disponibilidad_horaria || prev.disponibilidadHoraria,
+            centroId: rec.centro_id?._id || prev.centroId,
+            contactoDirecto: rec.contacto_directo || prev.contactoDirecto,
+            activo: rec.activo ?? prev.activo,
+          }));
+        }
+      } catch (e) {
+        console.error('Error cargando registro de médico:', e);
+      }
+    };
+    loadMedico();
+  }, [user]);
 
   // Cargar catálogos (especialidades, centros)
   React.useEffect(() => {
@@ -100,17 +151,26 @@ export default function DoctorProfile() {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    if (!user?._id) {
+    const userId = user?.id || user?._id;
+    if (!userId) {
       alert('No hay usuario autenticado. Inicia sesión.');
       return;
     }
-    const payload = toMedicoPayload(form, user._id);
+    const payload = toMedicoPayload(form, userId);
     try {
       setSaving(true);
-      const resp = await createDoctor(payload);
-      // Actualizamos el estado local visual y cerramos modal
+      let resp;
+      if (doctorRecord?._id) {
+        // Actualiza el existente (no enviar usuario_id en update)
+        const { usuario_id, ...partial } = payload;
+        resp = await updateDoctor(doctorRecord._id, partial);
+      } else {
+        // Crea si no existe
+        resp = await createDoctor(payload);
+      }
+      // Reflejar en UI y cerrar
       setDatos(form);
-      alert(resp?.message || 'Médico guardado');
+      alert(resp?.message || 'Datos guardados');
       setOpen(false);
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Error al guardar médico';
@@ -127,55 +187,72 @@ export default function DoctorProfile() {
       <div className="col-12">
         <div className="card">
           <div className="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 className="card-title mb-0">Perfil Médico</h5>
+            <div>
+              <h5 className="card-title mb-0">Perfil de {displayUser.nombre}</h5>
+              <div className="text-muted small">
+                Rol: {user?.rol || '—'} · ID: {(user?.id || user?._id || '—')}
+              </div>
+            </div>
             <button className="btn btn-sm btn-outline-secondary" onClick={openModal}>
               <i className="fas fa-pen me-1"></i> Editar
             </button>
           </div>
           <div className="card-body">
             <div className="row small g-3">
-              <div className="col-12 col-md-6">
+              {/* Fila 1: Identificación */}
+              <div className="col-12 col-md-4">
                 <p className="text-muted-foreground mb-0">Nombre</p>
-                <p className="fw-medium mb-0">{datos.nombre}</p>
+                <p className="fw-medium mb-0">{displayUser.nombre}</p>
               </div>
-              <div className="col-6 col-md-3">
+              <div className="col-6 col-md-4">
                 <p className="text-muted-foreground mb-0">RUN</p>
-                <p className="fw-medium mb-0">{datos.run}</p>
-              </div>
-              <div className="col-6 col-md-3">
-                <p className="text-muted-foreground mb-0">Nacimiento</p>
-                <p className="fw-medium mb-0">{datos.nacimiento}</p>
-              </div>
-
-              <div className="col-6 col-md-4">
-                <p className="text-muted-foreground mb-0">Especialidad</p>
-                <p className="fw-medium mb-0">{datos.especialidad}</p>
-              </div>
-              <div className="col-6 col-md-4">
-                <p className="text-muted-foreground mb-0">Subespecialidad</p>
-                <p className="fw-medium mb-0">{datos.subespecialidad || 'No especificada'}</p>
-              </div>
-              <div className="col-6 col-md-4">
-                <p className="text-muted-foreground mb-0">Años de Experiencia</p>
-                <p className="fw-medium mb-0">{datos.añosExperiencia} años</p>
-              </div>
-
-              <div className="col-6 col-md-4">
-                <p className="text-muted-foreground mb-0">Teléfono</p>
-                <p className="fw-medium mb-0">{datos.telefono}</p>
+                <p className="fw-medium mb-0">{displayUser.rut || '—'}</p>
               </div>
               <div className="col-6 col-md-4">
                 <p className="text-muted-foreground mb-0">Email</p>
-                <p className="fw-medium mb-0">{datos.email}</p>
-              </div>
-              <div className="col-6 col-md-4">
-                <p className="text-muted-foreground mb-0">Dirección</p>
-                <p className="fw-medium mb-0">{datos.direccion}</p>
+                <p className="fw-medium mb-0">{displayUser.email || '—'}</p>
               </div>
 
-              <div className="col-12">
-                <p className="text-muted-foreground mb-0">Universidad</p>
-                <p className="fw-medium mb-0">{datos.universidad}</p>
+              {/* Fila 2: Perfil profesional */}
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Especialidad</p>
+                <p className="fw-medium mb-0">{datos.especialidad || '—'}</p>
+              </div>
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Centro de Salud</p>
+                <p className="fw-medium mb-0">{centerName}{centerComuna ? ` - ${centerComuna}` : ''}</p>
+              </div>
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Estado</p>
+                <span className={`badge ${datos.activo ? 'bg-success' : 'bg-danger'}`}>{datos.activo ? 'Activo' : 'Inactivo'}</span>
+              </div>
+
+              {/* Fila 3: Formación */}
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Título Profesional</p>
+                <p className="fw-medium mb-0">{datos.tituloProfesional || '—'}</p>
+              </div>
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Institución de Formación</p>
+                <p className="fw-medium mb-0">{datos.institucionFormacion || datos.universidad || '—'}</p>
+              </div>
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Años de Experiencia</p>
+                <p className="fw-medium mb-0">{datos.añosExperiencia ? `${datos.añosExperiencia} años` : '—'}</p>
+              </div>
+
+              {/* Fila 4: Disponibilidad y contacto */}
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Disponibilidad Horaria</p>
+                <p className="fw-medium mb-0">{datos.disponibilidadHoraria || '—'}</p>
+              </div>
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Contacto Directo</p>
+                <p className="fw-medium mb-0">{datos.contactoDirecto || datos.telefono || '—'}</p>
+              </div>
+              <div className="col-12 col-md-4">
+                <p className="text-muted-foreground mb-0">Dirección</p>
+                <p className="fw-medium mb-0">{datos.direccion || '—'}</p>
               </div>
             </div>
           </div>
