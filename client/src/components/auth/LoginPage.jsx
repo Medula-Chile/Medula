@@ -119,7 +119,7 @@ export default function LoginPage() {
 
           {/* Alternativa de ingreso con ClaveÚnica (placeholder) */}
           <div className="text-center">
-            <button type="button" className="btn btn-outline-secondary btn-sm">Ingresar con ClaveÚnica</button>
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => window.open('https://claveunica.gob.cl', '_blank')}>Ingresar con ClaveÚnica</button>
           </div>
         </form>
       </div>
