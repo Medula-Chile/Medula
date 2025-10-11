@@ -2,105 +2,605 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 export default function AdminCitas() {
+  const [citas, setCitas] = useState([]);
   const [pacientes, setPacientes] = useState([]);
   const [medicos, setMedicos] = useState([]);
   const [centros, setCentros] = useState([]);
+  const [selectedCita, setSelectedCita] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [form, setForm] = useState({
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Estado para el formulario
+  const [formData, setFormData] = useState({
     paciente_id: '',
     profesional_id: '',
     centro_id: '',
     fecha_hora: '',
     motivo: '',
+    estado: 'programada',
     notas: ''
   });
 
+  // Cargar datos al iniciar
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [pacientesRes, medicosRes, centrosRes] = await Promise.all([
-          axios.get('/api/pacientes'),
-          axios.get('/api/medicos'),
-          axios.get('/api/centros')
-        ]);
-        setPacientes(pacientesRes.data);
-        setMedicos(medicosRes.data);
-        setCentros(centrosRes.data);
-      } catch (err) {
-        setError('Error al cargar datos');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchCitas();
+    fetchPacientes();
+    fetchMedicos();
+    fetchCentros();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Obtener todas las citas
+  const fetchCitas = async () => {
     try {
-      await axios.post('/api/administradores/citas', form);
-      alert('Cita creada exitosamente');
-      setForm({
-        paciente_id: '',
-        profesional_id: '',
-        centro_id: '',
-        fecha_hora: '',
-        motivo: '',
-        notas: ''
-      });
+      setLoading(true);
+      const response = await axios.get('http://localhost:5000/api/citas');
+      // Asegurar que sea un array
+      setCitas(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
-      setError('Error al crear cita');
+      setError('Error al cargar citas');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <p>Cargando...</p>;
-  if (error) return <p>{error}</p>;
+  // Obtener pacientes - CORREGIDO
+  const fetchPacientes = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/pacientes');
+      // Manejar diferentes formatos de respuesta
+      let pacientesData = response.data;
+      
+      // Si es un objeto con propiedad pacientes
+      if (pacientesData && pacientesData.pacientes) {
+        pacientesData = pacientesData.pacientes;
+      }
+      // Si es un objeto con propiedad data
+      else if (pacientesData && pacientesData.data) {
+        pacientesData = pacientesData.data;
+      }
+      
+      // Asegurar que sea un array
+      setPacientes(Array.isArray(pacientesData) ? pacientesData : []);
+    } catch (err) {
+      console.error('Error cargando pacientes:', err);
+      setPacientes([]); // Asegurar que sea array vacío en caso de error
+    }
+  };
+
+  // Obtener médicos - CORREGIDO
+  const fetchMedicos = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/medicos');
+      // Manejar diferentes formatos de respuesta
+      let medicosData = response.data;
+      
+      // Si es un objeto con propiedad medicos
+      if (medicosData && medicosData.medicos) {
+        medicosData = medicosData.medicos;
+      }
+      // Si es un objeto con propiedad data
+      else if (medicosData && medicosData.data) {
+        medicosData = medicosData.data;
+      }
+      
+      // Asegurar que sea un array
+      setMedicos(Array.isArray(medicosData) ? medicosData : []);
+    } catch (err) {
+      console.error('Error cargando médicos:', err);
+      setMedicos([]); // Asegurar que sea array vacío en caso de error
+    }
+  };
+
+  // Obtener centros de salud - CORREGIDO
+  const fetchCentros = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/centros');
+      // Manejar diferentes formatos de respuesta
+      let centrosData = response.data;
+      
+      // Si es un objeto con propiedad centros
+      if (centrosData && centrosData.centros) {
+        centrosData = centrosData.centros;
+      }
+      // Si es un objeto con propiedad data
+      else if (centrosData && centrosData.data) {
+        centrosData = centrosData.data;
+      }
+      
+      // Asegurar que sea un array
+      setCentros(Array.isArray(centrosData) ? centrosData : []);
+    } catch (err) {
+      console.error('Error cargando centros:', err);
+      setCentros([]); // Asegurar que sea array vacío en caso de error
+    }
+  };
+
+  // Buscar citas
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      fetchCitas();
+      return;
+    }
+    try {
+      setLoading(true);
+      // Búsqueda en frontend
+      const citasFiltradas = citas.filter(cita => 
+        (cita.paciente_id?.usuario_id?.nombre && cita.paciente_id.usuario_id.nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (cita.profesional_id?.nombre && cita.profesional_id.nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (cita.motivo && cita.motivo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (cita.estado && cita.estado.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setCitas(citasFiltradas);
+    } catch (err) {
+      setError('Error al buscar citas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Abrir formulario para crear cita
+  const handleNewCita = () => {
+    setFormData({
+      paciente_id: '',
+      profesional_id: '',
+      centro_id: '',
+      fecha_hora: '',
+      motivo: '',
+      estado: 'programada',
+      notas: ''
+    });
+    setShowForm(true);
+    setEditing(false);
+    setSelectedCita(null);
+    setError('');
+  };
+
+  // Abrir formulario para editar cita
+  const handleEditCita = (cita) => {
+    // Formatear fecha para el input datetime-local
+    const fechaHora = new Date(cita.fecha_hora);
+    const fechaHoraFormateada = fechaHora.toISOString().slice(0, 16);
+    
+    setFormData({
+      paciente_id: cita.paciente_id._id,
+      profesional_id: cita.profesional_id._id,
+      centro_id: cita.centro_id._id,
+      fecha_hora: fechaHoraFormateada,
+      motivo: cita.motivo,
+      estado: cita.estado,
+      notas: cita.notas || ''
+    });
+    setShowForm(true);
+    setEditing(true);
+    setSelectedCita(cita);
+    setError('');
+  };
+
+  // Guardar cita (crear o actualizar)
+  const handleSaveCita = async () => {
+    try {
+      setError('');
+
+      // Validaciones básicas
+      if (!formData.paciente_id || !formData.profesional_id || !formData.centro_id || !formData.fecha_hora || !formData.motivo) {
+        setError('Paciente, médico, centro, fecha/hora y motivo son requeridos');
+        return;
+      }
+
+      // Validar que la fecha no sea en el pasado
+      const fechaCita = new Date(formData.fecha_hora);
+      const ahora = new Date();
+      if (fechaCita <= ahora) {
+        setError('La fecha y hora de la cita debe ser futura');
+        return;
+      }
+
+      if (formData.motivo.length > 500) {
+        setError('El motivo no puede exceder los 500 caracteres');
+        return;
+      }
+
+      if (formData.notas.length > 1000) {
+        setError('Las notas no pueden exceder los 1000 caracteres');
+        return;
+      }
+
+      // Preparar datos para enviar
+      const citaData = {
+        paciente_id: formData.paciente_id,
+        profesional_id: formData.profesional_id,
+        centro_id: formData.centro_id,
+        fecha_hora: formData.fecha_hora,
+        motivo: formData.motivo,
+        estado: formData.estado,
+        notas: formData.notas
+      };
+
+      if (editing && selectedCita) {
+        // Actualizar cita existente
+        const response = await axios.put(`http://localhost:5000/api/citas/${selectedCita._id}`, citaData);
+        alert(response.data.message || 'Cita actualizada exitosamente');
+      } else {
+        // Crear nueva cita
+        const response = await axios.post('http://localhost:5000/api/citas', citaData);
+        alert(response.data.message || 'Cita creada exitosamente');
+      }
+
+      // Limpiar y recargar
+      setShowForm(false);
+      setEditing(false);
+      setSelectedCita(null);
+      fetchCitas();
+      
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          'Error al guardar cita';
+      setError(errorMessage);
+      console.error('Error:', err);
+    }
+  };
+
+  // Eliminar cita
+  const handleDeleteCita = async (citaId, pacienteNombre) => {
+    if (!window.confirm(`¿Eliminar la cita de ${pacienteNombre}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+    try {
+      await axios.delete(`http://localhost:5000/api/citas/${citaId}`);
+      alert('Cita eliminada exitosamente');
+      fetchCitas();
+    } catch (err) {
+      setError('Error al eliminar cita');
+    }
+  };
+
+  // Cambiar estado de la cita
+  const handleChangeEstado = async (citaId, nuevoEstado, pacienteNombre) => {
+    if (!window.confirm(`¿Cambiar el estado de la cita de ${pacienteNombre} a "${nuevoEstado}"?`)) {
+      return;
+    }
+    try {
+      await axios.put(`http://localhost:5000/api/citas/${citaId}`, { estado: nuevoEstado });
+      alert(`Estado de cita cambiado a "${nuevoEstado}" exitosamente`);
+      fetchCitas();
+    } catch (err) {
+      setError('Error al cambiar estado de la cita');
+    }
+  };
+
+  // Cancelar edición/creación
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditing(false);
+    setSelectedCita(null);
+    setError('');
+  };
+
+  // Función auxiliar para obtener nombre seguro del paciente
+  const getPacienteNombre = (cita) => {
+    return cita.paciente_id?.usuario_id?.nombre || 'N/A';
+  };
+
+  // Función auxiliar para obtener nombre seguro del médico
+  const getMedicoNombre = (cita) => {
+    return cita.profesional_id?.nombre || 'N/A';
+  };
+
+  // Función auxiliar para obtener nombre seguro del centro
+  const getCentroNombre = (cita) => {
+    return cita.centro_id?.nombre || 'N/A';
+  };
+
+  // Función para formatear fecha
+  const formatFecha = (fecha) => {
+    return new Date(fecha).toLocaleString('es-CL');
+  };
+
+  // Función para obtener badge según estado
+  const getEstadoBadge = (estado) => {
+    const estados = {
+      programada: 'bg-primary',
+      confirmada: 'bg-success',
+      completada: 'bg-info',
+      cancelada: 'bg-danger',
+      no_asistio: 'bg-warning'
+    };
+    return estados[estado] || 'bg-secondary';
+  };
+
+  // Función para obtener texto del estado
+  const getEstadoTexto = (estado) => {
+    const textos = {
+      programada: 'Programada',
+      confirmada: 'Confirmada',
+      completada: 'Completada',
+      cancelada: 'Cancelada',
+      no_asistio: 'No Asistió'
+    };
+    return textos[estado] || estado;
+  };
+
+  if (loading) return <div className="text-center mt-4"><p>Cargando citas...</p></div>;
 
   return (
-    <div>
-      <h2>Crear Cita</h2>
-      <form onSubmit={handleSubmit} className="card p-3">
-        <div className="row g-2">
-          <div className="col-md-6">
-            <label>Paciente</label>
-            <select className="form-select" value={form.paciente_id} onChange={(e) => setForm({ ...form, paciente_id: e.target.value })} required>
-              <option value="">Seleccionar paciente</option>
-              {pacientes.map(p => <option key={p._id} value={p._id}>{p.usuario_id.nombre}</option>)}
-            </select>
+    <div className="container-fluid">
+      <div className="row">
+        <div className="col-12">
+          <h2 className="mb-4">Gestión de Citas Médicas</h2>
+
+          {/* Barra de búsqueda y botones */}
+          <div className="row mb-4">
+            <div className="col-md-6">
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Buscar por paciente, médico o motivo..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <button className="btn btn-outline-secondary" onClick={handleSearch}>
+                  🔍
+                </button>
+              </div>
+            </div>
+            <div className="col-md-6 text-end">
+              <button className="btn btn-success" onClick={handleNewCita}>
+                + Agregar Cita
+              </button>
+              <button className="btn btn-outline-secondary ms-2" onClick={fetchCitas}>
+                🔄 Actualizar
+              </button>
+            </div>
           </div>
-          <div className="col-md-6">
-            <label>Profesional</label>
-            <select className="form-select" value={form.profesional_id} onChange={(e) => setForm({ ...form, profesional_id: e.target.value })} required>
-              <option value="">Seleccionar profesional</option>
-              {medicos.map(m => <option key={m._id} value={m.usuario_id}>{m.usuario_id.nombre}</option>)}
-            </select>
-          </div>
-          <div className="col-md-6">
-            <label>Centro</label>
-            <select className="form-select" value={form.centro_id} onChange={(e) => setForm({ ...form, centro_id: e.target.value })} required>
-              <option value="">Seleccionar centro</option>
-              {centros.map(c => <option key={c._id} value={c._id}>{c.nombre}</option>)}
-            </select>
-          </div>
-          <div className="col-md-6">
-            <label>Fecha y Hora</label>
-            <input type="datetime-local" className="form-control" value={form.fecha_hora} onChange={(e) => setForm({ ...form, fecha_hora: e.target.value })} required />
-          </div>
-          <div className="col-12">
-            <label>Motivo</label>
-            <input type="text" className="form-control" value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value })} required />
-          </div>
-          <div className="col-12">
-            <label>Notas</label>
-            <textarea className="form-control" value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })} rows="3"></textarea>
-          </div>
-          <div className="col-12">
-            <button type="submit" className="btn btn-success">Crear Cita</button>
+
+          {/* Mensaje de error */}
+          {error && (
+            <div className="alert alert-danger alert-dismissible fade show" role="alert">
+              {error}
+              <button type="button" className="btn-close" onClick={() => setError('')}></button>
+            </div>
+          )}
+
+          {/* Formulario de creación/edición */}
+          {showForm && (
+            <div className="card mb-4">
+              <div className="card-header">
+                <h5>{editing ? 'Editar Cita Médica' : 'Nueva Cita Médica'}</h5>
+              </div>
+              <div className="card-body">
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label">Paciente *</label>
+                      <select
+                        className="form-select"
+                        value={formData.paciente_id}
+                        onChange={(e) => setFormData({ ...formData, paciente_id: e.target.value })}
+                      >
+                        <option value="">Seleccionar paciente</option>
+                        {/* CORREGIDO: Verificar que pacientes sea array */}
+                        {Array.isArray(pacientes) && pacientes.map(paciente => (
+                          <option key={paciente._id} value={paciente._id}>
+                            {paciente.usuario_id?.nombre} - {paciente.usuario_id?.rut}
+                          </option>
+                        ))}
+                      </select>
+                      {!Array.isArray(pacientes) && (
+                        <small className="text-danger">Error al cargar pacientes</small>
+                      )}
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Médico *</label>
+                      <select
+                        className="form-select"
+                        value={formData.profesional_id}
+                        onChange={(e) => setFormData({ ...formData, profesional_id: e.target.value })}
+                      >
+                        <option value="">Seleccionar médico</option>
+                        {/* CORREGIDO: Verificar que medicos sea array */}
+                        {Array.isArray(medicos) && medicos.map(medico => (
+                          <option key={medico._id} value={medico.usuario_id?._id}>
+                            {medico.usuario_id?.nombre} - {medico.especialidad} - {medico.centro_id?.nombre}
+                          </option>
+                        ))}
+                      </select>
+                      {!Array.isArray(medicos) && (
+                        <small className="text-danger">Error al cargar médicos</small>
+                      )}
+                      <small className="text-muted">
+                        Se muestran médicos con sus especialidades y centros asignados
+                      </small>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Centro de Salud *</label>
+                      <select
+                        className="form-select"
+                        value={formData.centro_id}
+                        onChange={(e) => setFormData({ ...formData, centro_id: e.target.value })}
+                      >
+                        <option value="">Seleccionar centro</option>
+                        {/* CORREGIDO: Verificar que centros sea array */}
+                        {Array.isArray(centros) && centros.map(centro => (
+                          <option key={centro._id} value={centro._id}>
+                            {centro.nombre} - {centro.comuna}
+                          </option>
+                        ))}
+                      </select>
+                      {!Array.isArray(centros) && (
+                        <small className="text-danger">Error al cargar centros</small>
+                      )}
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Fecha y Hora *</label>
+                      <input
+                        type="datetime-local"
+                        className="form-control"
+                        value={formData.fecha_hora}
+                        onChange={(e) => setFormData({ ...formData, fecha_hora: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label">Estado</label>
+                      <select
+                        className="form-select"
+                        value={formData.estado}
+                        onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                      >
+                        <option value="programada">Programada</option>
+                        <option value="confirmada">Confirmada</option>
+                        <option value="completada">Completada</option>
+                        <option value="cancelada">Cancelada</option>
+                        <option value="no_asistio">No Asistió</option>
+                      </select>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Motivo *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.motivo}
+                        onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
+                        placeholder="Motivo de la consulta"
+                        maxLength="500"
+                      />
+                      <small className="text-muted">
+                        {formData.motivo.length}/500 caracteres
+                      </small>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Notas</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={formData.notas}
+                        onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+                        placeholder="Notas adicionales..."
+                        maxLength="1000"
+                      />
+                      <small className="text-muted">
+                        {formData.notas.length}/1000 caracteres
+                      </small>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-end">
+                  <button className="btn btn-primary me-2" onClick={handleSaveCita}>
+                    {editing ? 'Actualizar' : 'Crear'} Cita
+                  </button>
+                  <button className="btn btn-secondary" onClick={handleCancel}>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Lista de citas */}
+          <div className="card">
+            <div className="card-header">
+              <h5>Lista de Citas Médicas ({citas.length})</h5>
+            </div>
+            <div className="card-body">
+              {citas.length === 0 ? (
+                <p className="text-center text-muted">No hay citas médicas registradas</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>Paciente</th>
+                        <th>Médico Asignado</th>
+                        <th>Especialidad</th>
+                        <th>Centro</th>
+                        <th>Fecha y Hora</th>
+                        <th>Motivo</th>
+                        <th>Estado</th>
+                        <th style={{ width: 180 }}>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {citas.map(cita => (
+                        <tr key={cita._id}>
+                          <td>
+                            <strong>{getPacienteNombre(cita)}</strong>
+                          </td>
+                          <td>
+                            <strong>{getMedicoNombre(cita)}</strong>
+                          </td>
+                          <td>
+                            {/* Buscar la especialidad del médico */}
+                            {Array.isArray(medicos) && medicos.find(m => m.usuario_id?._id === cita.profesional_id?._id)?.especialidad || 'N/A'}
+                          </td>
+                          <td>{getCentroNombre(cita)}</td>
+                          <td>
+                            <small className="text-muted">
+                              {formatFecha(cita.fecha_hora)}
+                            </small>
+                          </td>
+                          <td>
+                            <small className="text-muted">
+                              {cita.motivo.length > 50 
+                                ? `${cita.motivo.substring(0, 50)}...` 
+                                : cita.motivo
+                              }
+                            </small>
+                          </td>
+                          <td>
+                            <span className={`badge ${getEstadoBadge(cita.estado)}`}>
+                              {getEstadoTexto(cita.estado)}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-outline-primary"
+                                onClick={() => handleEditCita(cita)}
+                                title="Editar"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                className="btn btn-outline-info"
+                                onClick={() => handleChangeEstado(cita._id, 'confirmada', getPacienteNombre(cita))}
+                                title="Confirmar cita"
+                              >
+                                ✅
+                              </button>
+                              <button
+                                className="btn btn-outline-danger"
+                                onClick={() => handleDeleteCita(cita._id, getPacienteNombre(cita))}
+                                title="Eliminar"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
