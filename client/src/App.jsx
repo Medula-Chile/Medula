@@ -35,9 +35,10 @@ import AdminMedicos from './pages/Admin/AdminMedicos.jsx';
 import AdminRecetas from './pages/Admin/AdminRecetas.jsx';
 import AdminCitas from './pages/Admin/AdminCitas.jsx';
 import AdminExamenes from './pages/Admin/AdminExamenes.jsx';
-import AdminUsers from './pages/admin/AdminUsers';
+import AdminUsers from './pages/Admin/AdminUsers.jsx';
 import AdminEspecialidades from './pages/Admin/AdminEspecialidades.jsx';
 import AdminCentrosSalud from './pages/Admin/AdminCentrosSalud.jsx';
+import DoctorHistorial from './pages/Doctor/DoctorHistorial.jsx';
 
 function App() {  return (
     <AuthProvider>
@@ -65,6 +66,7 @@ function App() {  return (
             <Route index element={<Navigate to="inicio" replace />} />
             <Route path="inicio" element={<DoctorInicio />} />
             <Route path="pacientes" element={<DoctorPacientes />} />
+            <Route path="historial" element={<DoctorHistorial />} />
             <Route path="agenda" element={<DoctorSchedule />} />
             <Route path="recetas" element={<DoctorRecetas />} />
             <Route path="examenes" element={<DoctorExamen />} />

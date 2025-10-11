@@ -47,6 +47,10 @@ export default function Aside({ isOpen, onClose, onLogout }) {
               <i className="fas fa-user-friends"></i>
               <span>Pacientes</span>
             </NavLink>
+            <NavLink to="/doctor/historial" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={onClose}>
+              <i className="fas fa-history"></i>
+              <span>Historial</span>
+            </NavLink>
             <NavLink to="/doctor/agenda" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={onClose}>
               <i className="fas fa-calendar-alt"></i>
               <span>Agenda</span>

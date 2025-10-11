@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import api from '../../services/api';
 
 export default function AdminMedicos() {
   const [medicos, setMedicos] = useState([]);
@@ -69,11 +70,12 @@ export default function AdminMedicos() {
     }
   };
 
-  // Obtener centros de salud
+  // Obtener centros de salud (ruta correcta y usando api con token)
   const fetchCentrosSalud = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/centros-salud');
-      setCentrosSalud(response.data);
+      const response = await api.get('/centros');
+      const data = response.data;
+      setCentrosSalud(Array.isArray(data) ? data : (data?.centros || []));
     } catch (err) {
       console.error('Error cargando centros de salud:', err);
     }
