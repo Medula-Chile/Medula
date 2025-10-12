@@ -294,77 +294,19 @@ footer .logos img{
    ===================================================== */
 
 /* Base y utilidades previas */
+@import url('./styles/Global.css');
+@import url('./styles/Components.css');
+@import url('./index.css');
+@import url('./App.css');
 
 /* Componentes y páginas */
-
-/* ===== Consolidated CSS below (do not edit sources here) ===== */
-/* =====================
-   Section: Global Variables and Resets
-   Source:  styles/Global.css
-   ===================== */
-/* ===== End Section: Global Variables and Resets ===== */
-/* =====================
-   Section: Shared Components (empty placeholder)
-   Source:  styles/Components.css
-   ===================== */
-/* ===== End Section: Shared Components (empty placeholder) ===== */
-/* =====================
-   Section: Vite Template Index
-   Source:  index.css
-   ===================== */
-/* ===== End Section: Vite Template Index ===== */
-/* =====================
-   Section: App Shell Overrides
-   Source:  App.css
-   ===================== */
-/* ===== End Section: App Shell Overrides ===== */
-/* =====================
-   Section: Aside Left
-   Source:  components/asides/asideLeft.css
-   ===================== */
-/* ===== End Section: Aside Left ===== */
-/* =====================
-   Section: Aside Right
-   Source:  components/asides/asideright.css
-   ===================== */
-/* ===== End Section: Aside Right ===== */
-/* =====================
-   Section: Doctor Header
-   Source:  pages/Doctor/header/MedicalHeader.css
-   ===================== */
-/* ===== End Section: Doctor Header ===== */
-/* =====================
-   Section: Patient Desktop View (Recetas)
-   Source:  components/recetas/PatientDesktopView.css
-   ===================== */
-/* ===== End Section: Patient Desktop View (Recetas) ===== */
-/* =====================
-   Section: Historial Medico Page (03-historial)
-   Source:  components/historial_medico/03-historial.css
-   ===================== */
-/* ===== End Section: Historial Medico Page (03-historial) ===== */
-/* =====================
-   Section: Historial Medico Desktop Theme
-   Source:  components/historial_medico/historial_medico.css
-   ===================== */
-/* ===== End Section: Historial Medico Desktop Theme ===== */
-/* =====================
-   Section: Header Component Styles
-   Source:  components/header/Header.css
-   ===================== */
-/* ===== End Section: Header Component Styles ===== */
-/* =====================
-   Section: Auth Register Page
-   Source:  components/auth/register.css
-   ===================== */
-/* ===== End Section: Auth Register Page ===== */
-/* =====================
-   Section: Auth Shared Styles
-   Source:  components/auth/Auth.css
-   ===================== */
-/* ===== End Section: Auth Shared Styles ===== */
-/* =====================
-   Section: Auth Login Page
-   Source:  components/auth/Login.css
-   ===================== */
-/* ===== End Section: Auth Login Page ===== */
+@import url('./components/asides/asideLeft.css');
+@import url('./components/asides/asideright.css');
+@import url('./pages/Doctor/header/MedicalHeader.css');
+@import url('./components/recetas/PatientDesktopView.css');
+@import url('./components/historial_medico/03-historial.css');
+@import url('./components/historial_medico/historial_medico.css');
+@import url('./components/header/Header.css');
+@import url('./components/auth/register.css');
+@import url('./components/auth/Auth.css');
+@import url('./components/auth/Login.css');
