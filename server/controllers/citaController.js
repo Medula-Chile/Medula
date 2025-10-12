@@ -2,10 +2,24 @@ const CitaMedica = require('../models/citas');
 
 exports.crearCita = async (req, res) => {
     try {
+        // Validación: evitar doble reserva para el mismo profesional en la misma fecha/hora
+        const { profesional_id, fecha_hora } = req.body;
+        if (!profesional_id || !fecha_hora) {
+            return res.status(400).json({ message: 'profesional_id y fecha_hora son requeridos' });
+        }
+
+        const conflicto = await CitaMedica.findOne({ profesional_id, fecha_hora: new Date(fecha_hora) });
+        if (conflicto) {
+            return res.status(409).json({ message: 'El profesional ya tiene una cita en esa fecha y hora' });
+        }
+
         const nuevaCita = new CitaMedica(req.body);
         const citaGuardada = await nuevaCita.save();
 
-        await citaGuardada.populate('paciente_id', 'nombre usuario_id');
+        await citaGuardada.populate({
+            path: 'paciente_id',
+            populate: { path: 'usuario_id', select: 'nombre rut' }
+        });
         await citaGuardada.populate('profesional_id', 'nombre');
         await citaGuardada.populate('centro_id', 'nombre direccion');
 
@@ -24,7 +38,10 @@ exports.crearCita = async (req, res) => {
 exports.obtenerCitas = async (req, res) => {
     try {
         const citas = await CitaMedica.find()
-            .populate('paciente_id')
+            .populate({
+                path: 'paciente_id',
+                populate: { path: 'usuario_id', select: 'nombre rut' }
+            })
             .populate('profesional_id', 'nombre')
             .populate('centro_id', 'nombre direccion')
             .sort({ fecha_hora: -1 });
@@ -41,7 +58,10 @@ exports.obtenerCitas = async (req, res) => {
 exports.obtenerCitaPorId = async (req, res) => {
     try {
         const cita = await CitaMedica.findById(req.params.id)
-            .populate('paciente_id')
+            .populate({
+                path: 'paciente_id',
+                populate: { path: 'usuario_id', select: 'nombre rut' }
+            })
             .populate('profesional_id', 'nombre')
             .populate('centro_id', 'nombre direccion comuna telefono');
 
@@ -60,12 +80,28 @@ exports.obtenerCitaPorId = async (req, res) => {
 
 exports.actualizarCita = async (req, res) => {
     try {
+        // Validación de solape al actualizar (excluye la misma cita)
+        const { profesional_id, fecha_hora } = req.body;
+        if (profesional_id && fecha_hora) {
+            const conflicto = await CitaMedica.findOne({
+                _id: { $ne: req.params.id },
+                profesional_id,
+                fecha_hora: new Date(fecha_hora)
+            });
+            if (conflicto) {
+                return res.status(409).json({ message: 'El profesional ya tiene una cita en esa fecha y hora' });
+            }
+        }
+
         const citaActualizada = await CitaMedica.findByIdAndUpdate(
             req.params.id,
             req.body,
             { new: true, runValidators: true }
         )
-            .populate('paciente_id')
+            .populate({
+                path: 'paciente_id',
+                populate: { path: 'usuario_id', select: 'nombre rut' }
+            })
             .populate('profesional_id', 'nombre')
             .populate('centro_id', 'nombre direccion');
 
