@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './Auth.css';
 import api from '../../services/api';
 // Página de inicio de sesión (Login)
 // Maneja selección de rol, validación básica y redirección según el rol seleccionado.

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './Auth.css';
 import api from '../../services/api';
 
 // Página de registro de usuarios

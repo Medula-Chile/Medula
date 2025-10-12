@@ -5,7 +5,6 @@ import Testimonials from '../components/Landing/Testimonials'
 import Checklist from '../components/Landing/Checklist'
 import FAQ from '../components/Landing/FAQ'
 import Footer from '../components/Landing/Footer'
-import '../styles.css'
 
 export default function LandingPage() {
     return (

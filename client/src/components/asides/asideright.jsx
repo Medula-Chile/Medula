@@ -1,4 +1,3 @@
-import './asideright.css'
 function AsideRight() {
     return (
         <>

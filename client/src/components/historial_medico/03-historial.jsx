@@ -1,4 +1,3 @@
-import './03-historial.css'
 function Historial() {
     return (
         <div className="d-flex flex-column h-100">

@@ -1,4 +1,3 @@
-import './asideLeft.css'
 function AsideLeft() {
     return (
         <aside className="sidebar" id="sidebar">

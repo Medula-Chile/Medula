@@ -53,6 +53,7 @@ app.use('/api/especialidades', require('./routes/especialidadRoutes'));
 app.use('/api/recetas', require('./routes/recetaRoutes'));
 app.use('/api/examenes', require('./routes/examenRoutes'));
 app.use('/api/medicamentos', require('./routes/medicamentoRoutes'));
+app.use('/api/consultas', require('./routes/consultaRoutes'));
 
 // Log de variables de entorno
 console.log('\n=== Variables de Entorno Cargadas ===');

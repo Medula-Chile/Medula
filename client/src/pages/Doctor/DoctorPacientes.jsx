@@ -54,7 +54,6 @@ export default function DoctorPacientes() {
       };
       const estadoMap = {
         programada: 'En espera',
-        confirmada: 'En progreso',
         completada: 'Completado',
         cancelada: 'Cancelado',
         no_asistio: 'No presentado',
@@ -62,6 +61,8 @@ export default function DoctorPacientes() {
 
       const mapped = mias.map(c => ({
         id: c._id,
+        paciente_id: c?.paciente_id?._id || (typeof c?.paciente_id === 'string' ? c.paciente_id : null),
+        pacienteId: c?.paciente_id?._id || (typeof c?.paciente_id === 'string' ? c.paciente_id : null),
         paciente: c?.paciente_id?.usuario_id?.nombre || c?.paciente_id?.nombre || 'Paciente',
         medico: doctorName,
         especialidad: doctorSpecialty,

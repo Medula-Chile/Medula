@@ -21,7 +21,8 @@ export default function AdminShell() {
     { path: '/admin/recetas', label: 'Crear Recetas' },
     { path: '/admin/citas', label: 'Gestionar citas' },
     { path: '/admin/especialidades', label: 'Gestionar Especialidades' },
-    { path: '/admin/centros', label: 'Gestionar Centros de Salud' }
+    { path: '/admin/centros', label: 'Gestionar Centros de Salud' },
+    { path: '/admin/medicamentos', label: 'Gestionar Medicamentos' }
   ];
 
   return (

@@ -39,6 +39,7 @@ import AdminUsers from './pages/Admin/AdminUsers.jsx';
 import AdminEspecialidades from './pages/Admin/AdminEspecialidades.jsx';
 import AdminCentrosSalud from './pages/Admin/AdminCentrosSalud.jsx';
 import DoctorHistorial from './pages/Doctor/DoctorHistorial.jsx';
+import AdminMedicamentos from './pages/Admin/AdminMedicamentos.jsx';
 
 function App() {  return (
     <AuthProvider>
@@ -85,6 +86,7 @@ function App() {  return (
             <Route path="examenes" element={<AdminExamenes />} />
             <Route path="especialidades" element={<AdminEspecialidades />} />
             <Route path="centros" element={<AdminCentrosSalud />} />
+            <Route path="medicamentos" element={<AdminMedicamentos />} />
 
           </Route>
 
