@@ -37,7 +37,19 @@ exports.crearCita = async (req, res) => {
 
 exports.obtenerCitas = async (req, res) => {
     try {
-        const citas = await CitaMedica.find()
+        const { profesional, estado, desde, hasta, paciente } = req.query;
+        const q = {};
+        if (profesional) q.profesional_id = profesional;
+        if (estado) q.estado = estado;
+        if (desde || hasta) {
+            q.fecha_hora = {};
+            if (desde) q.fecha_hora.$gte = new Date(desde);
+            if (hasta) q.fecha_hora.$lte = new Date(hasta);
+        }
+        // Nota: para filtrar por paciente por nombre se requeriría agregación/texto; aquí se soporta por id exacto si se pasa
+        if (paciente) q.paciente_id = paciente;
+
+        const citas = await CitaMedica.find(q)
             .populate({
                 path: 'paciente_id',
                 populate: { path: 'usuario_id', select: 'nombre rut' }

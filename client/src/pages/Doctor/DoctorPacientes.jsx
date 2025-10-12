@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import axios from 'axios';
 import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
 import { useAuth } from '../../contexts/AuthContext';
-import { subscribe, getAssignments, upsertAssignment, removeAssignment, seedIfEmpty } from './data/assignmentsStore';
+import { subscribe, getAssignments, setAssignments, upsertAssignment, removeAssignment, seedIfEmpty } from './data/assignmentsStore';
 
 export default function DoctorPacientes() {
   // Vista de administración: lista maestra de asignaciones (pasadas, presentes y futuras)
@@ -11,6 +12,8 @@ export default function DoctorPacientes() {
 
   const [items, setItems] = useState(() => getAssignments());
   const [activeId, setActiveId] = useState(items[0]?.id ?? null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Seed inicial si está vacío (reutiliza data mock existente)
   useEffect(() => { seedIfEmpty({ doctorName, doctorSpecialty }); }, [doctorName, doctorSpecialty]);
@@ -27,6 +30,67 @@ export default function DoctorPacientes() {
     setItems(getAssignments());
     return () => unsub();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cargar citas reales del backend y mapear a items de tarjetas
+  const fetchCitas = useCallback(async () => {
+    try {
+      const doctorUserId = user?.id || user?._id;
+      if (!doctorUserId) return; // esperar usuario
+      setLoading(true);
+      setError('');
+      const resp = await axios.get('http://localhost:5000/api/citas', {
+        params: { profesional: doctorUserId }
+      });
+      const citas = Array.isArray(resp.data) ? resp.data : [];
+      // ya vienen filtradas por el backend
+      const mias = citas;
+
+      const pad = (n) => String(n).padStart(2,'0');
+      const toFechaLabel = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const day = d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+        return `${day} • ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      };
+      const estadoMap = {
+        programada: 'En espera',
+        confirmada: 'En progreso',
+        completada: 'Completado',
+        cancelada: 'Cancelado',
+        no_asistio: 'No presentado',
+      };
+
+      const mapped = mias.map(c => ({
+        id: c._id,
+        paciente: c?.paciente_id?.usuario_id?.nombre || c?.paciente_id?.nombre || 'Paciente',
+        medico: doctorName,
+        especialidad: doctorSpecialty,
+        centro: c?.centro_id?.nombre || '—',
+        resumen: c?.motivo || '—',
+        estado: estadoMap[c?.estado] || 'En espera',
+        when: c?.fecha_hora ? new Date(c.fecha_hora).toISOString() : null,
+        fecha: toFechaLabel(c?.fecha_hora),
+        observaciones: '—',
+        proximoControl: '—',
+        recetaId: null,
+        vitals: { presion: null, temperatura: null, pulso: null },
+        medicamentos: [],
+        medicamentosDet: [],
+        examenes: [],
+        licencia: { otorga: false, dias: null, nota: '' },
+      }));
+
+      // cargar en el store existente para reutilizar UI/filtros
+      setAssignments(mapped);
+    } catch (e) {
+      console.error('Error cargando citas del backend:', e);
+      setError('No fue posible cargar tus citas.');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, user?._id, doctorName, doctorSpecialty]);
+
+  useEffect(() => { fetchCitas(); }, [fetchCitas]);
 
   // Filtros
   const [q, setQ] = useState('');
@@ -119,8 +183,13 @@ export default function DoctorPacientes() {
         <h4 className="mb-0">Pacientes asignados</h4>
         <div className="d-flex gap-2">
           <button className="btn btn-primary btn-sm" onClick={openNew}><i className="fas fa-plus me-2"/>Agregar</button>
+          <button className="btn btn-outline-secondary btn-sm" onClick={fetchCitas} disabled={loading}><i className="fas fa-rotate me-2"/>Actualizar</button>
         </div>
       </div>
+
+      {error && (
+        <div className="alert alert-danger py-2 small" role="alert">{error}</div>
+      )}
 
       {/* Filtros */}
       <div className="card mb-3">
@@ -161,7 +230,10 @@ export default function DoctorPacientes() {
             </div>
             <div className="card-body p-0">
               <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-                {filtered.map((it) => {
+                {loading && (
+                  <div className="p-3 text-muted small">Cargando citas...</div>
+                )}
+                {!loading && filtered.map((it) => {
                   const isActive = String(activeId) === String(it.id);
                   return (
                     <div key={it.id} className={`consultation-item ${isActive?'active':''}`} onClick={()=>setActiveId(it.id)} role="button">
@@ -189,7 +261,7 @@ export default function DoctorPacientes() {
                     </div>
                   );
                 })}
-                {filtered.length === 0 && (
+                {!loading && filtered.length === 0 && (
                   <div className="p-3 text-muted small">Sin resultados para los filtros aplicados.</div>
                 )}
               </div>
