@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import axios from 'axios';
 import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
 import { useAuth } from '../../contexts/AuthContext';
-import { subscribe, getAssignments, setAssignments, upsertAssignment, removeAssignment, seedIfEmpty } from './data/assignmentsStore';
+import { subscribe, getAssignments, setAssignments, upsertAssignment, seedIfEmpty } from './data/assignmentsStore';
 
 export default function DoctorPacientes() {
   // Vista de administración: lista maestra de asignaciones (pasadas, presentes y futuras)
@@ -134,7 +134,6 @@ export default function DoctorPacientes() {
   });
 
   const openNew = () => { setEditId(null); setForm({ paciente: '', especialidad: doctorSpecialty, centro: '', resumen: '', estado: 'En espera', when: '' }); setOpen(true); };
-  const openEdit = (it) => { setEditId(it.id); setForm({ paciente: it.paciente||'', especialidad: it.especialidad||doctorSpecialty, centro: it.centro||'', resumen: it.resumen||'', estado: it.estado||'En espera', when: it.when ? it.when.substring(0,16) : '' }); setOpen(true); };
   const close = () => setOpen(false);
 
   const save = (e) => {
@@ -166,16 +165,7 @@ export default function DoctorPacientes() {
     setOpen(false);
   };
 
-  const cancelItem = (id) => {
-    const it = items.find(x => String(x.id) === String(id));
-    if (!it) return;
-    upsertAssignment({ ...it, estado: 'Cancelado' });
-  };
 
-  const removeItem = (id) => {
-    if (!window.confirm('¿Eliminar esta asignación?')) return;
-    removeAssignment(id);
-  };
 
   return (
     <div className="container-fluid">
@@ -251,11 +241,7 @@ export default function DoctorPacientes() {
                             </div>
                           </div>
                           <p className="small line-clamp-2 mb-1">{it.resumen}</p>
-                          <div className="d-flex gap-2">
-                            <button className="btn btn-outline-secondary btn-xxs" onClick={(e)=>{ e.stopPropagation(); openEdit(it); }}><i className="fas fa-edit me-1"/>Editar</button>
-                            <button className="btn btn-outline-warning btn-xxs" onClick={(e)=>{ e.stopPropagation(); cancelItem(it.id); }}><i className="fas fa-ban me-1"/>Cancelar</button>
-                            <button className="btn btn-outline-danger btn-xxs" onClick={(e)=>{ e.stopPropagation(); removeItem(it.id); }}><i className="fas fa-trash me-1"/>Eliminar</button>
-                          </div>
+
                         </div>
                       </div>
                     </div>
