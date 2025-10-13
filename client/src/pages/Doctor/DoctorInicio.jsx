@@ -49,7 +49,16 @@ export default function DoctorInicio() {
         const start = new Date(y, m, d, 0, 0, 0, 0);
         const end = new Date(y, m, d, 23, 59, 59, 999);
         const parseWhen = (c) => {
-          const candidates = [c.fecha, c.when, c.hora, c.createdAt, c.updatedAt].filter(Boolean);
+          const candidates = [
+            c.fecha,
+            c.fecha_cita,
+            c.fechaHora,
+            c.hora_cita,
+            c.when,
+            c.hora,
+            c.createdAt,
+            c.updatedAt,
+          ].filter(Boolean);
           const dt = candidates.length ? new Date(candidates[0]) : null;
           return dt ? dt.toISOString() : new Date().toISOString();
         };
@@ -65,6 +74,7 @@ export default function DoctorInicio() {
           const whenIso = parseWhen(c);
           return {
             id: c._id || c.id,
+            paciente_id: c?.paciente_id?._id || c?.paciente_id || c?.pacienteId || null,
             paciente: c?.paciente_id?.usuario?.nombre || c?.paciente_id?.nombre || c?.paciente_nombre || '—',
             medico: doctorName,
             especialidad: c?.especialidad || doctorSpecialty,

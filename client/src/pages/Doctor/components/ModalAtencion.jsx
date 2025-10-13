@@ -36,6 +36,7 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
   // Info básica para mostrar nombres
   const [pacienteInfo, setPacienteInfo] = useState(null);
   const [medicoInfo, setMedicoInfo] = useState(null);
+  const [citaInfo, setCitaInfo] = useState(null);
 
   useEffect(() => {
     if (open) {
@@ -65,6 +66,41 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
   useEffect(() => {
     setReceta(prev => ({ ...prev, medico_id: doctorId || prev.medico_id }));
   }, [doctorId]);
+
+  // Fallback: si no viene pacienteId pero sí citaId, intentar obtener el paciente desde la cita
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (!open) return;
+      if (pacienteId) { setCitaInfo(null); return; }
+      if (!citaId) { setCitaInfo(null); return; }
+      try {
+        const r = await api.get(`/citas/${citaId}`);
+        const c = r.data || {};
+        const pid = c?.paciente_id?._id || c?.paciente_id || c?.pacienteId || null;
+        if (!cancelled) {
+          setCitaInfo(c);
+          if (pid) {
+            setReceta(prev => ({ ...prev, paciente_id: pid }));
+            try {
+              const p = await api.get(`/pacientes/${pid}`);
+              if (!cancelled) setPacienteInfo(p.data || null);
+            } catch { /* ignore */ }
+          }
+        }
+      } catch { if (!cancelled) setCitaInfo(null); }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [open, citaId, pacienteId]);
+
+  // Si tenemos pacienteInfo pero receta.paciente_id está vacío, intentar inferirlo
+  useEffect(() => {
+    if (!open) return;
+    if (receta.paciente_id) return;
+    const pid = pacienteInfo?._id || pacienteInfo?.id || pacienteInfo?.paciente?._id || pacienteInfo?.paciente?.id || null;
+    if (pid) setReceta(prev => ({ ...prev, paciente_id: pid }));
+  }, [open, pacienteInfo]);
 
   // Cargar nombres
   useEffect(() => {
@@ -299,7 +335,16 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
                       <label className="form-label">Paciente ID</label>
                       <input className="form-control" value={receta.paciente_id} onChange={(e)=>setReceta({ ...receta, paciente_id: e.target.value })} disabled={!!pacienteId} />
                       {/* Mostrar nombre del paciente, si disponible */}
-                      <small className="text-muted">{pacienteId && pacienteInfo?.usuario?.nombre ? pacienteInfo.usuario.nombre : ''}</small>
+                      <small className="text-muted">
+                        {(
+                          pacienteInfo?.usuario?.nombre ||
+                          pacienteInfo?.usuario_id?.nombre ||
+                          pacienteInfo?.nombre ||
+                          citaInfo?.paciente_id?.usuario?.nombre ||
+                          citaInfo?.paciente?.usuario?.nombre ||
+                          ''
+                        )}
+                      </small>
                     </div>
                     <div className="col-12 col-md-6">
                       <label className="form-label">Médico ID</label>
