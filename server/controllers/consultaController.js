@@ -1,4 +1,5 @@
 const Consulta = require('../models/consulta');
+const Receta = require('../models/receta');
 
 // POST /api/consultas
 exports.crearConsulta = async (req, res) => {
@@ -57,6 +58,31 @@ exports.crearConsulta = async (req, res) => {
     };
 
     const doc = await Consulta.create(payload);
+
+    // Si viene receta, persistir copia en colección Recetas para vistas de administración
+    if (payload.receta) {
+      try {
+        const recetaDoc = new Receta({
+          paciente_id: payload.receta.paciente_id,
+          medico_id: payload.receta.medico_id,
+          fecha_emision: payload.receta.fecha_emision || new Date(),
+          medicamentos: payload.receta.medicamentos.map(m => ({
+            nombre: m.nombre,
+            dosis: m.dosis,
+            frecuencia: m.frecuencia,
+            duracion: m.duracion,
+            instrucciones: m.instrucciones || ''
+          })),
+          indicaciones: payload.receta.indicaciones || '',
+          activa: typeof payload.receta.activa === 'boolean' ? payload.receta.activa : true,
+        });
+        await recetaDoc.save();
+      } catch (err) {
+        console.error('Error creando Receta paralela desde Consulta:', err);
+        // No interrumpir la creación de la Consulta si falla la receta paralela
+      }
+    }
+
     return res.status(201).json({ message: 'Consulta creada', consulta: doc });
   } catch (error) {
     console.error('Error creando consulta:', error);

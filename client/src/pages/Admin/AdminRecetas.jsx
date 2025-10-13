@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 
 export default function AdminRecetas() {
   const [pacientes, setPacientes] = useState([]);
@@ -17,8 +17,8 @@ export default function AdminRecetas() {
     const fetchData = async () => {
       try {
         const [pacientesRes, medicosRes] = await Promise.all([
-          axios.get('/api/pacientes'),
-          axios.get('/api/medicos')
+          api.get('/pacientes'),
+          api.get('/medicos')
         ]);
         setPacientes(pacientesRes.data);
         setMedicos(medicosRes.data);
@@ -35,7 +35,7 @@ export default function AdminRecetas() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/administradores/recetas', form);
+      await api.post('/administradores/recetas', form);
       alert('Receta creada exitosamente');
       setForm({
         paciente_id: '',
@@ -80,7 +80,7 @@ export default function AdminRecetas() {
             <label>Médico</label>
             <select className="form-select" value={form.medico_id} onChange={(e) => setForm({ ...form, medico_id: e.target.value })} required>
               <option value="">Seleccionar médico</option>
-              {medicos.map(m => <option key={m._id} value={m.usuario_id}>{m.usuario_id.nombre}</option>)}
+              {medicos.map(m => <option key={m._id} value={m._id}>{m.usuario_id?.nombre || m.nombre}</option>)}
             </select>
           </div>
         </div>

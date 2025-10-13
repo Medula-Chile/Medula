@@ -43,6 +43,38 @@ export default function AdminRecetasList() {
 
   const filtered = useMemo(() => items, [items]);
 
+  // Helpers para formatear nombres y evitar renderizar objetos en celdas
+  const getPacienteNombre = (p) => {
+    if (!p) return '-';
+    if (typeof p === 'string') return p;
+    if (typeof p === 'object') {
+      const byUsuario = p?.usuario_id && typeof p.usuario_id === 'object' ? (p.usuario_id.nombre || p.usuario_id.rut || p.usuario_id.email) : undefined;
+      const byUsuarioId = p?.usuario_id && typeof p.usuario_id !== 'object' ? String(p.usuario_id) : undefined;
+      return (
+        byUsuario ||
+        p.nombre ||
+        byUsuarioId ||
+        (p._id ? String(p._id) : '-')
+      );
+    }
+    return String(p);
+  };
+
+  const getMedicoNombre = (m) => {
+    if (!m) return '-';
+    if (typeof m === 'string') return m;
+    if (typeof m === 'object') {
+      return (
+        m.nombre ||
+        (m.usuario_id && typeof m.usuario_id === 'object' ? m.usuario_id.nombre : undefined) ||
+        (m.usuario_id && typeof m.usuario_id !== 'object' ? String(m.usuario_id) : undefined) ||
+        (m.email ? m.email : undefined) ||
+        (m._id ? String(m._id) : '-')
+      );
+    }
+    return String(m);
+  };
+
   return (
     <div className="container-fluid">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -119,10 +151,10 @@ export default function AdminRecetasList() {
                   </thead>
                   <tbody>
                     {filtered.map(r => {
-                      const fecha = r.fecha_emision ? new Date(r.fecha_emision).toLocaleString() : '-';
-                      const pacienteNombre = r?.paciente_id?.usuario_id?.nombre || r?.paciente_id?.nombre || r?.paciente_id || '-';
-                      const medicoNombre = r?.medico_id?.nombre || r?.medico_id?.email || r?.medico_id || '-';
-                      const medsCount = Array.isArray(r.medicamentos) ? r.medicamentos.length : 0;
+                      const fecha = r && r.fecha_emision ? new Date(r.fecha_emision).toLocaleString() : '-';
+                      const pacienteNombre = getPacienteNombre(r?.paciente_id);
+                      const medicoNombre = getMedicoNombre(r?.medico_id);
+                      const medsCount = Array.isArray(r?.medicamentos) ? r.medicamentos.length : 0;
                       return (
                         <tr key={r._id}>
                           <td>{fecha}</td>
@@ -148,20 +180,25 @@ export default function AdminRecetasList() {
       {/* Modal detalle */}
       {detail && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1080 }}>
-          <div className="card shadow" style={{ maxWidth: 800, width: '95%' }} role="dialog" aria-modal="true">
-            <div className="card-header d-flex justify-content-between align-items-center">
+          <div
+            className="card shadow"
+            style={{ maxWidth: 800, width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+            role="dialog"
+            aria-modal="true"
+         >
+            <div className="card-header d-flex justify-content-between align-items-center" style={{ position: 'sticky', top: 0, zIndex: 1, background: '#fff' }}>
               <h5 className="mb-0">Detalle receta <code>{detail._id}</code></h5>
               <button className="btn btn-sm btn-ghost" onClick={()=>setDetail(null)} aria-label="Cerrar"><i className="fas fa-times"></i></button>
             </div>
-            <div className="card-body small">
+            <div className="card-body small" style={{ flex: 1, overflow: 'auto' }}>
               <div className="row g-2">
                 <div className="col-12 col-md-6">
                   <label className="form-label">Paciente</label>
-                  <div className="form-control bg-light">{detail?.paciente_id?.usuario_id?.nombre || detail?.paciente_id?.nombre || detail?.paciente_id || '-'}</div>
+                  <div className="form-control bg-light">{getPacienteNombre(detail?.paciente_id)}</div>
                 </div>
                 <div className="col-12 col-md-6">
                   <label className="form-label">Médico</label>
-                  <div className="form-control bg-light">{detail?.medico_id?.nombre || detail?.medico_id?.email || detail?.medico_id || '-'}</div>
+                  <div className="form-control bg-light">{getMedicoNombre(detail?.medico_id)}</div>
                 </div>
                 <div className="col-12">
                   <label className="form-label">Indicaciones</label>

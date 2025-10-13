@@ -175,12 +175,17 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
 
   return (
     <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1080 }}>
-      <div className="card shadow" style={{ maxWidth: 900, width: '95%' }} role="dialog" aria-modal="true">
-        <div className="card-header d-flex justify-content-between align-items-center">
+      <div
+        className="card shadow"
+        style={{ maxWidth: 900, width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="card-header d-flex justify-content-between align-items-center" style={{ position: 'sticky', top: 0, zIndex: 1, background: '#fff' }}>
           <h5 className="mb-0">Atención médica</h5>
           <button className="btn btn-sm btn-ghost" onClick={onClose} aria-label="Cerrar"><i className="fas fa-times"></i></button>
         </div>
-        <div className="card-body">
+        <div className="card-body" style={{ flex: 1, overflow: 'auto' }}>
           {submitError && (
             <div className="alert alert-danger py-2 small" role="alert">{submitError}</div>
           )}
@@ -238,7 +243,7 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
                     <input className="form-control" placeholder="Buscar en catálogo..." value={q} onChange={(e)=>setQ(e.target.value)} />
                     {loading && <div className="text-muted small mt-1">Buscando...</div>}
                     {!loading && results.length > 0 && (
-                      <ul className="list-group small mt-1">
+                      <ul className="list-group small mt-1" style={{ maxHeight: '40vh', overflow: 'auto' }}>
                         {results.map(m => (
                           <li key={m._id} className="list-group-item d-flex justify-content-between align-items-center">
                             <span>
