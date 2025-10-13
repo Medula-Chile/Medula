@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import http from '../../api/http';
+import { Modal, Button, Form } from 'react-bootstrap';
 
 export default function AdminConsultas() {
   const [items, setItems] = useState([]);
@@ -13,6 +14,20 @@ export default function AdminConsultas() {
   const [medico, setMedico] = useState('');
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
+
+  // Modal para editar
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingConsulta, setEditingConsulta] = useState(null);
+  const [editForm, setEditForm] = useState({
+    motivo: '',
+    diagnostico: '',
+    sintomas: '',
+    observaciones: '',
+    tratamiento: '',
+    examenes: '',
+    licencia: { otorga: false, dias: '', nota: '' },
+    receta: null
+  });
 
   const fetchConsultas = async () => {
     try {
@@ -30,6 +45,57 @@ export default function AdminConsultas() {
       setError(e?.response?.data?.message || 'Error al cargar consultas');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEdit = (consulta) => {
+    setEditingConsulta(consulta);
+    setEditForm({
+      motivo: consulta.motivo || '',
+      diagnostico: consulta.diagnostico || '',
+      sintomas: consulta.sintomas || '',
+      observaciones: consulta.observaciones || '',
+      tratamiento: consulta.tratamiento || '',
+      examenes: consulta.examenes ? consulta.examenes.join(', ') : '',
+      licencia: consulta.licencia || { otorga: false, dias: '', nota: '' },
+      receta: consulta.receta || null
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const payload = {
+        consulta: {
+          motivo: editForm.motivo,
+          diagnostico: editForm.diagnostico,
+          sintomas: editForm.sintomas,
+          observaciones: editForm.observaciones,
+          tratamiento: editForm.tratamiento,
+          examenes: editForm.examenes.split(',').map(e => e.trim()).filter(Boolean),
+          licencia: {
+            otorga: editForm.licencia.otorga,
+            dias: editForm.licencia.otorga ? parseInt(editForm.licencia.dias) || null : null,
+            nota: editForm.licencia.otorga ? editForm.licencia.nota : ''
+          }
+        },
+        receta: editForm.receta
+      };
+      await http.put(`/api/consultas/${editingConsulta._id}`, payload);
+      setShowEditModal(false);
+      fetchConsultas();
+    } catch (e) {
+      alert('Error al actualizar consulta: ' + (e?.response?.data?.message || e.message));
+    }
+  };
+
+  const handleDelete = async (consulta) => {
+    if (!confirm('¿Estás seguro de eliminar esta consulta?')) return;
+    try {
+      await http.delete(`/api/consultas/${consulta._id}`);
+      fetchConsultas();
+    } catch (e) {
+      alert('Error al eliminar consulta: ' + (e?.response?.data?.message || e.message));
     }
   };
 
@@ -108,6 +174,7 @@ export default function AdminConsultas() {
                       <th>Motivo</th>
                       <th>Diagnóstico</th>
                       <th>Receta</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -125,6 +192,10 @@ export default function AdminConsultas() {
                           <td className="text-truncate" style={{ maxWidth: 240 }}>{c.motivo}</td>
                           <td className="text-truncate" style={{ maxWidth: 240 }}>{c.diagnostico}</td>
                           <td>{tieneReceta ? <span className="badge bg-primary">{`Sí (${medsCount})`}</span> : <span className="badge bg-secondary">No</span>}</td>
+                          <td>
+                            <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEdit(c)}>Editar</button>
+                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(c)}>Eliminar</button>
+                          </td>
                         </tr>
                       );
                     })}
@@ -135,6 +206,112 @@ export default function AdminConsultas() {
           </div>
         </div>
       )}
+
+      {/* Modal para editar */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Editar Consulta</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Motivo</Form.Label>
+              <Form.Control
+                type="text"
+                value={editForm.motivo}
+                onChange={(e) => setEditForm({ ...editForm, motivo: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Diagnóstico</Form.Label>
+              <Form.Control
+                type="text"
+                value={editForm.diagnostico}
+                onChange={(e) => setEditForm({ ...editForm, diagnostico: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Síntomas</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                value={editForm.sintomas}
+                onChange={(e) => setEditForm({ ...editForm, sintomas: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Observaciones</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                value={editForm.observaciones}
+                onChange={(e) => setEditForm({ ...editForm, observaciones: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Tratamiento</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                value={editForm.tratamiento}
+                onChange={(e) => setEditForm({ ...editForm, tratamiento: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Exámenes (separados por coma)</Form.Label>
+              <Form.Control
+                type="text"
+                value={editForm.examenes}
+                onChange={(e) => setEditForm({ ...editForm, examenes: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Check
+                type="checkbox"
+                label="Otorgar Licencia"
+                checked={editForm.licencia.otorga}
+                onChange={(e) => setEditForm({
+                  ...editForm,
+                  licencia: { ...editForm.licencia, otorga: e.target.checked }
+                })}
+              />
+              {editForm.licencia.otorga && (
+                <>
+                  <Form.Control
+                    type="number"
+                    placeholder="Días"
+                    value={editForm.licencia.dias}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      licencia: { ...editForm.licencia, dias: e.target.value }
+                    })}
+                    className="mt-2"
+                  />
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    placeholder="Nota"
+                    value={editForm.licencia.nota}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      licencia: { ...editForm.licencia, nota: e.target.value }
+                    })}
+                    className="mt-2"
+                  />
+                </>
+              )}
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleSaveEdit}>
+            Guardar Cambios
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

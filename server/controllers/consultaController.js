@@ -122,6 +122,82 @@ exports.obtenerConsulta = async (req, res) => {
   }
 };
 
+// PUT /api/consultas/:id
+exports.actualizarConsulta = async (req, res) => {
+  try {
+    const { consulta, receta } = req.body || {};
+
+    // Validaciones mínimas
+    if (!consulta || !consulta.motivo || !consulta.diagnostico) {
+      return res.status(400).json({ message: 'Motivo y diagnóstico son obligatorios' });
+    }
+
+    const payload = {
+      motivo: String(consulta.motivo).trim(),
+      sintomas: (consulta.sintomas || '').trim(),
+      diagnostico: String(consulta.diagnostico).trim(),
+      observaciones: (consulta.observaciones || '').trim(),
+      tratamiento: (consulta.tratamiento || '').trim(),
+      examenes: Array.isArray(consulta.examenes) ? consulta.examenes.map(x => String(x).trim()).filter(Boolean) : [],
+      licencia: consulta.licencia ? {
+        otorga: !!consulta.licencia.otorga,
+        dias: consulta.licencia.otorga ? (Number(consulta.licencia.dias) || null) : null,
+        nota: consulta.licencia.otorga ? String(consulta.licencia.nota || '').trim() : ''
+      } : { otorga: false, dias: null, nota: '' },
+    };
+
+    // Si hay receta, actualizarla
+    if (receta) {
+      if (!receta.paciente_id || !receta.medico_id) {
+        return res.status(400).json({ message: 'Receta inválida: paciente_id y medico_id son obligatorios' });
+      }
+      if (!Array.isArray(receta.medicamentos) || receta.medicamentos.length === 0) {
+        return res.status(400).json({ message: 'Receta inválida: debe incluir al menos un medicamento' });
+      }
+      for (const m of receta.medicamentos) {
+        if (!m.nombre || !m.dosis || !m.frecuencia || !m.duracion) {
+          return res.status(400).json({ message: 'Cada medicamento debe incluir nombre, dosis, frecuencia y duración' });
+        }
+      }
+      payload.receta = {
+        paciente_id: receta.paciente_id,
+        medico_id: receta.medico_id,
+        fecha_emision: receta.fecha_emision ? new Date(receta.fecha_emision) : new Date(),
+        medicamentos: receta.medicamentos.map(m => ({
+          medicamento_id: m.medicamento_id || undefined,
+          nombre: String(m.nombre).trim(),
+          dosis: String(m.dosis).trim(),
+          frecuencia: String(m.frecuencia).trim(),
+          duracion: String(m.duracion).trim(),
+          instrucciones: (m.instrucciones || '').trim(),
+        })),
+        indicaciones: (receta.indicaciones || '').trim(),
+        activa: typeof receta.activa === 'boolean' ? receta.activa : true,
+      };
+    }
+
+    const doc = await Consulta.findByIdAndUpdate(req.params.id, payload, { new: true });
+    if (!doc) return res.status(404).json({ message: 'Consulta no encontrada' });
+
+    return res.json({ message: 'Consulta actualizada', consulta: doc });
+  } catch (error) {
+    console.error('Error actualizando consulta:', error);
+    return res.status(500).json({ message: 'Error al actualizar consulta', error: error.message });
+  }
+};
+
+// DELETE /api/consultas/:id
+exports.eliminarConsulta = async (req, res) => {
+  try {
+    const doc = await Consulta.findByIdAndDelete(req.params.id);
+    if (!doc) return res.status(404).json({ message: 'Consulta no encontrada' });
+    return res.json({ message: 'Consulta eliminada' });
+  } catch (error) {
+    console.error('Error eliminando consulta:', error);
+    return res.status(500).json({ message: 'Error al eliminar consulta', error: error.message });
+  }
+};
+
 // GET /api/consultas
 exports.listarConsultas = async (req, res) => {
   try {
