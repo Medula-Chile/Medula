@@ -13,6 +13,8 @@ export default function DoctorInicio() {
   const { user } = useAuth();
   const doctorName = (user?.fullName || user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ')).trim() || 'Médico/a';
   const doctorSpecialty = (user?.specialty || user?.especialidad || user?.profession || user?.titulo || 'Medicina General');
+  // Id de usuario (profesional) autenticado: se usa para filtrar citas del backend
+  const doctorUserId = user?.id || user?._id || null;
 
   // Fuente de datos: store maestro de asignaciones
   const [allItems, setAllItems] = useState(() => getAssignments());
@@ -37,13 +39,23 @@ export default function DoctorInicio() {
     const init = getAssignments();
     setAllItems(init.map(it => ({ ...it, medico: doctorName || it.medico, especialidad: doctorSpecialty || it.especialidad })));
     return () => unsub();
-  }, [doctorName, doctorSpecialty]);
+  }, [doctorName, doctorSpecialty, user]);
 
   // Cargar citas del backend y sincronizar store local
   const fetchCitasHoy = useCallback(async () => {
       try {
-        const resp = await api.get('/citas');
-        const raw = Array.isArray(resp.data) ? resp.data : (resp.data?.citas || []);
+        // Resolver userId localmente para evitar problemas de cierre/orden
+        const uid = user?.id || user?._id || null;
+        // Filtrar por el profesional (usuario) en sesión para no traer citas de otros médicos
+        const resp = await api.get('/citas', { params: uid ? { profesional: uid } : {} });
+        let raw = Array.isArray(resp.data) ? resp.data : (resp.data?.citas || []);
+        // Salvaguarda: filtrar en cliente por profesional_id si el backend no aplicó el filtro
+        if (uid) {
+          raw = raw.filter(c => {
+            const pid = (typeof c?.profesional_id === 'object') ? (c?.profesional_id?._id || c?.profesional_id?.id) : c?.profesional_id;
+            return String(pid) === String(uid);
+          });
+        }
         const now = new Date();
         const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
         const start = new Date(y, m, d, 0, 0, 0, 0);
@@ -72,15 +84,45 @@ export default function DoctorInicio() {
         };
         const mapItem = (c) => {
           const whenIso = parseWhen(c);
+          const pacienteRaw = c?.paciente_id || c?.paciente || null;
+          const pacienteObj = (typeof pacienteRaw === 'object') ? pacienteRaw : null;
+          const pacienteId = pacienteObj?._id || pacienteObj?.id || c?.pacienteId || (typeof c?.paciente_id === 'string' ? c.paciente_id : null);
+          const pacienteNombre = (
+            (typeof pacienteRaw === 'string' ? pacienteRaw : null) ||
+            pacienteObj?.usuario?.nombre ||
+            pacienteObj?.usuario?.fullName ||
+            pacienteObj?.usuario?.name ||
+            pacienteObj?.usuario_id?.nombre ||
+            pacienteObj?.usuario_id?.fullName ||
+            pacienteObj?.usuario_id?.name ||
+            pacienteObj?.nombre ||
+            [pacienteObj?.nombres, pacienteObj?.apellidos].filter(Boolean).join(' ') ||
+            [pacienteObj?.firstName, pacienteObj?.lastName].filter(Boolean).join(' ')
+          ) || c?.paciente_nombre || c?.pacienteNombre || c?.paciente_nombre_completo || null;
+          const centroNombre = c?.centro || c?.centro_id?.nombre || c?.centroSalud?.nombre || c?.centro_salud?.nombre || '—';
+          // Normalizar estado desde backend a etiquetas UI
+          const estadoRaw = c?.estado;
+          let estadoNorm = 'En espera';
+          if (estadoRaw) {
+            const s = String(estadoRaw).toLowerCase();
+            if (s.includes('complet')) estadoNorm = 'Completado';
+            else if (s.includes('progreso')) estadoNorm = 'En progreso';
+            else if (s.includes('program') || s.includes('agenda')) estadoNorm = 'Programada';
+            else if (s.includes('cancel')) estadoNorm = 'Cancelado';
+            else if (s.includes('no') && s.includes('present')) estadoNorm = 'No presentado';
+          }
           return {
             id: c._id || c.id,
-            paciente_id: c?.paciente_id?._id || c?.paciente_id || c?.pacienteId || null,
-            paciente: c?.paciente_id?.usuario?.nombre || c?.paciente_id?.nombre || c?.paciente_nombre || '—',
+            paciente_id: pacienteId,
+            paciente: pacienteNombre || '—',
             medico: doctorName,
             especialidad: c?.especialidad || doctorSpecialty,
-            centro: c?.centro || c?.centro_id?.nombre || '—',
+            centro: centroNombre,
             resumen: c?.motivo || c?.resumen || '—',
-            estado: c?.estado || 'En espera',
+            motivo: c?.motivo || c?.resumen || null,
+            diagnostico: c?.diagnostico || null,
+            tratamiento: c?.tratamiento || null,
+            estado: estadoNorm,
             when: whenIso,
             fecha: fmtFecha(whenIso),
             observaciones: c?.observaciones || '—',
@@ -98,7 +140,67 @@ export default function DoctorInicio() {
         const today = raw
           .map(mapItem)
           .filter(it => inToday(it.when));
-        if (today.length) setAssignments(today);
+        // Debug: ver campos relevantes de paciente en primeros items
+        try {
+          if (process?.env?.NODE_ENV !== 'production') {
+            console.debug('[DoctorInicio] citas hoy (raw->mapped):', today.slice(0, 5).map(it => ({ id: it.id, paciente_id: it.paciente_id, paciente: it.paciente })));
+          }
+        } catch {}
+        // Enriquecer con nombre de paciente si no viene en la cita
+        const enriched = await Promise.all(today.map(async (it) => {
+          // Primer intento: si tenemos paciente_id, traer nombre desde /pacientes/:id
+          if ((it.paciente === '—' || !it.paciente) && it.paciente_id) {
+            try {
+              const pr = await api.get(`/pacientes/${it.paciente_id}`);
+              const pd = pr.data || {};
+              const name = (
+                pd?.usuario?.nombre ||
+                pd?.usuario?.fullName ||
+                pd?.usuario?.name ||
+                pd?.usuario_id?.nombre ||
+                pd?.usuario_id?.fullName ||
+                pd?.usuario_id?.name ||
+                pd?.nombre ||
+                [pd?.nombres, pd?.apellidos].filter(Boolean).join(' ') ||
+                [pd?.firstName, pd?.lastName].filter(Boolean).join(' ')
+              ) || null;
+              if (name) return { ...it, paciente: name };
+            } catch (e) {
+              try { if (process?.env?.NODE_ENV !== 'production') console.debug('[DoctorInicio] fallo /pacientes/:id', it.paciente_id, e?.message); } catch {}
+            }
+          }
+          // Segundo intento: consultar la cita individual para obtener paciente/usuario
+          if ((it.paciente === '—' || !it.paciente) && it.id) {
+            try {
+              const cr = await api.get(`/citas/${it.id}`);
+              const c = cr.data || {};
+              const pObj = c?.paciente_id || c?.paciente || null;
+              const pid = (typeof pObj === 'object') ? (pObj?._id || pObj?.id) : (typeof c?.paciente_id === 'string' ? c.paciente_id : null);
+              const name = (
+                (typeof pObj === 'string' ? pObj : null) ||
+                pObj?.usuario?.nombre ||
+                pObj?.usuario?.fullName ||
+                pObj?.usuario?.name ||
+                pObj?.usuario_id?.nombre ||
+                pObj?.usuario_id?.fullName ||
+                pObj?.usuario_id?.name ||
+                pObj?.nombre ||
+                [pObj?.nombres, pObj?.apellidos].filter(Boolean).join(' ') ||
+                [pObj?.firstName, pObj?.lastName].filter(Boolean).join(' ')
+              ) || c?.paciente_nombre || c?.pacienteNombre || null;
+              if (pid || name) return { ...it, paciente_id: it.paciente_id || pid || null, paciente: it.paciente || name || '—' };
+            } catch (e) {
+              try { if (process?.env?.NODE_ENV !== 'production') console.debug('[DoctorInicio] fallo /citas/:id', it.id, e?.message); } catch {}
+            }
+          }
+          return it;
+        }));
+        try {
+          if (process?.env?.NODE_ENV !== 'production') {
+            console.debug('[DoctorInicio] citas enriquecidas (preview):', enriched.slice(0, 5).map(it => ({ id: it.id, paciente_id: it.paciente_id, paciente: it.paciente })));
+          }
+        } catch {}
+        setAssignments(enriched);
       } catch (err) {
         // No romper la UI si el backend no responde
         // console.error('fetchCitasHoy error', err);
@@ -129,7 +231,6 @@ export default function DoctorInicio() {
   }, [allItems]);
   const consulta = useMemo(() => (todayItems.find(x => String(x.id) === String(activeId)) || null), [todayItems, activeId]);
   const [open, setOpen] = useState(false);
-  const doctorUserId = user?.id || user?._id || null;
   const [doctorMedicoId, setDoctorMedicoId] = useState(null);
 
   // Resolver el _id del modelo Medico a partir del usuario autenticado
@@ -200,7 +301,7 @@ export default function DoctorInicio() {
   const openModal = () => {
     // Evitar abrir si ya está completada
     if (consulta?.estado === 'Completado') {
-      alert('Esta atención ya fue completada. Use edición si necesita ajustar datos.');
+      alert('Esta atención ya fue completada. Para realizar cambios, contacte al administrador.');
       return;
     }
     if (consulta) {
@@ -299,7 +400,7 @@ export default function DoctorInicio() {
           <TimelineMedico items={todayItems} activeId={activeId} onSelect={setActiveId} onStart={openModal} />
         </div>
         <div className="col-12 col-lg-7 col-xl-5">
-          <ConsultationDetailDoctor consulta={consultaPreview} />
+          <ConsultationDetailDoctor key={activeId || 'none'} consulta={consultaPreview} />
         </div>
         <div className="col-12 col-xl-3">
           {/* Panel del Médico (métricas) */}
