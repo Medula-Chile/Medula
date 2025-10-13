@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import api from '../../services/api';
 import TimelineMedico from './components/TimelineMedico';
 import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
 import ModalAtencion from './components/ModalAtencion';
 import { useAuth } from '../../contexts/AuthContext';
-import { subscribe, getAssignments, seedIfEmpty, upsertAssignment } from './data/assignmentsStore';
+import { subscribe, getAssignments, seedIfEmpty, upsertAssignment, setAssignments } from './data/assignmentsStore';
 
 export default function DoctorInicio() {
   // Vista principal del Médico
@@ -17,7 +17,7 @@ export default function DoctorInicio() {
   // Fuente de datos: store maestro de asignaciones
   const [allItems, setAllItems] = useState(() => getAssignments());
   const [activeId, setActiveId] = useState(allItems[0]?.id ?? null);
-  // Seed inicial si está vacío
+  // Seed inicial si está vacío (será sobreescrito por datos reales si existen)
   useEffect(() => { seedIfEmpty({ doctorName, doctorSpecialty }); }, [doctorName, doctorSpecialty]);
   // Suscripción al store
   useEffect(() => {
@@ -38,6 +38,70 @@ export default function DoctorInicio() {
     setAllItems(init.map(it => ({ ...it, medico: doctorName || it.medico, especialidad: doctorSpecialty || it.especialidad })));
     return () => unsub();
   }, [doctorName, doctorSpecialty]);
+
+  // Cargar citas del backend y sincronizar store local
+  const fetchCitasHoy = useCallback(async () => {
+      try {
+        const resp = await api.get('/citas');
+        const raw = Array.isArray(resp.data) ? resp.data : (resp.data?.citas || []);
+        const now = new Date();
+        const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+        const start = new Date(y, m, d, 0, 0, 0, 0);
+        const end = new Date(y, m, d, 23, 59, 59, 999);
+        const parseWhen = (c) => {
+          const candidates = [c.fecha, c.when, c.hora, c.createdAt, c.updatedAt].filter(Boolean);
+          const dt = candidates.length ? new Date(candidates[0]) : null;
+          return dt ? dt.toISOString() : new Date().toISOString();
+        };
+        const inToday = (iso) => { const dt = new Date(iso); return dt >= start && dt <= end; };
+        const fmtFecha = (iso) => {
+          const dt = new Date(iso);
+          const label = dt.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+          const hh = String(dt.getHours()).padStart(2, '0');
+          const mm = String(dt.getMinutes()).padStart(2, '0');
+          return `${label} • ${hh}:${mm}`;
+        };
+        const mapItem = (c) => {
+          const whenIso = parseWhen(c);
+          return {
+            id: c._id || c.id,
+            paciente: c?.paciente_id?.usuario?.nombre || c?.paciente_id?.nombre || c?.paciente_nombre || '—',
+            medico: doctorName,
+            especialidad: c?.especialidad || doctorSpecialty,
+            centro: c?.centro || c?.centro_id?.nombre || '—',
+            resumen: c?.motivo || c?.resumen || '—',
+            estado: c?.estado || 'En espera',
+            when: whenIso,
+            fecha: fmtFecha(whenIso),
+            observaciones: c?.observaciones || '—',
+            proximoControl: c?.proximoControl || '—',
+            recetaId: c?.recetaId || null,
+            vitals: { presion: null, temperatura: null, pulso: null },
+            medicamentos: [],
+            medicamentosDet: Array.isArray(c?.receta?.medicamentos)
+              ? c.receta.medicamentos.map(m => ({ nombre: m.nombre, dias: m.duracion, frecuencia: m.frecuencia }))
+              : [],
+            examenes: Array.isArray(c?.examenes) ? c.examenes : [],
+            licencia: { otorga: !!c?.licencia?.otorga, dias: c?.licencia?.dias ?? null, nota: c?.licencia?.nota || '' },
+          };
+        };
+        const today = raw
+          .map(mapItem)
+          .filter(it => inToday(it.when));
+        if (today.length) setAssignments(today);
+      } catch (err) {
+        // No romper la UI si el backend no responde
+        // console.error('fetchCitasHoy error', err);
+      }
+  }, [doctorName, doctorSpecialty]);
+
+  // Cargar al montar + polling ligero
+  useEffect(() => {
+    let mounted = true;
+    fetchCitasHoy();
+    const t = setInterval(() => { if (mounted) fetchCitasHoy(); }, 30000);
+    return () => { mounted = false; clearInterval(t); };
+  }, [fetchCitasHoy]);
 
   // Filtrar solo las atenciones de hoy para el timeline
   const todayItems = useMemo(() => {
@@ -309,30 +373,33 @@ export default function DoctorInicio() {
       pacienteId={pacienteId}
       doctorId={doctorMedicoId || doctorUserId}
       citaId={activeId}
-      onSaved={(savedConsulta) => {
-        // Actualizar la tarjeta activa en el store para reflejar inmediatamente
-        if (activeId) {
-          const current = allItems.find(it => String(it.id) === String(activeId));
-          if (current) {
-            upsertAssignment({
-              ...current,
-              estado: 'Completado',
-              resumen: savedConsulta?.motivo || current.resumen,
-              motivo: savedConsulta?.motivo || current.motivo,
-              diagnostico: savedConsulta?.diagnostico || current.diagnostico,
-              tratamiento: savedConsulta?.tratamiento || current.tratamiento,
-              observaciones: savedConsulta?.observaciones || current.observaciones || '—',
-              proximoControl: current.proximoControl || '—',
-              vitals: current.vitals || { presion: null, temperatura: null, pulso: null },
-              medicamentosDet: Array.isArray(savedConsulta?.receta?.medicamentos)
-                ? savedConsulta.receta.medicamentos.map(m => ({ nombre: m.nombre, dias: m.duracion, frecuencia: m.frecuencia }))
-                : (current.medicamentosDet || []),
-              recetaId: savedConsulta?.receta ? (savedConsulta._id || '—') : current.recetaId || null,
-            });
+      onSaved={useCallback(
+        (savedConsulta) => {
+          // Actualizar la tarjeta activa en el store para reflejar inmediatamente
+          if (activeId) {
+            const current = allItems.find(it => String(it.id) === String(activeId));
+            if (current) {
+              upsertAssignment({
+                ...current,
+                estado: 'Completado',
+                resumen: savedConsulta?.motivo || current.resumen,
+                motivo: savedConsulta?.motivo || current.motivo,
+                diagnostico: savedConsulta?.diagnostico || current.diagnostico,
+                tratamiento: savedConsulta?.tratamiento || current.tratamiento,
+                observaciones: savedConsulta?.observaciones || current.observaciones || '—',
+                proximoControl: current.proximoControl || '—',
+                vitals: current.vitals || { presion: null, temperatura: null, pulso: null },
+                medicamentosDet: Array.isArray(savedConsulta?.receta?.medicamentos)
+                  ? savedConsulta.receta.medicamentos.map(m => ({ nombre: m.nombre, dias: m.duracion, frecuencia: m.frecuencia }))
+                  : (current.medicamentosDet || []),
+                recetaId: savedConsulta?.receta ? (savedConsulta._id || '—') : current.recetaId || null,
+              });
+            }
           }
-        }
-        setOpen(false);
-      }}
+          setOpen(false);
+          // Refrescar lista desde backend para sincronizar con otras sesiones
+          fetchCitasHoy();
+        },
+        [allItems, activeId, upsertAssignment, fetchCitasHoy]
+      )}
     />
-  </>);
-}
