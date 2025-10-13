@@ -403,3 +403,5 @@ export default function DoctorInicio() {
         [allItems, activeId, upsertAssignment, fetchCitasHoy]
       )}
     />
+  </>);
+}
