@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
+import http from '../../../api/http';
 
-export default function ModalAtencion({ open, onClose, pacienteId, doctorId, onSaved }) {
+export default function ModalAtencion({ open, onClose, pacienteId, doctorId, citaId, onSaved }) {
   const [stepReceta, setStepReceta] = useState(false);
   // Consulta
   const [consulta, setConsulta] = useState({
@@ -11,6 +11,12 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, onS
     observaciones: '',
     tratamiento: ''
   });
+  // Exámenes y Licencia
+  const [examenNombre, setExamenNombre] = useState('');
+  const [examenes, setExamenes] = useState([]);
+  const [licenciaOtorga, setLicenciaOtorga] = useState(false);
+  const [licenciaDias, setLicenciaDias] = useState('');
+  const [licenciaNota, setLicenciaNota] = useState('');
   // Receta
   const [receta, setReceta] = useState({
     paciente_id: '',
@@ -22,10 +28,17 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, onS
   });
 
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     if (open) {
       setConsulta({ motivo: '', sintomas: '', diagnostico: '', observaciones: '', tratamiento: '' });
+      setExamenNombre('');
+      setExamenes([]);
+      setLicenciaOtorga(false);
+      setLicenciaDias('');
+      setLicenciaNota('');
       setReceta({
         paciente_id: pacienteId || '',
         medico_id: doctorId || '',
@@ -39,6 +52,17 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, onS
     }
   }, [open, pacienteId, doctorId]);
 
+  // Exámenes helpers
+  const addExamen = () => {
+    const nombre = (examenNombre || '').trim();
+    if (!nombre) return;
+    setExamenes(prev => [...prev, nombre]);
+    setExamenNombre('');
+  };
+  const removeExamen = (idx) => {
+    setExamenes(prev => prev.filter((_, i) => i !== idx));
+  };
+
   // Autocomplete medicamentos
   const [q, setQ] = useState('');
   const [results, setResults] = useState([]);
@@ -46,7 +70,7 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, onS
   const searchMeds = async () => {
     try {
       setLoading(true);
-      const resp = await axios.get('http://localhost:5000/api/medicamentos', { params: { q, activo: true } });
+      const resp = await http.get('/api/medicamentos', { params: { q, activo: true } });
       setResults(Array.isArray(resp.data) ? resp.data.slice(0, 20) : []);
     } catch (e) {
       setResults([]);
@@ -105,20 +129,46 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, onS
       });
       if ((receta.indicaciones || '').length > 1000) e.indicaciones = 'Máximo 1000 caracteres';
     }
+    if (licenciaOtorga) {
+      if (!licenciaDias) e.licenciaDias = 'Días requeridos';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSubmitError('');
     if (!validate()) return;
-    const payload = {
-      consulta: { ...consulta },
-      receta: stepReceta ? { ...receta } : null
-    };
-    const resp = await axios.post('http://localhost:5000/api/consultas', payload);
-    if (onSaved) onSaved(resp.data?.consulta);
-    onClose();
+    try {
+      setSaving(true);
+      const payload = {
+        cita_id: citaId || null,
+        consulta: {
+          ...consulta,
+          examenes: examenes.slice(),
+          licencia: {
+            otorga: !!licenciaOtorga,
+            dias: licenciaOtorga ? Number(licenciaDias) || null : null,
+            nota: licenciaOtorga ? (licenciaNota || '') : ''
+          }
+        },
+        receta: stepReceta ? { ...receta } : null
+      };
+      const resp = await http.post('/api/consultas', payload);
+      // Marcar cita como completada en BD si se entregó citaId
+      if (citaId) {
+        try { await http.put(`/api/citas/${citaId}`, { estado: 'completada' }); } catch { /* no romper si falla */ }
+      }
+      if (onSaved) onSaved(resp.data?.consulta);
+      onClose();
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'No se pudo guardar la consulta';
+      setSubmitError(msg);
+      console.error('Guardar consulta error:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!open) return null;
@@ -131,6 +181,9 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, onS
           <button className="btn btn-sm btn-ghost" onClick={onClose} aria-label="Cerrar"><i className="fas fa-times"></i></button>
         </div>
         <div className="card-body">
+          {submitError && (
+            <div className="alert alert-danger py-2 small" role="alert">{submitError}</div>
+          )}
           <form className="small" onSubmit={handleSave}>
             {/* Datos de Consulta */}
             <div className="row g-2 g-md-3">
@@ -241,9 +294,56 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, onS
               )}
             </div>
 
+            {/* Exámenes solicitados */}
+            <div className="mt-3">
+              <h6 className="fw-medium mb-2">Exámenes solicitados</h6>
+              <div className="row g-2 align-items-end">
+                <div className="col-12 col-md-10">
+                  <input type="text" className="form-control" placeholder="Hemograma, Rx Tórax, etc." value={examenNombre} onChange={(e)=>setExamenNombre(e.target.value)} onKeyDown={(e)=>{ if (e.key==='Enter'){ e.preventDefault(); addExamen(); } }} />
+                </div>
+                <div className="col-12 col-md-2 d-grid">
+                  <button type="button" className="btn btn-outline-primary btn-sm" onClick={addExamen}>Agregar</button>
+                </div>
+              </div>
+              {Array.isArray(examenes) && examenes.length > 0 && (
+                <ul className="list-group list-group-flush mt-2 small">
+                  {examenes.map((ex, idx) => (
+                    <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+                      <span>{ex}</span>
+                      <button type="button" className="btn btn-link btn-sm text-danger" onClick={()=>removeExamen(idx)}>Quitar</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Licencia médica */}
+            <div className="mt-3">
+              <h6 className="fw-medium mb-2">Licencia médica</h6>
+              <div className="form-check form-switch">
+                <input className="form-check-input" type="checkbox" id="licenciaSwitch" checked={!!licenciaOtorga} onChange={(e)=>setLicenciaOtorga(e.target.checked)} />
+                <label className="form-check-label" htmlFor="licenciaSwitch">Otorgar licencia</label>
+              </div>
+              {licenciaOtorga && (
+                <div className="row g-2 mt-1">
+                  <div className="col-12 col-md-3">
+                    <label className="form-label">Días</label>
+                    <input type="number" min="1" className={`form-control ${errors.licenciaDias?'is-invalid':''}`} value={licenciaDias} onChange={(e)=>setLicenciaDias(e.target.value)} placeholder="7" />
+                    {errors.licenciaDias && <div className="invalid-feedback">{errors.licenciaDias}</div>}
+                  </div>
+                  <div className="col-12 col-md-9">
+                    <label className="form-label">Notas</label>
+                    <input type="text" className="form-control" value={licenciaNota} onChange={(e)=>setLicenciaNota(e.target.value)} placeholder="Motivo y recomendaciones" />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="d-flex justify-content-end gap-2 mt-3">
-              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onClose}>Cancelar</button>
-              <button type="submit" className="btn btn-primary btn-sm">Guardar</button>
+              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onClose} disabled={saving}>Cancelar</button>
+              <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
+                {saving ? 'Guardando…' : 'Guardar'}
+              </button>
             </div>
           </form>
         </div>

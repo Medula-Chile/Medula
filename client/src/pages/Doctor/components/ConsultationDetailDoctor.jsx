@@ -1,8 +1,11 @@
 import React from 'react';
-import axios from 'axios';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export default function ConsultationDetailDoctor({ consulta }) {
   // Detalle de consulta para el flujo del Médico.
+  const { user } = useAuth();
+  const doctorName = (user?.fullName || user?.name || user?.nombre || [user?.firstName, user?.lastName].filter(Boolean).join(' ')).trim() || 'Médico/a';
+  const doctorSpecialty = (user?.specialty || user?.especialidad || user?.profession || user?.titulo || 'Medicina General');
   if (!consulta) {
     return (
       <div className="card">
@@ -23,29 +26,8 @@ export default function ConsultationDetailDoctor({ consulta }) {
   const temperatura = consulta?.vitals?.temperatura ?? '—';
   const pulso = consulta?.vitals?.pulso ?? '—';
 
-  // Cargar recetas para mostrar medicamentos desde la receta vinculada (mock actual)
-  const [recetas, setRecetas] = React.useState([]);
-  React.useEffect(() => {
-    let mounted = true;
-    axios.get('/mock/recetas.json')
-      .then(r => { if (mounted) setRecetas(Array.isArray(r.data) ? r.data : []); })
-      .catch(() => {});
-    return () => { mounted = false; };
-  }, []);
-
-  const recetaActiva = React.useMemo(() => {
-    if (!consulta?.recetaId || !Array.isArray(recetas)) return null;
-    return recetas.find(r => r.id === consulta.recetaId) || null;
-  }, [consulta?.recetaId, recetas]);
-
-  const medsFromReceta = React.useMemo(() => {
-    if (!recetaActiva?.meds) return null;
-    return recetaActiva.meds.map(m => {
-      const f = m.frecuencia || '';
-      const display = f && f.toLowerCase().includes('diario') ? f : `${f}${m.duracionDias ? ` x ${m.duracionDias} días` : ''}`;
-      return `${m.nombre} ${m.dosis} • ${display}`;
-    });
-  }, [recetaActiva]);
+  // Se muestran medicamentos desde la consulta actual (medicamentosDet)
+  const medsFromReceta = null;
 
   // Construir listas seguras para mostrar
   const legacyMeds = Array.isArray(consulta.medicamentos) ? consulta.medicamentos : [];
@@ -81,8 +63,20 @@ export default function ConsultationDetailDoctor({ consulta }) {
       </div>
       <div className="card-body watermark-bg">
         <div className="mb-4">
-          <h6 className="fw-medium mb-2">Diagnóstico y Observaciones</h6>
+          <h6 className="fw-medium mb-2">Motivo de consulta</h6>
+          <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{consulta.motivo || '—'}</p>
+        </div>
+        <div className="mb-4">
+          <h6 className="fw-medium mb-2">Diagnóstico</h6>
+          <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{consulta.diagnostico || '—'}</p>
+        </div>
+        <div className="mb-4">
+          <h6 className="fw-medium mb-2">Observaciones</h6>
           <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{consulta.observaciones || '—'}</p>
+        </div>
+        <div className="mb-4">
+          <h6 className="fw-medium mb-2">Tratamiento indicado</h6>
+          <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{consulta.tratamiento || '—'}</p>
         </div>
 
         <div className="mb-4">
@@ -95,11 +89,11 @@ export default function ConsultationDetailDoctor({ consulta }) {
         <div className="row mb-4 small">
           <div className="col-6 col-md-6 mb-2">
             <p className="text-muted-foreground mb-0">Médico</p>
-            <p className="fw-medium mb-0">{consulta.medico || '—'}</p>
+            <p className="fw-medium mb-0">{doctorName}</p>
           </div>
           <div className="col-6 col-md-6 mb-2">
             <p className="text-muted-foreground mb-0">Especialidad</p>
-            <p className="fw-medium mb-0">{consulta.especialidad || '—'}</p>
+            <p className="fw-medium mb-0">{doctorSpecialty}</p>
           </div>
           <div className="col-6 col-md-6 mb-2">
             <p className="text-muted-foreground mb-0">Box/Centro</p>

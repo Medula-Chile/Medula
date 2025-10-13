@@ -103,6 +103,11 @@ export default function DoctorInicio() {
   }, [doctorName, doctorSpecialty]);
 
   const openModal = () => {
+    // Evitar abrir si ya está completada
+    if (consulta?.estado === 'Completado') {
+      alert('Esta atención ya fue completada. Use edición si necesita ajustar datos.');
+      return;
+    }
     if (consulta) {
       setForm({
         observaciones: consulta.observaciones && consulta.observaciones !== '—' ? consulta.observaciones : '',
@@ -282,7 +287,31 @@ export default function DoctorInicio() {
       onClose={closeModal}
       pacienteId={pacienteId}
       doctorId={doctorUserId}
-      onSaved={() => { setOpen(false); }}
+      citaId={activeId}
+      onSaved={(savedConsulta) => {
+        // Actualizar la tarjeta activa en el store para reflejar inmediatamente
+        if (activeId) {
+          const current = allItems.find(it => String(it.id) === String(activeId));
+          if (current) {
+            upsertAssignment({
+              ...current,
+              estado: 'Completado',
+              resumen: savedConsulta?.motivo || current.resumen,
+              motivo: savedConsulta?.motivo || current.motivo,
+              diagnostico: savedConsulta?.diagnostico || current.diagnostico,
+              tratamiento: savedConsulta?.tratamiento || current.tratamiento,
+              observaciones: savedConsulta?.observaciones || current.observaciones || '—',
+              proximoControl: current.proximoControl || '—',
+              vitals: current.vitals || { presion: null, temperatura: null, pulso: null },
+              medicamentosDet: Array.isArray(savedConsulta?.receta?.medicamentos)
+                ? savedConsulta.receta.medicamentos.map(m => ({ nombre: m.nombre, dias: m.duracion, frecuencia: m.frecuencia }))
+                : (current.medicamentosDet || []),
+              recetaId: savedConsulta?.receta ? (savedConsulta._id || '—') : current.recetaId || null,
+            });
+          }
+        }
+        setOpen(false);
+      }}
     />
   </>);
 }

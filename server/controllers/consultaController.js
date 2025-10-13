@@ -3,7 +3,7 @@ const Consulta = require('../models/consulta');
 // POST /api/consultas
 exports.crearConsulta = async (req, res) => {
   try {
-    const { consulta, receta } = req.body || {};
+    const { consulta, receta, cita_id } = req.body || {};
 
     // Validaciones mínimas
     if (!consulta || !consulta.motivo || !consulta.diagnostico) {
@@ -27,11 +27,18 @@ exports.crearConsulta = async (req, res) => {
     }
 
     const payload = {
+      cita_id: cita_id || null,
       motivo: String(consulta.motivo).trim(),
       sintomas: (consulta.sintomas || '').trim(),
       diagnostico: String(consulta.diagnostico).trim(),
       observaciones: (consulta.observaciones || '').trim(),
       tratamiento: (consulta.tratamiento || '').trim(),
+      examenes: Array.isArray(consulta.examenes) ? consulta.examenes.map(x => String(x).trim()).filter(Boolean) : [],
+      licencia: consulta.licencia ? {
+        otorga: !!consulta.licencia.otorga,
+        dias: consulta.licencia.otorga ? (Number(consulta.licencia.dias) || null) : null,
+        nota: consulta.licencia.otorga ? String(consulta.licencia.nota || '').trim() : ''
+      } : { otorga: false, dias: null, nota: '' },
       receta: receta ? {
         paciente_id: receta.paciente_id,
         medico_id: receta.medico_id,
@@ -85,7 +92,13 @@ exports.listarConsultas = async (req, res) => {
     if (paciente) filter['receta.paciente_id'] = paciente;
     if (medico) filter['receta.medico_id'] = medico;
 
-    const cs = await Consulta.find(filter).sort({ createdAt: -1 });
+    const cs = await Consulta.find(filter)
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'receta.paciente_id',
+        populate: { path: 'usuario_id', select: 'nombre rut' }
+      })
+      .populate({ path: 'receta.medico_id', select: 'nombre email' });
     res.json(cs);
   } catch (error) {
     return res.status(500).json({ message: 'Error al listar consultas', error: error.message });
