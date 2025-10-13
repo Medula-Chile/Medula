@@ -48,65 +48,69 @@ export default function RegisterPage() {
 
   // Render del formulario de registro
   return (
-    <div className="auth-root">
-      <div className="auth-card" role="main" aria-labelledby="titulo-register">
-        <div className="auth-logo" aria-hidden="true">
-          <img src="/medula_icono.png" alt="Logo Médula" style={{ width: 120, height: 'auto' }} />
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+      <div className="card border shadow-sm p-4" role="main" aria-labelledby="titulo-register" style={{ maxWidth: '400px', width: '100%' }}>
+        <div className="text-center mb-3" aria-hidden="true">
+          <img src="/medula_icono.png" alt="Logo Médula" className="img-fluid" style={{ width: 120 }} />
         </div>
-        <h1 id="titulo-register" className="auth-app-name">MEDULA</h1>
-        <p className="auth-tagline">Cuida, organiza y protege</p>
+        <h1 id="titulo-register" className="text-center mb-1 fw-bold text-primary">MEDULA</h1>
+        <p className="text-center text-muted mb-4">Cuida, organiza y protege</p>
 
         <div>
           <h2 className="text-center h5 mb-3">Crear Cuenta</h2>
           <form onSubmit={onSubmit} noValidate>
             {/* Campo: nombre completo */}
-            <label className="auth-label" htmlFor="inName">Nombre completo</label>
-            <input id="inName" className="auth-input" type="text" value={name} onChange={(e)=>setName(e.target.value)} placeholder="Ingresa tu nombre completo" required />
+            <label className="form-label" htmlFor="inName">Nombre completo</label>
+            <input id="inName" className="form-control mb-2" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ingresa tu nombre completo" required />
 
             {/* Campo: rut */}
-            <label className="auth-label" htmlFor="inRut">Rut</label>
-            <input id="inRut" className="auth-input" type="text" value={rut} onChange={(e)=>setRut(e.target.value)} placeholder="Ingresa tu rut" required />
+            <label className="form-label" htmlFor="inRut">Rut</label>
+            <input id="inRut" className="form-control mb-2" type="text" value={rut} onChange={(e) => setRut(e.target.value)} placeholder="Ingresa tu rut" required />
 
             {/* Campo: email */}
-            <label className="auth-label" htmlFor="inEmail">Email</label>
-            <input id="inEmail" className="auth-input" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Ingresa email" required />
+            <label className="form-label" htmlFor="inEmail">Email</label>
+            <input id="inEmail" className="form-control mb-2" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Ingresa email" required />
 
             {/* Campo: contraseña */}
-            <label className="auth-label" htmlFor="inPass">Contraseña</label>
-            <input id="inPass" className="auth-input" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Crea una contraseña segura" required />
+            <label className="form-label" htmlFor="inPass">Contraseña</label>
+            <input id="inPass" className="form-control mb-2" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Crea una contraseña segura" required />
 
             {/* Campo: confirmar contraseña */}
-            <label className="auth-label" htmlFor="inConfirm">Confirmar contraseña</label>
-            <input id="inConfirm" className="auth-input" type="password" value={confirm} onChange={(e)=>setConfirm(e.target.value)} placeholder="Repite tu contraseña" required />
+            <label className="form-label" htmlFor="inConfirm">Confirmar contraseña</label>
+            <input id="inConfirm" className="form-control mb-2" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Repite tu contraseña" required />
 
             {/* Aceptación de Términos y Política de Privacidad */}
-            <div className="auth-checkbox">
-              <input id="inAccept" type="checkbox" checked={accept} onChange={(e)=>setAccept(e.target.checked)} />
-              <label htmlFor="inAccept" style={{ fontWeight: 'normal' }}>
+            <div className="form-check mb-3">
+              <input id="inAccept" className="form-check-input" type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} />
+              <label className="form-check-label" htmlFor="inAccept">
                 Acepto los <a href="#">Términos y Condiciones</a> y la <a href="#">Política de Privacidad</a>
               </label>
             </div>
 
             {/* Mensaje de error */}
             {error && (
-              <div className="auth-error" role="alert" style={{ color: '#b00020', marginBottom: 10 }}>
+              <div className="alert alert-danger mb-3" role="alert">
                 {error}
               </div>
             )}
 
             {/* Acción principal: enviar formulario de registro */}
-            <button type="submit" className="btn btn-primary btn-sm" style={{ width: '100%' }} disabled={loading}>
+            <button type="submit" className="btn btn-primary w-100 mb-2" disabled={loading}>
               {loading ? 'Registrando…' : 'Registrarse'}
             </button>
 
             {/* Separador de opciones */}
-            <div className="auth-divider"><span>o</span></div>
+            <div className="text-center my-3">
+              <span className="bg-light px-2">o</span>
+            </div>
 
             {/* Alternativa de registro con ClaveÚnica (placeholder) */}
-            <button type="button" className="btn btn-outline-secondary btn-sm" style={{ width: '100%' }}>Registrarse con ClaveÚnica</button>
+            <button type="button" className="btn btn-outline-secondary w-100 mb-2">Registrarse con ClaveÚnica</button>
 
             {/* Enlace para ir a la pantalla de inicio de sesión */}
-            <div className="auth-link">¿Ya tienes una cuenta? <Link to="/auth/login">Inicia sesión</Link></div>
+            <div className="text-center">
+              ¿Ya tienes una cuenta? <Link to="/auth/login" className="text-decoration-none">Inicia sesión</Link>
+            </div>
           </form>
         </div>
       </div>
