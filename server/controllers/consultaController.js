@@ -98,6 +98,10 @@ exports.crearConsulta = async (req, res) => {
           activa: typeof payload.receta.activa === 'boolean' ? payload.receta.activa : true,
         });
         await recetaDoc.save();
+        try {
+          doc.recetaId = recetaDoc._id;
+          await doc.save();
+        } catch {}
       } catch (err) {
         console.error('Error creando Receta paralela desde Consulta:', err);
         // No interrumpir la creación de la Consulta si falla la receta paralela
@@ -125,7 +129,7 @@ exports.obtenerConsulta = async (req, res) => {
 // GET /api/consultas
 exports.listarConsultas = async (req, res) => {
   try {
-    const { paciente, medico, desde, hasta, q } = req.query;
+    const { paciente, medico, desde, hasta, q, cita_id, citaId } = req.query;
     const filter = {};
     if (q) {
       const rx = new RegExp(q, 'i');
@@ -138,6 +142,8 @@ exports.listarConsultas = async (req, res) => {
     }
     if (paciente) filter['receta.paciente_id'] = paciente;
     if (medico) filter['receta.medico_id'] = medico;
+    // Permitir filtrar por vínculo con cita
+    if (cita_id || citaId) filter.cita_id = cita_id || citaId;
 
     const cs = await Consulta.find(filter)
       .sort({ createdAt: -1 })

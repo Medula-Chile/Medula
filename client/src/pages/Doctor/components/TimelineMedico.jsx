@@ -26,6 +26,7 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
             const estadoClass = estado === 'Completado'
               ? 'bg-success text-white'
               : (estado === 'En progreso' ? 'bg-warning text-dark' : 'bg-secondary text-white');
+            const isCompleted = estado === 'Completado';
             return (
               <div
                 key={item.id}
@@ -50,14 +51,29 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
                         <button
                           type="button"
                           className="btn btn-outline-secondary btn-sm py-0 px-2"
-                          onClick={(e) => { e.stopPropagation(); onSelect(item.id); onStart && onStart(); }}
+                          disabled={isCompleted}
+                          title={isCompleted ? 'Atención completada. Para editar contacte al administrador.' : 'Iniciar atención'}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelect(item.id);
+                            if (isCompleted) {
+                              alert('Esta atención ya fue completada. Si necesita editar, contacte al administrador.');
+                              return;
+                            }
+                            onStart && onStart();
+                          }}
                         >
                           Iniciar atención
                         </button>
                       </div>
                     </div>
 
-                    <p className="text-muted-foreground small mb-1">{item.centro}</p>
+                    {/* Paciente y centro */}
+                    <p className="text-muted-foreground small mb-1">
+                      <i className="fas fa-user me-1"></i>
+                      {item.paciente && item.paciente !== '—' ? item.paciente : (item.paciente_id || '—')}
+                      {item.centro ? (<span className="ms-2 text-muted">• {item.centro}</span>) : null}
+                    </p>
                     <p className="small line-clamp-2 mb-0">{item.resumen}</p>
                   </div>
                 </div>
