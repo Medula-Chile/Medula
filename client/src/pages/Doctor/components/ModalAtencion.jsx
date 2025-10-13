@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import http from '../../../api/http';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import api from '../../../services/api';
 
 export default function ModalAtencion({ open, onClose, pacienteId, doctorId, citaId, onSaved }) {
   const [stepReceta, setStepReceta] = useState(false);
@@ -28,8 +28,14 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
   });
 
   const [errors, setErrors] = useState({});
+  const topRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
+
+  // Info básica para mostrar nombres
+  const [pacienteInfo, setPacienteInfo] = useState(null);
+  const [medicoInfo, setMedicoInfo] = useState(null);
 
   useEffect(() => {
     if (open) {
@@ -52,6 +58,56 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
     }
   }, [open, pacienteId, doctorId]);
 
+  // Mantener receta en sync si cambian los IDs desde props
+  useEffect(() => {
+    setReceta(prev => ({ ...prev, paciente_id: pacienteId || prev.paciente_id }));
+  }, [pacienteId]);
+  useEffect(() => {
+    setReceta(prev => ({ ...prev, medico_id: doctorId || prev.medico_id }));
+  }, [doctorId]);
+
+  // Cargar nombres
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        if (pacienteId) {
+          const r = await api.get(`/pacientes/${pacienteId}`);
+          if (!cancelled) setPacienteInfo(r.data || null);
+        } else {
+          if (!cancelled) setPacienteInfo(null);
+        }
+      } catch { if (!cancelled) setPacienteInfo(null); }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [pacienteId]);
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        if (doctorId) {
+          try {
+            const r = await api.get(`/medicos/${doctorId}`);
+            if (!cancelled) setMedicoInfo(r.data || null);
+          } catch (err) {
+            // Fallback: si doctorId es _id de Usuario, intentar obtener nombre de usuario
+            try {
+              const u = await api.get(`/users/${doctorId}`);
+              if (!cancelled) setMedicoInfo({ usuario: { nombre: u.data?.nombre || u.data?.fullName || u.data?.email || '' } });
+            } catch {
+              if (!cancelled) setMedicoInfo(null);
+            }
+          }
+        } else {
+          if (!cancelled) setMedicoInfo(null);
+        }
+      } catch { if (!cancelled) setMedicoInfo(null); }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [doctorId]);
+
   // Exámenes helpers
   const addExamen = () => {
     const nombre = (examenNombre || '').trim();
@@ -70,7 +126,7 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
   const searchMeds = async () => {
     try {
       setLoading(true);
-      const resp = await http.get('/api/medicamentos', { params: { q, activo: true } });
+      const resp = await api.get('/medicamentos', { params: { q, activo: true } });
       setResults(Array.isArray(resp.data) ? resp.data.slice(0, 20) : []);
     } catch (e) {
       setResults([]);
@@ -139,7 +195,13 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
   const handleSave = async (e) => {
     e.preventDefault();
     setSubmitError('');
-    if (!validate()) return;
+    setSubmitSuccess('');
+    if (!validate()) {
+      setSubmitError('Completa los campos obligatorios en Consulta (Motivo, Diagnóstico) y Receta.');
+      // Desplazar al inicio del modal para ver el mensaje
+      try { topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch {}
+      return;
+    }
     try {
       setSaving(true);
       const payload = {
@@ -155,12 +217,15 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
         },
         receta: stepReceta ? { ...receta } : null
       };
-      const resp = await http.post('/api/consultas', payload);
+      const resp = await api.post('/consultas', payload);
       // Marcar cita como completada en BD si se entregó citaId
       if (citaId) {
-        try { await http.put(`/api/citas/${citaId}`, { estado: 'completada' }); } catch { /* no romper si falla */ }
+        try { await api.put(`/citas/${citaId}`, { estado: 'completada' }); } catch { /* no romper si falla */ }
       }
       if (onSaved) onSaved(resp.data?.consulta);
+      setSubmitSuccess('Consulta guardada correctamente');
+      // Mostrar confirmación breve antes de cerrar
+      await new Promise(resolve => setTimeout(resolve, 900));
       onClose();
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'No se pudo guardar la consulta';
@@ -181,13 +246,16 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
         role="dialog"
         aria-modal="true"
       >
-        <div className="card-header d-flex justify-content-between align-items-center" style={{ position: 'sticky', top: 0, zIndex: 1, background: '#fff' }}>
+        <div ref={topRef} className="card-header d-flex justify-content-between align-items-center" style={{ position: 'sticky', top: 0, zIndex: 1, background: '#fff' }}>
           <h5 className="mb-0">Atención médica</h5>
           <button className="btn btn-sm btn-ghost" onClick={onClose} aria-label="Cerrar"><i className="fas fa-times"></i></button>
         </div>
         <div className="card-body" style={{ flex: 1, overflow: 'auto' }}>
           {submitError && (
-            <div className="alert alert-danger py-2 small" role="alert">{submitError}</div>
+            <div className="alert alert-danger py-2 small" role="alert" style={{ position: 'sticky', top: 0 }}>{submitError}</div>
+          )}
+          {submitSuccess && (
+            <div className="alert alert-success py-2 small" role="alert" style={{ position: 'sticky', top: submitError ? 36 : 0 }}>{submitSuccess}</div>
           )}
           <form className="small" onSubmit={handleSave}>
             {/* Datos de Consulta */}
@@ -230,10 +298,14 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
                     <div className="col-12 col-md-6">
                       <label className="form-label">Paciente ID</label>
                       <input className="form-control" value={receta.paciente_id} onChange={(e)=>setReceta({ ...receta, paciente_id: e.target.value })} disabled={!!pacienteId} />
+                      {/* Mostrar nombre del paciente, si disponible */}
+                      <small className="text-muted">{pacienteId && pacienteInfo?.usuario?.nombre ? pacienteInfo.usuario.nombre : ''}</small>
                     </div>
                     <div className="col-12 col-md-6">
                       <label className="form-label">Médico ID</label>
                       <input className="form-control" value={receta.medico_id} onChange={(e)=>setReceta({ ...receta, medico_id: e.target.value })} disabled={!!doctorId} />
+                      {/* Mostrar nombre del médico, si disponible */}
+                      <small className="text-muted">{doctorId && medicoInfo?.usuario?.nombre ? medicoInfo.usuario.nombre : ''}</small>
                     </div>
                   </div>
 

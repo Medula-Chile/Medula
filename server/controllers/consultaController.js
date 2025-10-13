@@ -1,5 +1,7 @@
 const Consulta = require('../models/consulta');
 const Receta = require('../models/receta');
+const Paciente = require('../models/paciente');
+const Medico = require('../models/medico');
 
 // POST /api/consultas
 exports.crearConsulta = async (req, res) => {
@@ -62,9 +64,28 @@ exports.crearConsulta = async (req, res) => {
     // Si viene receta, persistir copia en colección Recetas para vistas de administración
     if (payload.receta) {
       try {
+        // Resolver IDs correctos de Paciente y Medico por si recibimos IDs de Usuario
+        let pacienteId = payload.receta.paciente_id;
+        let medicoId = payload.receta.medico_id;
+        try {
+          // Si no existe Paciente con ese _id, intentar buscar por usuario_id
+          const pById = await Paciente.findById(pacienteId).select('_id');
+          if (!pById && pacienteId) {
+            const pByUsuario = await Paciente.findOne({ usuario_id: pacienteId }).select('_id');
+            if (pByUsuario) pacienteId = pByUsuario._id;
+          }
+        } catch { /* noop */ }
+        try {
+          const mById = await Medico.findById(medicoId).select('_id');
+          if (!mById && medicoId) {
+            const mByUsuario = await Medico.findOne({ usuario_id: medicoId }).select('_id');
+            if (mByUsuario) medicoId = mByUsuario._id;
+          }
+        } catch { /* noop */ }
+
         const recetaDoc = new Receta({
-          paciente_id: payload.receta.paciente_id,
-          medico_id: payload.receta.medico_id,
+          paciente_id: pacienteId,
+          medico_id: medicoId,
           fecha_emision: payload.receta.fecha_emision || new Date(),
           medicamentos: payload.receta.medicamentos.map(m => ({
             nombre: m.nombre,

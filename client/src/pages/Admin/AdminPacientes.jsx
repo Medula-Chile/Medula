@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 
 export default function AdminPacientes() {
   const [pacientes, setPacientes] = useState([]);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [usuarios, setUsuarios] = useState([]);
+  const [userFilter, setUserFilter] = useState('');
   const [selectedPaciente, setSelectedPaciente] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -39,6 +42,7 @@ export default function AdminPacientes() {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/pacientes');
       setPacientes(response.data.pacientes || response.data);
+      setPage(1);
     } catch (err) {
       setError('Error al cargar pacientes');
       console.error('Error:', err);
@@ -50,10 +54,35 @@ export default function AdminPacientes() {
   // Obtener usuarios con rol paciente para el formulario
   const fetchUsuariosPacientes = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/users?rol=paciente');
-      setUsuarios(response.data.usuarios || response.data);
+      const p1 = axios.get('http://localhost:5000/api/users', { params: { rol: 'paciente', limite: 1000, pagina: 1 } }).catch(()=>null);
+      const p2 = axios.get('http://localhost:5000/api/users', { params: { limit: 1000 } }).catch(()=>null);
+      const p3 = axios.get('http://localhost:5000/api/usuarios', { params: { limit: 1000 } }).catch(()=>null);
+      const p4 = axios.get('http://localhost:5000/api/users/all').catch(()=>null);
+      const p5 = axios.get('http://localhost:5000/api/usuarios/all').catch(()=>null);
+      const [r1,r2,r3,r4,r5] = await Promise.all([p1,p2,p3,p4,p5]);
+      const arrays = [];
+      const pushIfArray = (resp) => {
+        if (!resp) return;
+        const d = resp.data;
+        if (Array.isArray(d)) arrays.push(d);
+        else if (Array.isArray(d?.usuarios)) arrays.push(d.usuarios);
+        else if (Array.isArray(d?.users)) arrays.push(d.users);
+        else if (Array.isArray(d?.data)) arrays.push(d.data);
+        else if (Array.isArray(d?.results)) arrays.push(d.results);
+      };
+      [r1,r2,r3,r4,r5].forEach(pushIfArray);
+      const merged = [].concat(...arrays);
+      const map = new Map();
+      merged.forEach(u => { if (u && u._id) map.set(String(u._id), u); });
+      let list = Array.from(map.values());
+      list = list.filter(u => {
+        const r = (u?.rol ?? u?.role ?? '').toString().toLowerCase();
+        return r === 'paciente' || r.includes('pac');
+      });
+      setUsuarios(list);
     } catch (err) {
       console.error('Error cargando usuarios:', err);
+      setUsuarios([]);
     }
   };
 
@@ -67,6 +96,7 @@ export default function AdminPacientes() {
       setLoading(true);
       const response = await axios.get(`http://localhost:5000/api/pacientes/buscar?q=${searchTerm}`);
       setPacientes(response.data.pacientes || response.data);
+      setPage(1);
     } catch (err) {
       setError('Error al buscar pacientes');
     } finally {
@@ -228,6 +258,22 @@ export default function AdminPacientes() {
     return paciente.usuario_id?.rut || paciente.usuario_rut || 'N/A';
   };
 
+  // Usuarios disponibles = usuarios con rol paciente sin perfil creado
+  const assignedUsuarioIds = useMemo(() => new Set(
+    (Array.isArray(pacientes) ? pacientes : []).map(p => String(p?.usuario_id?._id || p?.usuario_id || ''))
+  ), [pacientes]);
+  const availableUsers = useMemo(() => {
+    const base = Array.isArray(usuarios) ? usuarios : [];
+    const onlyUnassigned = base.filter(u => !assignedUsuarioIds.has(String(u?._id || '')));
+    const f = (userFilter || '').toLowerCase().trim();
+    if (!f) return onlyUnassigned;
+    return onlyUnassigned.filter(u =>
+      (u?.nombre || '').toLowerCase().includes(f) ||
+      (u?.email || '').toLowerCase().includes(f) ||
+      (u?.rut || '').toLowerCase().includes(f)
+    );
+  }, [usuarios, assignedUsuarioIds, userFilter]);
+
   if (loading) return <div className="text-center mt-4"><p>Cargando pacientes...</p></div>;
 
   return (
@@ -281,26 +327,45 @@ export default function AdminPacientes() {
                 <div className="row">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Usuario *</label>
-                      <select
-                        className="form-select"
-                        value={formData.usuario_id}
-                        onChange={(e) => handleUsuarioChange(e.target.value)}
-                        disabled={editing} // No permitir cambiar usuario en edición
-                      >
-                        <option value="">Seleccionar usuario</option>
-                        {usuarios.map(usuario => (
-                          <option key={usuario._id} value={usuario._id}>
-                            {usuario.nombre} - {usuario.email} - {usuario.rut}
-                          </option>
-                        ))}
-                      </select>
-                      <small className="text-muted">
-                        {editing 
-                          ? 'No se puede cambiar el usuario asociado' 
-                          : 'Selecciona un usuario con rol paciente'
-                        }
-                      </small>
+                      <label className="form-label">Usuario * <span className="text-muted small">(Pacientes: {usuarios.length} · Asignados: {assignedUsuarioIds.size} · Disponibles: {availableUsers.length})</span></label>
+                      {editing ? (
+                        <input className="form-control" value={selectedPaciente?.usuario_id?.nombre || 'Usuario asociado'} disabled />
+                      ) : (
+                        <div>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Buscar usuario..."
+                            value={userFilter}
+                            onChange={(e)=>setUserFilter(e.target.value)}
+                          />
+                          <div className="border rounded mt-1" style={{ maxHeight: 400, overflowY: 'auto' }}>
+                            <div className="list-group list-group-flush">
+                              {availableUsers.map(u => (
+                                <button
+                                  type="button"
+                                  key={u._id}
+                                  className={`list-group-item list-group-item-action ${formData.usuario_id===u._id?'active':''}`}
+                                  onClick={()=> handleUsuarioChange(u._id)}
+                                >
+                                  <div className="d-flex justify-content-between">
+                                    <span><strong>{u.nombre}</strong></span>
+                                    <code>{u._id}</code>
+                                  </div>
+                                  <div className="small text-muted">{u.email} · {u.rut}</div>
+                                </button>
+                              ))}
+                              {availableUsers.length===0 && (
+                                <div className="list-group-item text-muted small">Sin usuarios disponibles</div>
+                              )}
+                            </div>
+                          </div>
+                          {formData.usuario_id && (
+                            <div className="form-text">Seleccionado: <code>{formData.usuario_id}</code></div>
+                          )}
+                          <small className="text-muted d-block mt-1">Selecciona un usuario con rol paciente</small>
+                        </div>
+                      )}
                     </div>
 
                     {formData.usuario_id && (
@@ -429,7 +494,7 @@ export default function AdminPacientes() {
                       </tr>
                     </thead>
                     <tbody>
-                      {pacientes.map(paciente => (
+                      {(pacientes.slice((page-1)*pageSize, page*pageSize)).map(paciente => (
                         <tr key={paciente._id} className={!paciente.activo ? 'table-secondary' : ''}>
                           <td>
                             {getPacienteNombre(paciente)}
@@ -473,6 +538,39 @@ export default function AdminPacientes() {
                       ))}
                     </tbody>
                   </table>
+                  {/* Paginación */}
+                  <div className="d-flex justify-content-between align-items-center mt-2">
+                    <div className="small text-muted">
+                      Mostrando {(Math.min((page-1)*pageSize+1, pacientes.length))}-{Math.min(page*pageSize, pacientes.length)} de {pacientes.length}
+                    </div>
+                    <nav>
+                      <ul className="pagination pagination-sm mb-0">
+                        <li className={`page-item ${page===1?'disabled':''}`}>
+                          <button className="page-link" onClick={()=>setPage(1)}>«</button>
+                        </li>
+                        <li className={`page-item ${page===1?'disabled':''}`}>
+                          <button className="page-link" onClick={()=>setPage(p=>Math.max(1,p-1))}>‹</button>
+                        </li>
+                        {Array.from({length: Math.max(1, Math.ceil(pacientes.length/pageSize))}).slice(Math.max(0,page-3), Math.max(0,page-3)+5).map((_,i)=>{
+                          const start = Math.max(1, page-2);
+                          const num = start + i;
+                          const total = Math.ceil(pacientes.length/pageSize);
+                          if (num>total) return null;
+                          return (
+                            <li key={num} className={`page-item ${page===num?'active':''}`}>
+                              <button className="page-link" onClick={()=>setPage(num)}>{num}</button>
+                            </li>
+                          );
+                        })}
+                        <li className={`page-item ${page>=Math.ceil(pacientes.length/pageSize)?'disabled':''}`}>
+                          <button className="page-link" onClick={()=>setPage(p=>Math.min(Math.ceil(pacientes.length/pageSize)||1, p+1))}>›</button>
+                        </li>
+                        <li className={`page-item ${page>=Math.ceil(pacientes.length/pageSize)?'disabled':''}`}>
+                          <button className="page-link" onClick={()=>setPage(Math.max(1, Math.ceil(pacientes.length/pageSize)||1))}>»</button>
+                        </li>
+                      </ul>
+                    </nav>
+                  </div>
                 </div>
               )}
             </div>

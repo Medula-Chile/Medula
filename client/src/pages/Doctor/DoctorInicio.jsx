@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import api from '../../services/api';
 import TimelineMedico from './components/TimelineMedico';
 import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
 import ModalAtencion from './components/ModalAtencion';
@@ -55,6 +56,26 @@ export default function DoctorInicio() {
   const consulta = useMemo(() => (todayItems.find(x => String(x.id) === String(activeId)) || null), [todayItems, activeId]);
   const [open, setOpen] = useState(false);
   const doctorUserId = user?.id || user?._id || null;
+  const [doctorMedicoId, setDoctorMedicoId] = useState(null);
+
+  // Resolver el _id del modelo Medico a partir del usuario autenticado
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        if (!doctorUserId) { setDoctorMedicoId(null); return; }
+        const resp = await api.get('/medicos');
+        const arr = Array.isArray(resp.data) ? resp.data : [];
+        // Coincidir por usuario_id del Medico con el id del usuario autenticado
+        const found = arr.find(m => String(m?.usuario_id?._id || m?.usuario_id) === String(doctorUserId));
+        if (!cancelled) setDoctorMedicoId(found?._id || null);
+      } catch {
+        if (!cancelled) setDoctorMedicoId(null);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [doctorUserId]);
   const pacienteId = useMemo(() => {
     if (!consulta) return null;
     return consulta?.paciente_id?._id || consulta?.paciente_id || consulta?.pacienteId || null;
@@ -286,7 +307,7 @@ export default function DoctorInicio() {
       open={open}
       onClose={closeModal}
       pacienteId={pacienteId}
-      doctorId={doctorUserId}
+      doctorId={doctorMedicoId || doctorUserId}
       citaId={activeId}
       onSaved={(savedConsulta) => {
         // Actualizar la tarjeta activa en el store para reflejar inmediatamente

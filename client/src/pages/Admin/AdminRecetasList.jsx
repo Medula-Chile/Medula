@@ -75,6 +75,13 @@ export default function AdminRecetasList() {
     return String(m);
   };
 
+  const getId = (val) => {
+    if (!val) return '-';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') return val._id ? String(val._id) : '-';
+    return String(val);
+  };
+
   return (
     <div className="container-fluid">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -159,8 +166,14 @@ export default function AdminRecetasList() {
                         <tr key={r._id}>
                           <td>{fecha}</td>
                           <td><code>{r._id}</code></td>
-                          <td>{pacienteNombre}</td>
-                          <td>{medicoNombre}</td>
+                          <td>
+                            <div>{pacienteNombre}</div>
+                            <div className="text-muted small"><code>{getId(r?.paciente_id)}</code></div>
+                          </td>
+                          <td>
+                            <div>{medicoNombre}</div>
+                            <div className="text-muted small"><code>{getId(r?.medico_id)}</code></div>
+                          </td>
                           <td className="text-truncate" style={{ maxWidth: 240 }}>{r.indicaciones || '—'}</td>
                           <td><span className="badge bg-primary">{medsCount}</span></td>
                           <td>
