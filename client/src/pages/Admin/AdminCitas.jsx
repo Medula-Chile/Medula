@@ -329,51 +329,54 @@ export default function AdminCitas() {
 
   return (
     <div className="container-fluid">
-      <div className="row">
-        <div className="col-12">
-          <h2 className="mb-4">Gestión de Citas Médicas</h2>
+      <div className="row mb-4">
+        <div className="col">
+          <h2 className="mb-0">Gestión de Citas Médicas</h2>
+          <p className="text-muted">Administrar citas del sistema</p>
+        </div>
+      </div>
 
-          {/* Barra de búsqueda y botones */}
-          <div className="row mb-4">
-            <div className="col-md-6">
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Buscar por paciente, médico o motivo..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <button className="btn btn-outline-secondary" onClick={handleSearch}>
-                  🔍
-                </button>
-              </div>
-            </div>
-            <div className="col-md-6 text-end">
-              <button className="btn btn-success" onClick={handleNewCita}>
-                + Agregar Cita
-              </button>
-              <button className="btn btn-outline-secondary ms-2" onClick={fetchCitas}>
-                🔄 Actualizar
-              </button>
-            </div>
+      {/* Barra de búsqueda y botones */}
+      <div className="row g-3 mb-4">
+        <div className="col-12 col-md-6">
+          <div className="input-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Buscar por paciente, médico o motivo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <button className="btn btn-outline-secondary" onClick={handleSearch}>
+              <i className="fas fa-search"></i>
+            </button>
           </div>
+        </div>
+        <div className="col-12 col-md-6 text-md-end">
+          <button className="btn btn-success me-2" onClick={handleNewCita}>
+            <i className="fas fa-plus"></i> Agregar Cita
+          </button>
+          <button className="btn btn-outline-secondary" onClick={fetchCitas}>
+            <i className="fas fa-sync-alt"></i> Actualizar
+          </button>
+        </div>
+      </div>
 
-          {/* Mensaje de error */}
-          {error && (
-            <div className="alert alert-danger alert-dismissible fade show" role="alert">
-              {error}
-              <button type="button" className="btn-close" onClick={() => setError('')}></button>
-            </div>
-          )}
+      {/* Mensaje de error */}
+      {error && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          {error}
+          <button type="button" className="btn-close" onClick={() => setError('')}></button>
+        </div>
+      )}
 
-          {/* Formulario de creación/edición */}
-          {showForm && (
-            <div className="card mb-4">
-              <div className="card-header">
-                <h5>{editing ? 'Editar Cita Médica' : 'Nueva Cita Médica'}</h5>
-              </div>
+      {/* Formulario de creación/edición */}
+      {showForm && (
+        <div className="card mb-4">
+          <div className="card-header">
+            <h5>{editing ? 'Editar Cita Médica' : 'Nueva Cita Médica'}</h5>
+          </div>
               <div className="card-body">
                 <div className="row">
                   <div className="col-md-6">
@@ -499,106 +502,96 @@ export default function AdminCitas() {
                   </div>
                 </div>
 
-                <div className="text-end">
-                  <button className="btn btn-primary me-2" onClick={handleSaveCita}>
-                    {editing ? 'Actualizar' : 'Crear'} Cita
-                  </button>
-                  <button className="btn btn-secondary" onClick={handleCancel}>
-                    Cancelar
-                  </button>
-                </div>
-              </div>
+          <div className="text-end">
+            <button className="btn btn-primary me-2" onClick={handleSaveCita}>
+              {editing ? 'Actualizar' : 'Crear'} Cita
+            </button>
+            <button className="btn btn-secondary" onClick={handleCancel}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+        </div>
+      )}
+
+      {/* Lista de citas */}
+      <div className="card">
+        <div className="card-header bg-light">
+          <h5 className="mb-0"><i className="fas fa-calendar-alt"></i> Lista de Citas Médicas <span className="badge bg-primary">{citas.length}</span></h5>
+        </div>
+        <div className="card-body">
+          {citas.length === 0 ? (
+            <p className="text-center text-muted">No hay citas médicas registradas</p>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-striped table-hover table-sm">
+                <thead className="table-light">
+                  <tr>
+                    <th style={{minWidth: '120px'}}>Paciente</th>
+                    <th style={{minWidth: '120px'}}>Médico</th>
+                    <th style={{minWidth: '100px'}}>Centro</th>
+                    <th style={{minWidth: '130px'}}>Fecha y Hora</th>
+                    <th style={{minWidth: '150px'}}>Motivo</th>
+                    <th style={{minWidth: '90px'}}>Estado</th>
+                    <th className="text-center" style={{minWidth: '120px'}}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {citas.map(cita => {
+                    const especialidad = Array.isArray(medicos) && medicos.find(m => m.usuario_id?._id === cita.profesional_id?._id)?.especialidad;
+                    return (
+                    <tr key={cita._id}>
+                      <td>
+                        <div>{getPacienteNombre(cita)}</div>
+                      </td>
+                      <td>
+                        <div>{getMedicoNombre(cita)}</div>
+                        {especialidad && <small className="text-muted">{especialidad}</small>}
+                      </td>
+                      <td className="small">{getCentroNombre(cita)}</td>
+                      <td className="small">
+                        {formatFecha(cita.fecha_hora)}
+                      </td>
+                      <td className="small text-truncate" style={{maxWidth: '200px'}}>
+                        {cita.motivo}
+                      </td>
+                      <td>
+                        <span className={`badge ${getEstadoBadge(cita.estado)}`}>
+                          {getEstadoTexto(cita.estado)}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <div className="btn-group btn-group-sm">
+                          <button
+                            className="btn btn-outline-primary"
+                            onClick={() => handleEditCita(cita)}
+                            title="Editar"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            className="btn btn-outline-success"
+                            onClick={() => handleChangeEstado(cita._id, 'confirmada', getPacienteNombre(cita))}
+                            title="Confirmar cita"
+                          >
+                            <i className="fas fa-check"></i>
+                          </button>
+                          <button
+                            className="btn btn-outline-danger"
+                            onClick={() => handleDeleteCita(cita._id, getPacienteNombre(cita))}
+                            title="Eliminar"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
-
-          {/* Lista de citas */}
-          <div className="card">
-            <div className="card-header">
-              <h5>Lista de Citas Médicas ({citas.length})</h5>
-            </div>
-            <div className="card-body">
-              {citas.length === 0 ? (
-                <p className="text-center text-muted">No hay citas médicas registradas</p>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-striped table-hover">
-                    <thead>
-                      <tr>
-                        <th>Paciente</th>
-                        <th>Médico Asignado</th>
-                        <th>Especialidad</th>
-                        <th>Centro</th>
-                        <th>Fecha y Hora</th>
-                        <th>Motivo</th>
-                        <th>Estado</th>
-                        <th style={{ width: 180 }}>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {citas.map(cita => (
-                        <tr key={cita._id}>
-                          <td>
-                            <strong>{getPacienteNombre(cita)}</strong>
-                          </td>
-                          <td>
-                            <strong>{getMedicoNombre(cita)}</strong>
-                          </td>
-                          <td>
-                            {/* Buscar la especialidad del médico */}
-                            {Array.isArray(medicos) && medicos.find(m => m.usuario_id?._id === cita.profesional_id?._id)?.especialidad || 'N/A'}
-                          </td>
-                          <td>{getCentroNombre(cita)}</td>
-                          <td>
-                            <small className="text-muted">
-                              {formatFecha(cita.fecha_hora)}
-                            </small>
-                          </td>
-                          <td>
-                            <small className="text-muted">
-                              {cita.motivo.length > 50 
-                                ? `${cita.motivo.substring(0, 50)}...` 
-                                : cita.motivo
-                              }
-                            </small>
-                          </td>
-                          <td>
-                            <span className={`badge ${getEstadoBadge(cita.estado)}`}>
-                              {getEstadoTexto(cita.estado)}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="btn-group btn-group-sm">
-                              <button
-                                className="btn btn-outline-primary"
-                                onClick={() => handleEditCita(cita)}
-                                title="Editar"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                className="btn btn-outline-info"
-                                onClick={() => handleChangeEstado(cita._id, 'confirmada', getPacienteNombre(cita))}
-                                title="Confirmar cita"
-                              >
-                                ✅
-                              </button>
-                              <button
-                                className="btn btn-outline-danger"
-                                onClick={() => handleDeleteCita(cita._id, getPacienteNombre(cita))}
-                                title="Eliminar"
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>

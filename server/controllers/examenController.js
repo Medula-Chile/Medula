@@ -36,10 +36,11 @@ exports.subirAdjunto = async (req, res, opts = {}) => {
 
 exports.obtenerExamenes = async (req, res) => {
   try {
-    const { paciente, medico, estado, desde, hasta, consulta } = req.query;
+    const { paciente, medico, estado, desde, hasta, consulta, medico_realizador, realizador } = req.query;
     const filter = {};
     if (paciente) filter.paciente_id = paciente;
     if (medico) filter.medico_solicitante = medico;
+    if (medico_realizador || realizador) filter.medico_realizador = medico_realizador || realizador;
     if (estado) filter.estado = estado;
     if (consulta) filter.consulta_id = consulta;
     if (desde || hasta) {
@@ -49,8 +50,42 @@ exports.obtenerExamenes = async (req, res) => {
     }
 
     const examenes = await Examen.find(filter)
-      .populate('paciente_id', 'nombre usuario_id')
-      .populate('medico_solicitante', 'nombre especialidad')
+      .populate({
+        path: 'paciente_id',
+        select: 'nombre usuario_id',
+        populate: {
+          path: 'usuario_id',
+          select: 'nombre email'
+        }
+      })
+      .populate({
+        path: 'medico_solicitante',
+        select: 'nombre especialidad usuario_id',
+        populate: {
+          path: 'usuario_id',
+          select: 'nombre'
+        }
+      })
+      .populate({
+        path: 'medico_realizador',
+        select: 'nombre especialidad usuario_id',
+        populate: {
+          path: 'usuario_id',
+          select: 'nombre'
+        }
+      })
+      .populate({
+        path: 'consulta_id',
+        select: 'cita_id',
+        populate: {
+          path: 'cita_id',
+          select: 'profesional_id',
+          populate: {
+            path: 'profesional_id',
+            select: 'nombre email'
+          }
+        }
+      })
       .sort({ fecha_solicitud: -1 });
 
     res.json(examenes);
@@ -68,8 +103,42 @@ exports.obtenerExamenesPorPaciente = async (req, res) => {
     const { pacienteId } = req.params;
 
     const examenes = await Examen.find({ paciente_id: pacienteId })
-      .populate('paciente_id', 'nombre usuario_id')
-      .populate('medico_solicitante', 'nombre especialidad')
+      .populate({
+        path: 'paciente_id',
+        select: 'nombre usuario_id',
+        populate: {
+          path: 'usuario_id',
+          select: 'nombre email'
+        }
+      })
+      .populate({
+        path: 'medico_solicitante',
+        select: 'nombre especialidad usuario_id',
+        populate: {
+          path: 'usuario_id',
+          select: 'nombre'
+        }
+      })
+      .populate({
+        path: 'medico_realizador',
+        select: 'nombre especialidad usuario_id',
+        populate: {
+          path: 'usuario_id',
+          select: 'nombre'
+        }
+      })
+      .populate({
+        path: 'consulta_id',
+        select: 'cita_id',
+        populate: {
+          path: 'cita_id',
+          select: 'profesional_id',
+          populate: {
+            path: 'profesional_id',
+            select: 'nombre email'
+          }
+        }
+      })
       .sort({ fecha_solicitud: -1 });
 
     res.json(examenes);

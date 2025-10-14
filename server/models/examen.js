@@ -17,6 +17,12 @@ const examenSchema = new mongoose.Schema({
         ref: 'Medico',
         required: [true, 'El ID del médico solicitante es obligatorio']
     },
+    // Médico que realizó el examen (puede ser distinto del solicitante)
+    medico_realizador: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Medico',
+        default: null
+    },
     tipo_examen: {
         type: String,
         required: [true, 'El tipo de examen es obligatorio'],
@@ -54,6 +60,7 @@ const examenSchema = new mongoose.Schema({
 
 examenSchema.index({ paciente_id: 1 });
 examenSchema.index({ medico_solicitante: 1 });
+examenSchema.index({ medico_realizador: 1 });
 examenSchema.index({ tipo_examen: 1 });
 examenSchema.index({ estado: 1 });
 examenSchema.index({ fecha_solicitud: -1 });

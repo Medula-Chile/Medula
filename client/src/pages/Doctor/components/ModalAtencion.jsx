@@ -276,6 +276,13 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
         const pid = receta.paciente_id || pacienteId || null;
         const mid = doctorId || receta.medico_id || null;
         const consultaId = resp?.data?.consulta?._id || null;
+        
+        console.log('[ModalAtencion] Creando exámenes con:');
+        console.log('  - paciente_id:', pid);
+        console.log('  - medico_solicitante (doctorId):', mid);
+        console.log('  - consulta_id:', consultaId);
+        console.log('  - cantidad de exámenes:', examenes.length);
+        
         if (pid && mid && Array.isArray(examenes) && examenes.length > 0) {
           const tasks = examenes.map((ex) => api.post('/examenes', {
             paciente_id: pid,
@@ -288,14 +295,30 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
           const results = await Promise.allSettled(tasks);
           const ok = results.filter(r => r.status === 'fulfilled').length;
           const fail = results.length - ok;
+          
+          // Log de resultados
+          console.log('[ModalAtencion] Resultados de creación de exámenes:', { ok, fail });
+          results.forEach((r, i) => {
+            if (r.status === 'rejected') {
+              console.error(`[ModalAtencion] Examen ${i} falló:`, r.reason?.response?.data || r.reason);
+            }
+          });
+          
           if (ok > 0) {
             setSubmitSuccess(prev => (prev ? `${prev} • ` : '') + `Exámenes creados: ${ok}${fail ? ` (fallidos: ${fail})` : ''}`);
           } else if (fail > 0) {
             setSubmitError(prev => (prev ? `${prev} • ` : '') + `No se pudieron crear ${fail} exámenes`);
           }
+        } else {
+          console.warn('[ModalAtencion] No se crearon exámenes. Razón:', {
+            tienePaciente: !!pid,
+            tieneMedico: !!mid,
+            tieneExamenes: Array.isArray(examenes) && examenes.length > 0
+          });
         }
       } catch (exErr) {
         // no bloquear flujo; sólo informar
+        console.error('[ModalAtencion] Error al crear exámenes:', exErr);
         setSubmitError(prev => (prev ? `${prev} • ` : '') + 'Fallo al crear exámenes');
       }
       // Marcar cita como completada en BD si se entregó citaId

@@ -105,12 +105,24 @@ export default function AdminConsultas() {
 
   return (
     <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="mb-0">Consultas médicas</h2>
-        <div className="d-flex align-items-center gap-2">
-          <span className="badge bg-secondary">Recibidas: {filtered.length}</span>
-          <button className="btn btn-outline-dark" onClick={()=>setShowRaw(s=>!s)}>{showRaw ? 'Ocultar JSON' : 'Ver JSON'}</button>
-          <button className="btn btn-outline-secondary" onClick={fetchConsultas} disabled={loading}>🔄 Actualizar</button>
+      <div className="row mb-4">
+        <div className="col">
+          <h2 className="mb-0">Consultas Médicas</h2>
+          <p className="text-muted">Gestionar consultas del sistema</p>
+        </div>
+      </div>
+
+      <div className="row g-3 mb-3">
+        <div className="col-auto">
+          <span className="badge bg-secondary fs-6">Total: {filtered.length}</span>
+        </div>
+        <div className="col-auto ms-auto">
+          <button className="btn btn-outline-dark btn-sm me-2" onClick={()=>setShowRaw(s=>!s)}>
+            <i className="fas fa-code"></i> {showRaw ? 'Ocultar JSON' : 'Ver JSON'}
+          </button>
+          <button className="btn btn-outline-secondary btn-sm" onClick={fetchConsultas} disabled={loading}>
+            <i className="fas fa-sync-alt"></i> Actualizar
+          </button>
         </div>
       </div>
 
@@ -122,8 +134,8 @@ export default function AdminConsultas() {
               <label className="form-label small">Buscar (motivo, diagnóstico, observaciones, tratamiento)</label>
               <div className="input-group">
                 <input className="form-control" value={q} onChange={(e)=>setQ(e.target.value)} placeholder="texto libre" onKeyDown={(e)=>{ if (e.key==='Enter') fetchConsultas(); }} />
-                <button className="btn btn-outline-secondary" onClick={fetchConsultas}>🔍</button>
-                {!!q && <button className="btn btn-outline-secondary" onClick={()=>{ setQ(''); fetchConsultas(); }}>✕</button>}
+                <button className="btn btn-outline-secondary" onClick={fetchConsultas}><i className="fas fa-search"></i></button>
+                {!!q && <button className="btn btn-outline-secondary" onClick={()=>{ setQ(''); fetchConsultas(); }}><i className="fas fa-times"></i></button>}
               </div>
             </div>
             <div className="col-6 col-md-2">
@@ -159,22 +171,22 @@ export default function AdminConsultas() {
 
       {!loading && (
         <div className="card">
-          <div className="card-header"><h5 className="mb-0">Resultados ({filtered.length})</h5></div>
+          <div className="card-header bg-light"><h5 className="mb-0"><i className="fas fa-notes-medical"></i> Resultados <span className="badge bg-primary">{filtered.length}</span></h5></div>
           <div className="card-body p-0">
             {filtered.length === 0 ? (
               <div className="p-3 text-muted small">Sin resultados.</div>
             ) : (
               <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                  <thead>
+                <table className="table table-striped table-hover table-sm">
+                  <thead className="table-light">
                     <tr>
-                      <th>Fecha</th>
-                      <th>Paciente</th>
-                      <th>Médico</th>
-                      <th>Motivo</th>
-                      <th>Diagnóstico</th>
-                      <th>Receta</th>
-                      <th>Acciones</th>
+                      <th style={{minWidth: '130px'}}>Fecha</th>
+                      <th style={{minWidth: '120px'}}>Paciente</th>
+                      <th style={{minWidth: '120px'}}>Médico</th>
+                      <th style={{minWidth: '150px'}}>Motivo</th>
+                      <th style={{minWidth: '150px'}}>Diagnóstico</th>
+                      <th style={{minWidth: '80px'}}>Receta</th>
+                      <th className="text-center" style={{minWidth: '120px'}}>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -186,15 +198,19 @@ export default function AdminConsultas() {
                       const medsCount = c?.receta?.medicamentos?.length || 0;
                       return (
                         <tr key={c._id}>
-                          <td>{fecha}</td>
+                          <td className="small">{fecha}</td>
                           <td>{pacienteNombre}</td>
                           <td>{medicoNombre}</td>
-                          <td className="text-truncate" style={{ maxWidth: 240 }}>{c.motivo}</td>
-                          <td className="text-truncate" style={{ maxWidth: 240 }}>{c.diagnostico}</td>
-                          <td>{tieneReceta ? <span className="badge bg-primary">{`Sí (${medsCount})`}</span> : <span className="badge bg-secondary">No</span>}</td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEdit(c)}>Editar</button>
-                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(c)}>Eliminar</button>
+                          <td className="small text-truncate" style={{ maxWidth: 200 }}>{c.motivo}</td>
+                          <td className="small text-truncate" style={{ maxWidth: 200 }}>{c.diagnostico}</td>
+                          <td className="text-center">{tieneReceta ? <span className="badge bg-primary">{medsCount}</span> : <span className="badge bg-secondary">-</span>}</td>
+                          <td className="text-center">
+                            <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEdit(c)} title="Editar">
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(c)} title="Eliminar">
+                              <i className="fas fa-trash"></i>
+                            </button>
                           </td>
                         </tr>
                       );

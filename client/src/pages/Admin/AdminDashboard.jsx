@@ -9,6 +9,7 @@ import {
   PointElement,
   LineElement,
   ArcElement,
+  Filler,
   Title,
   Tooltip,
   Legend,
@@ -22,6 +23,7 @@ ChartJS.register(
   PointElement,
   LineElement,
   ArcElement,
+  Filler,
   Title,
   Tooltip,
   Legend
@@ -31,220 +33,389 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     pacientes: 0,
     medicos: 0,
-    atenciones: 0,
-    rating: 4.2,
-    websiteTraffic: 27542,
-    activeDoctors: 275,
-    activePatients: 1685,
-    openHealthQuestions: 18,
-    openInvoices: 1685,
+    consultas: 0,
+    citas: 0,
+    examenes: 0,
+    recetas: 0,
+    citasHoy: 0,
+    citasPendientes: 0,
   });
 
-  const [hospitalSurveyData, setHospitalSurveyData] = useState({
-    newPatients: [],
-    oldPatients: [],
-  });
-
+  const [loading, setLoading] = useState(true);
   const [recentPatients, setRecentPatients] = useState([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  const [recentExamenes, setRecentExamenes] = useState([]);
+  const [estadisticasCitas, setEstadisticasCitas] = useState({
+    programada: 0,
+    confirmada: 0,
+    completada: 0,
+    cancelada: 0,
+  });
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const pacientesRes = await api.get('/admin/count-pacientes');
-        const medicosRes = await api.get('/admin/count-medicos');
-        const atencionesRes = await api.get('/admin/count-atenciones');
-        // Fetch other stats as needed from backend or mock here
+        setLoading(true);
+        
+        // Fetch all data in parallel
+        const [pacientesRes, medicosRes, consultasRes, citasRes, examenesRes, recetasRes] = await Promise.allSettled([
+          api.get('/pacientes'),
+          api.get('/medicos'),
+          api.get('/consultas'),
+          api.get('/citas'),
+          api.get('/examenes'),
+          api.get('/recetas'),
+        ]);
 
-        setStats(prev => ({
-          ...prev,
-          pacientes: pacientesRes.data.count,
-          medicos: medicosRes.data.count,
-          atenciones: atencionesRes.data.count,
-        }));
+        const pacientesArr = pacientesRes.status === 'fulfilled' 
+          ? (Array.isArray(pacientesRes.value.data) ? pacientesRes.value.data : (pacientesRes.value.data?.pacientes || []))
+          : [];
+        
+        const medicosArr = medicosRes.status === 'fulfilled'
+          ? (Array.isArray(medicosRes.value.data) ? medicosRes.value.data : (medicosRes.value.data?.medicos || []))
+          : [];
+        
+        const consultasArr = consultasRes.status === 'fulfilled'
+          ? (Array.isArray(consultasRes.value.data) ? consultasRes.value.data : (consultasRes.value.data?.consultas || []))
+          : [];
+        
+        const citasArr = citasRes.status === 'fulfilled'
+          ? (Array.isArray(citasRes.value.data) ? citasRes.value.data : (citasRes.value.data?.citas || []))
+          : [];
+        
+        const examenesArr = examenesRes.status === 'fulfilled'
+          ? (Array.isArray(examenesRes.value.data) ? examenesRes.value.data : (examenesRes.value.data?.examenes || []))
+          : [];
+        
+        const recetasArr = recetasRes.status === 'fulfilled'
+          ? (Array.isArray(recetasRes.value.data) ? recetasRes.value.data : (recetasRes.value.data?.recetas || []))
+          : [];
 
-        // Fetch recent patients
-        const recentPatientsRes = await api.get('/admin/recent-patients');
-        setRecentPatients(recentPatientsRes.data);
+        // Calcular estadísticas de citas
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const manana = new Date(hoy);
+        manana.setDate(manana.getDate() + 1);
 
-        // Fetch upcoming appointments
-        const upcomingAppointmentsRes = await api.get('/admin/upcoming-appointments');
-        setUpcomingAppointments(upcomingAppointmentsRes.data);
+        const citasHoy = citasArr.filter(c => {
+          const fecha = new Date(c.fecha_hora || c.fecha);
+          return fecha >= hoy && fecha < manana;
+        }).length;
 
-        // Fetch notifications
-        const notificationsRes = await api.get('/admin/notifications');
-        setNotifications(notificationsRes.data);
+        const citasPendientes = citasArr.filter(c => 
+          c.estado === 'programada' || c.estado === 'confirmada'
+        ).length;
 
-        // Fetch hospital survey data (mock or real)
-        setHospitalSurveyData({
-          newPatients: [120, 150, 170, 140, 180, 200, 220, 210, 230, 250, 270, 300],
-          oldPatients: [100, 130, 160, 120, 150, 170, 190, 180, 200, 220, 240, 260],
+        // Estadísticas por estado
+        const estadisticas = citasArr.reduce((acc, cita) => {
+          const estado = cita.estado || 'programada';
+          acc[estado] = (acc[estado] || 0) + 1;
+          return acc;
+        }, {});
+
+        setStats({
+          pacientes: pacientesArr.length,
+          medicos: medicosArr.length,
+          consultas: consultasArr.length,
+          citas: citasArr.length,
+          examenes: examenesArr.length,
+          recetas: recetasArr.length,
+          citasHoy,
+          citasPendientes,
         });
+
+        setEstadisticasCitas({
+          programada: estadisticas.programada || 0,
+          confirmada: estadisticas.confirmada || 0,
+          completada: estadisticas.completada || 0,
+          cancelada: estadisticas.cancelada || 0,
+        });
+
+        // Pacientes recientes: tomar últimos 10 por createdAt si existe
+        const recent = pacientesArr
+          .slice()
+          .sort((a,b)=> new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0))
+          .slice(0, 10)
+          .map(p => ({
+            _id: p._id,
+            nombre: p?.usuario_id?.nombre || p?.usuario?.nombre || p?.nombre || 'N/A',
+            doctorName: p?.medico?.nombre || p?.medico_asignado?.nombre || 'N/A',
+            fecha_admision: p?.createdAt || new Date().toISOString(),
+            enfermedad: p?.diagnostico || 'N/A',
+            numero_habitacion: p?.habitacion || '—',
+          }));
+        setRecentPatients(recent);
+
+        // Próximas citas: próximos 7 días
+        const upcoming = citasArr
+          .filter(c => {
+            const fecha = new Date(c.fecha_hora || c.fecha);
+            return fecha >= new Date() && (c.estado === 'programada' || c.estado === 'confirmada');
+          })
+          .sort((a,b)=> new Date(a?.fecha_hora || a?.fecha || 0) - new Date(b?.fecha_hora || b?.fecha || 0))
+          .slice(0, 5)
+          .map(c => ({
+            _id: c._id,
+            pacienteNombre: c?.paciente_id?.usuario_id?.nombre || c?.paciente_id?.usuario?.nombre || c?.paciente_nombre || 'Paciente',
+            medicoNombre: c?.profesional_id?.nombre || 'Médico',
+            motivo: c?.motivo || 'Consulta',
+            fecha: c?.fecha_hora || c?.fecha || new Date().toISOString(),
+          }));
+        setUpcomingAppointments(upcoming);
+
+        // Exámenes recientes
+        const recentExams = examenesArr
+          .slice()
+          .sort((a,b)=> new Date(b?.fecha_solicitud || 0) - new Date(a?.fecha_solicitud || 0))
+          .slice(0, 5)
+          .map(e => ({
+            _id: e._id,
+            tipo: e.tipo_examen,
+            paciente: e?.paciente_id?.usuario_id?.nombre || 'Paciente',
+            estado: e.estado,
+            fecha: e.fecha_solicitud,
+          }));
+        setRecentExamenes(recentExams);
+
       } catch (error) {
         console.error('Error fetching admin stats:', error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchStats();
   }, []);
 
-  const overallRating = stats.rating;
-  const websiteTraffic = stats.websiteTraffic;
-  const activeDoctors = stats.activeDoctors;
-  const activePatients = stats.activePatients;
-  const openHealthQuestions = stats.openHealthQuestions;
-  const openInvoices = stats.openInvoices;
-
-  const hospitalSurveyLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-
-  const hospitalSurveyChartData = {
-    labels: hospitalSurveyLabels,
+  // Datos para gráfico de citas por estado
+  const citasEstadoData = {
+    labels: ['Programadas', 'Confirmadas', 'Completadas', 'Canceladas'],
     datasets: [
       {
-        label: 'Nuevos Pacientes',
-        data: hospitalSurveyData.newPatients,
-        borderColor: 'rgba(75,192,192,1)',
-        backgroundColor: 'rgba(75,192,192,0.2)',
-        fill: true,
-        tension: 0.4,
-      },
-      {
-        label: 'Pacientes Antiguos',
-        data: hospitalSurveyData.oldPatients,
-        borderColor: 'rgba(153,102,255,1)',
-        backgroundColor: 'rgba(153,102,255,0.2)',
-        fill: true,
-        tension: 0.4,
+        label: 'Citas por Estado',
+        data: [
+          estadisticasCitas.programada,
+          estadisticasCitas.confirmada,
+          estadisticasCitas.completada,
+          estadisticasCitas.cancelada,
+        ],
+        backgroundColor: [
+          'rgba(255, 193, 7, 0.6)',
+          'rgba(13, 202, 240, 0.6)',
+          'rgba(25, 135, 84, 0.6)',
+          'rgba(220, 53, 69, 0.6)',
+        ],
+        borderColor: [
+          'rgba(255, 193, 7, 1)',
+          'rgba(13, 202, 240, 1)',
+          'rgba(25, 135, 84, 1)',
+          'rgba(220, 53, 69, 1)',
+        ],
+        borderWidth: 1,
       },
     ],
   };
 
-  const overallRatingData = {
-    labels: ['Calificación'],
-    datasets: [
-      {
-        label: 'Calificación General',
-        data: [overallRating],
-        backgroundColor: ['#ffc107'],
-      },
-    ],
-  };
-
-  const websiteTrafficData = {
-    labels: ['Tráfico del Sitio Web'],
-    datasets: [
-      {
-        label: 'Visitantes',
-        data: [websiteTraffic],
-        backgroundColor: ['#007bff'],
-      },
-    ],
-  };
+  if (loading) {
+    return (
+      <div className="container-fluid mt-4">
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Cargando...</span>
+          </div>
+          <p className="mt-3 text-muted">Cargando estadísticas...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mt-3">
-      <h1>Dashboard Administrador</h1>
+    <div className="container-fluid">
       <div className="row mb-4">
-        <div className="col-md-3">
-          <div className="card text-center p-3">
-            <h5>Calificación General</h5>
-            <Doughnut data={overallRatingData} />
-            <p>{overallRating} / 5.0</p>
+        <div className="col">
+          <h2 className="mb-0">Dashboard Administrador</h2>
+          <p className="text-muted">Resumen general del sistema</p>
+        </div>
+      </div>
+
+      {/* Tarjetas de estadísticas principales */}
+      <div className="row g-3 mb-4">
+        <div className="col-6 col-md-4 col-lg-2">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <i className="fas fa-users fa-2x text-primary mb-2"></i>
+              <h3 className="mb-0">{stats.pacientes}</h3>
+              <small className="text-muted">Pacientes</small>
+            </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card text-center p-3">
-            <h5>Tráfico del Sitio Web</h5>
-            <Bar data={websiteTrafficData} />
-            <p>{websiteTraffic} Visitantes Únicos</p>
+        <div className="col-6 col-md-4 col-lg-2">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <i className="fas fa-user-md fa-2x text-success mb-2"></i>
+              <h3 className="mb-0">{stats.medicos}</h3>
+              <small className="text-muted">Médicos</small>
+            </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card text-center p-3">
-            <h5>Médicos Activos</h5>
-            <h3>{activeDoctors}</h3>
+        <div className="col-6 col-md-4 col-lg-2">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <i className="fas fa-calendar-check fa-2x text-info mb-2"></i>
+              <h3 className="mb-0">{stats.citas}</h3>
+              <small className="text-muted">Citas Totales</small>
+            </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card text-center p-3">
-            <h5>Pacientes Activos</h5>
-            <h3>{activePatients}</h3>
+        <div className="col-6 col-md-4 col-lg-2">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <i className="fas fa-calendar-day fa-2x text-warning mb-2"></i>
+              <h3 className="mb-0">{stats.citasHoy}</h3>
+              <small className="text-muted">Citas Hoy</small>
+            </div>
+          </div>
+        </div>
+        <div className="col-6 col-md-4 col-lg-2">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <i className="fas fa-flask fa-2x text-danger mb-2"></i>
+              <h3 className="mb-0">{stats.examenes}</h3>
+              <small className="text-muted">Exámenes</small>
+            </div>
+          </div>
+        </div>
+        <div className="col-6 col-md-4 col-lg-2">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <i className="fas fa-prescription fa-2x text-secondary mb-2"></i>
+              <h3 className="mb-0">{stats.recetas}</h3>
+              <small className="text-muted">Recetas</small>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="row mb-4">
-        <div className="col-md-8">
-          <div className="card p-3">
-            <h5>Encuesta del Hospital</h5>
-            <Line data={hospitalSurveyChartData} />
+      {/* Gráfico de citas y próximas citas */}
+      <div className="row g-3 mb-4">
+        <div className="col-12 col-lg-6">
+          <div className="card h-100">
+            <div className="card-header bg-light">
+              <h5 className="mb-0"><i className="fas fa-chart-pie"></i> Citas por Estado</h5>
+            </div>
+            <div className="card-body">
+              <Doughnut data={citasEstadoData} options={{ maintainAspectRatio: true, responsive: true }} />
+            </div>
           </div>
         </div>
-        <div className="col-md-4">
-          <div className="card p-3">
-            <h5>Preguntas de Salud Abiertas</h5>
-            <h3>{openHealthQuestions}</h3>
-            <h5>Facturas Abiertas</h5>
-            <h3>{openInvoices}</h3>
+
+        <div className="col-12 col-lg-6">
+          <div className="card h-100">
+            <div className="card-header bg-light">
+              <h5 className="mb-0"><i className="fas fa-calendar-alt"></i> Próximas Citas</h5>
+            </div>
+            <div className="card-body" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {upcomingAppointments.length === 0 ? (
+                <p className="text-muted text-center py-4">No hay citas próximas</p>
+              ) : (
+                <div className="list-group list-group-flush">
+                  {upcomingAppointments.map((appt) => (
+                    <div key={appt._id} className="list-group-item px-0">
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div>
+                          <h6 className="mb-1">{appt.pacienteNombre}</h6>
+                          <p className="mb-1 small text-muted">
+                            <i className="fas fa-user-md"></i> {appt.medicoNombre}
+                          </p>
+                          <p className="mb-0 small">{appt.motivo}</p>
+                        </div>
+                        <span className="badge bg-primary">{new Date(appt.fecha).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="row mb-4">
-        <div className="col-md-6">
-          <div className="card p-3">
-            <h5>Pacientes Recientes</h5>
-            <Table striped bordered hover size="sm">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nombre</th>
-                  <th>Médico Asignado</th>
-                  <th>Fecha de Admisión</th>
-                  <th>Enfermedad</th>
-                  <th>Número de Habitación</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentPatients.map((patient, idx) => (
-                  <tr key={patient._id}>
-                    <td>{idx + 1}</td>
-                    <td>{patient.nombre}</td>
-                    <td>{patient.doctorName || 'N/A'}</td>
-                    <td>{new Date(patient.fecha_admision).toLocaleDateString()}</td>
-                    <td>{patient.enfermedad || 'N/A'}</td>
-                    <td>{patient.numero_habitacion || 'N/A'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+      {/* Pacientes recientes y exámenes recientes */}
+      <div className="row g-3 mb-4">
+        <div className="col-12 col-lg-6">
+          <div className="card h-100">
+            <div className="card-header bg-light">
+              <h5 className="mb-0"><i className="fas fa-user-plus"></i> Pacientes Recientes</h5>
+            </div>
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover table-sm mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Fecha Registro</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentPatients.length === 0 ? (
+                      <tr>
+                        <td colSpan="2" className="text-center text-muted py-3">No hay pacientes recientes</td>
+                      </tr>
+                    ) : (
+                      recentPatients.map((patient) => (
+                        <tr key={patient._id}>
+                          <td>{patient.nombre}</td>
+                          <td className="small text-muted">{new Date(patient.fecha_admision).toLocaleDateString()}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="col-md-6">
-          <div className="card p-3">
-            <h5>Citas Próximas</h5>
-            <ListGroup>
-              {upcomingAppointments.map((appt) => (
-                <ListGroupItem key={appt._id}>
-                  <strong>{appt.pacienteNombre}</strong> - {appt.especialidad} <br />
-                  {new Date(appt.fecha).toLocaleString()}
-                </ListGroupItem>
-              ))}
-            </ListGroup>
-          </div>
-
-          <div className="card p-3 mt-3">
-            <h5>Notificaciones</h5>
-            {notifications.length === 0 ? (
-              <Alert variant="info">No hay nuevas notificaciones</Alert>
-            ) : (
-              <ListGroup>
-                {notifications.map((note, idx) => (
-                  <ListGroupItem key={idx}>{note}</ListGroupItem>
-                ))}
-              </ListGroup>
-            )}
+        <div className="col-12 col-lg-6">
+          <div className="card h-100">
+            <div className="card-header bg-light">
+              <h5 className="mb-0"><i className="fas fa-flask"></i> Exámenes Recientes</h5>
+            </div>
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover table-sm mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Paciente</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentExamenes.length === 0 ? (
+                      <tr>
+                        <td colSpan="3" className="text-center text-muted py-3">No hay exámenes recientes</td>
+                      </tr>
+                    ) : (
+                      recentExamenes.map((exam) => (
+                        <tr key={exam._id}>
+                          <td><span className="badge bg-info text-dark">{exam.tipo}</span></td>
+                          <td className="small">{exam.paciente}</td>
+                          <td>
+                            <span className={`badge ${
+                              exam.estado === 'solicitado' ? 'bg-warning text-dark' : 
+                              exam.estado === 'realizado' ? 'bg-success' : 
+                              exam.estado === 'entregado' ? 'bg-primary' : 'bg-secondary'
+                            }`}>
+                              {exam.estado}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>

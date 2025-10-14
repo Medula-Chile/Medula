@@ -144,16 +144,15 @@ export default function AdminRecetasList() {
               <div className="p-3 text-muted small">Sin resultados.</div>
             ) : (
               <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                  <thead>
+                <table className="table table-striped table-hover table-sm">
+                  <thead className="table-light">
                     <tr>
-                      <th>Fecha</th>
-                      <th>Folio</th>
-                      <th>Paciente</th>
-                      <th>Médico</th>
-                      <th>Indicaciones</th>
-                      <th>Medicamentos</th>
-                      <th></th>
+                      <th style={{minWidth: '110px'}}>Fecha</th>
+                      <th style={{minWidth: '100px'}}>Paciente</th>
+                      <th style={{minWidth: '100px'}}>Médico</th>
+                      <th style={{minWidth: '150px'}}>Indicaciones</th>
+                      <th className="text-center" style={{minWidth: '80px'}}>Medicamentos</th>
+                      <th className="text-center" style={{minWidth: '80px'}}>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -164,8 +163,7 @@ export default function AdminRecetasList() {
                       const medsCount = Array.isArray(r?.medicamentos) ? r.medicamentos.length : 0;
                       return (
                         <tr key={r._id}>
-                          <td>{fecha}</td>
-                          <td><code>{r._id}</code></td>
+                          <td className="small">{fecha}</td>
                           <td>
                             <div>{pacienteNombre}</div>
                             <div className="text-muted small"><code>{getId(r?.paciente_id)}</code></div>
@@ -174,10 +172,12 @@ export default function AdminRecetasList() {
                             <div>{medicoNombre}</div>
                             <div className="text-muted small"><code>{getId(r?.medico_id)}</code></div>
                           </td>
-                          <td className="text-truncate" style={{ maxWidth: 240 }}>{r.indicaciones || '—'}</td>
-                          <td><span className="badge bg-primary">{medsCount}</span></td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary" onClick={()=>setDetail(r)}>Ver detalle</button>
+                          <td className="text-truncate small" style={{ maxWidth: 200 }}>{r.indicaciones || '—'}</td>
+                          <td className="text-center"><span className="badge bg-primary">{medsCount}</span></td>
+                          <td className="text-center">
+                            <button className="btn btn-sm btn-outline-primary" onClick={()=>setDetail(r)} title="Ver detalle">
+                              <i className="fas fa-eye"></i>
+                            </button>
                           </td>
                         </tr>
                       );

@@ -20,9 +20,9 @@ const RecetaSchema = new mongoose.Schema({
 
 const ConsultaSchema = new mongoose.Schema({
   // vínculo con la cita para poder recuperar la consulta por cita
-  cita_id: { type: mongoose.Schema.Types.ObjectId, index: true, default: null },
+  cita_id: { type: mongoose.Schema.Types.ObjectId, ref: 'CitaMedica', index: true, default: null },
   // folio/id de la receta creada en colección Recetas (si corresponde)
-  recetaId: { type: mongoose.Schema.Types.ObjectId, default: null, index: true },
+  recetaId: { type: mongoose.Schema.Types.ObjectId, ref: 'Receta', default: null, index: true },
   motivo: { type: String, required: true, trim: true },
   sintomas: { type: String, trim: true },
   diagnostico: { type: String, required: true, trim: true },
