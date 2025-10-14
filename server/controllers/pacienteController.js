@@ -116,6 +116,61 @@ export const obtenerPacientePorId = async (req, res) => {
     }
 };
 
+// Obtener datos del paciente actual (basado en el token JWT)
+export const obtenerPacienteActual = async (req, res) => {
+    try {
+        // El middleware de autenticación ya verifica el token y agrega req.user
+        const paciente = await Paciente.findOne({ usuario_id: req.user.id })
+            .populate('usuario_id', 'nombre email rut fecha_registro rol');
+
+        if (!paciente) {
+            return res.status(404).json({ message: 'Paciente no encontrado' });
+        }
+
+        res.json(paciente);
+    } catch (error) {
+        res.status(500).json({
+            message: 'Error al obtener paciente actual',
+            error: error.message
+        });
+    }
+};
+
+// Actualizar datos del paciente actual
+export const actualizarPacienteActual = async (req, res) => {
+    try {
+        const { fecha_nacimiento, sexo, direccion, telefono, prevision, alergias, enfermedades_cronicas } = req.body;
+
+        const pacienteActualizado = await Paciente.findOneAndUpdate(
+            { usuario_id: req.user.id },
+            {
+                fecha_nacimiento,
+                sexo,
+                direccion,
+                telefono,
+                prevision,
+                alergias: alergias || [],
+                enfermedades_cronicas: enfermedades_cronicas || []
+            },
+            { new: true, runValidators: true }
+        ).populate('usuario_id', 'nombre email rut');
+
+        if (!pacienteActualizado) {
+            return res.status(404).json({ message: 'Paciente no encontrado' });
+        }
+
+        res.json({
+            message: 'Paciente actualizado exitosamente',
+            paciente: pacienteActualizado
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: 'Error al actualizar paciente actual',
+            error: error.message
+        });
+    }
+};
+
 // Actualizar paciente
 export const actualizarPaciente = async (req, res) => {
     try {

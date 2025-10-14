@@ -10,13 +10,14 @@ const auth = async (req, res, next) => {
             return res.status(401).json({ message: 'No se proporcionó token de autenticación' });
         }
 
-        // Verificar el token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Verificar el token (usar fallback si no hay JWT_SECRET definido)
+        const secret = process.env.JWT_SECRET || 'tu_secreto_temporal';
+        const decoded = jwt.verify(token, secret);
         
-        // Buscar el usuario
+        // Buscar el usuario (el modelo usa 'activo', no 'estado')
         const user = await User.findOne({ 
             _id: decoded.id,
-            estado: true // Solo usuarios activos
+            activo: true // Solo usuarios activos
         });
 
         if (!user) {

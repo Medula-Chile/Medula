@@ -36,6 +36,31 @@ exports.obtenerHistorial = async (req, res) => {
     }
 };
 
+// Obtener historial médico del paciente actual
+exports.obtenerHistorialPacienteActual = async (req, res) => {
+    try {
+        // Primero encontrar el paciente actual
+        const Paciente = require('../models/paciente');
+        const paciente = await Paciente.findOne({ usuario_id: req.user.id });
+
+        if (!paciente) {
+            return res.status(404).json({ message: 'Paciente no encontrado' });
+        }
+
+        const historial = await HistorialMedico.find({ paciente_id: paciente._id })
+            .populate('paciente_id', 'usuario_id')
+            .populate('profesional_id', 'nombre')
+            .sort({ fecha: -1 });
+
+        res.json(historial);
+    } catch (error) {
+        res.status(500).json({
+            message: 'Error al obtener historial médico del paciente',
+            error: error.message
+        });
+    }
+};
+
 exports.obtenerHistorialPorId = async (req, res) => {
     try {
         const historial = await HistorialMedico.findById(req.params.id)

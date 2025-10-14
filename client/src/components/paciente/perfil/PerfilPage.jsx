@@ -1,21 +1,26 @@
 import React from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
+import patientsService from '../../../services/patients';
 
 export default function PerfilPage() {
   // Página de perfil del paciente.
   // Muestra un resumen de datos y permite editar campos de contacto en un modal.
+  const { user } = useAuth();
   const [datos, setDatos] = React.useState({
-    nombre: 'María Elena Contreras',
-    run: '12.345.678-9',
-    nacimiento: '01 Ene 1990',
-    fonasa: 'FONASA B',
-    sangre: 'O+',
-    telefono: '+56 9 1234 5678',
-    email: 'maria@example.com',
-    direccion: 'Calle 123, Comuna, Ciudad',
-    emergNombre: 'Juan Contreras',
-    emergRelacion: 'Padre',
-    emergTelefono: '+56 9 9876 5432',
+    nombre: '',
+    run: '',
+    nacimiento: '',
+    fonasa: '',
+    sangre: '',
+    telefono: '',
+    email: '',
+    direccion: '',
+    emergNombre: '',
+    emergRelacion: '',
+    emergTelefono: '',
   });
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
 
   // Control del modal de edición y del formulario local (con errores de validación)
   const [open, setOpen] = React.useState(false);
@@ -23,6 +28,47 @@ export default function PerfilPage() {
     nombre: '', run: '', nacimiento: '', fonasa: '', sangre: '', telefono: '', email: '', direccion: '', emergNombre: '', emergRelacion: '', emergTelefono: ''
   });
   const [errors, setErrors] = React.useState({});
+
+  // Cargar datos del paciente desde la API
+  React.useEffect(() => {
+    const loadPatientData = async () => {
+      try {
+        setLoading(true);
+        const patientData = await patientsService.getCurrentPatient();
+
+        // Formatear fecha de nacimiento
+        const fechaNacimiento = new Date(patientData.fecha_nacimiento);
+        const formattedDate = fechaNacimiento.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+
+        setDatos({
+          nombre: patientData.usuario_id.nombre,
+          run: patientData.usuario_id.rut,
+          nacimiento: formattedDate,
+          fonasa: patientData.prevision,
+          sangre: '', // No está en el modelo actual
+          telefono: patientData.telefono,
+          email: patientData.usuario_id.email,
+          direccion: patientData.direccion,
+          emergNombre: '', // No está en el modelo actual
+          emergRelacion: '', // No está en el modelo actual
+          emergTelefono: '', // No está en el modelo actual
+        });
+      } catch (err) {
+        setError('Error al cargar los datos del paciente');
+      console.error('Error loading patient data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      loadPatientData();
+    }
+  }, [user]);
 
   // Carga inicial desde localStorage para persistir datos entre sesiones (demo)
   React.useEffect(() => {
@@ -54,7 +100,56 @@ export default function PerfilPage() {
     return Object.keys(e).length === 0;
   };
   // Guarda cambios del modal si la validación es correcta
-  const handleSave = (e) => { e.preventDefault(); if (!validate()) return; setDatos(form); setOpen(false); };
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    try {
+      // Actualizar datos del paciente en la API
+      await patientsService.updatePatient({
+        telefono: form.telefono,
+        direccion: form.direccion,
+        prevision: form.fonasa
+      });
+
+      // Actualizar estado local
+      setDatos(form);
+      setOpen(false);
+    } catch (err) {
+      console.error('Error updating patient data:', err);
+      setError('Error al actualizar los datos');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="row g-3">
+        <div className="col-12">
+          <div className="card">
+            <div className="card-body text-center">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Cargando...</span>
+              </div>
+              <p className="mt-2">Cargando datos del perfil...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="row g-3">
+        <div className="col-12">
+          <div className="alert alert-danger">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="row g-3">
