@@ -300,12 +300,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
           )}
         </div>
 
-        <div className="mb-4">
-          <h6 className="fw-medium mb-2">Signos Vitales</h6>
-          <p className="text-muted-foreground small bg-gray-100 p-3 rounded">
-            Presión: {presion} • Temperatura: {temperatura} • Pulso: {pulso}
-          </p>
-        </div>
+        {/* Se removió la sección de Signos Vitales a solicitud */}
 
         <div className="row mb-4 small">
           <div className="col-6 col-md-6 mb-2">

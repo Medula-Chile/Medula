@@ -162,52 +162,39 @@ export default function DoctorInicio() {
         } catch {}
         // Enriquecer con nombre de paciente si no viene en la cita
         const enriched = await Promise.all(today.map(async (it) => {
-          // Primer intento: si tenemos paciente_id, traer nombre desde /pacientes/:id
-          if ((it.paciente === '—' || !it.paciente) && it.paciente_id) {
+          let next = { ...it };
+          // Intento A: si tenemos paciente_id pero falta nombre, enriquecer nombre desde /pacientes/:id
+          if ((next.paciente === '—' || !next.paciente) && next.paciente_id) {
             try {
-              const pr = await api.get(`/pacientes/${it.paciente_id}`);
+              const pr = await api.get(`/pacientes/${next.paciente_id}`);
               const pd = pr.data || {};
               const name = (
-                pd?.usuario?.nombre ||
-                pd?.usuario?.fullName ||
-                pd?.usuario?.name ||
-                pd?.usuario_id?.nombre ||
-                pd?.usuario_id?.fullName ||
-                pd?.usuario_id?.name ||
-                pd?.nombre ||
-                [pd?.nombres, pd?.apellidos].filter(Boolean).join(' ') ||
+                pd?.usuario?.nombre || pd?.usuario?.fullName || pd?.usuario?.name ||
+                pd?.usuario_id?.nombre || pd?.usuario_id?.fullName || pd?.usuario_id?.name ||
+                pd?.nombre || [pd?.nombres, pd?.apellidos].filter(Boolean).join(' ') ||
                 [pd?.firstName, pd?.lastName].filter(Boolean).join(' ')
               ) || null;
-              if (name) return { ...it, paciente: name };
-            } catch (e) {
-              try { if (process?.env?.NODE_ENV !== 'production') console.debug('[DoctorInicio] fallo /pacientes/:id', it.paciente_id, e?.message); } catch {}
-            }
+              if (name) next = { ...next, paciente: name };
+            } catch {}
           }
-          // Segundo intento: consultar la cita individual para obtener paciente/usuario
-          if ((it.paciente === '—' || !it.paciente) && it.id) {
+          // Intento B: si falta paciente_id, siempre intentar /citas/:id para resolver pid y nombre
+          if (!next.paciente_id && next.id) {
             try {
-              const cr = await api.get(`/citas/${it.id}`);
+              const cr = await api.get(`/citas/${next.id}`);
               const c = cr.data || {};
               const pObj = c?.paciente_id || c?.paciente || null;
               const pid = (typeof pObj === 'object') ? (pObj?._id || pObj?.id) : (typeof c?.paciente_id === 'string' ? c.paciente_id : null);
               const name = (
                 (typeof pObj === 'string' ? pObj : null) ||
-                pObj?.usuario?.nombre ||
-                pObj?.usuario?.fullName ||
-                pObj?.usuario?.name ||
-                pObj?.usuario_id?.nombre ||
-                pObj?.usuario_id?.fullName ||
-                pObj?.usuario_id?.name ||
-                pObj?.nombre ||
-                [pObj?.nombres, pObj?.apellidos].filter(Boolean).join(' ') ||
+                pObj?.usuario?.nombre || pObj?.usuario?.fullName || pObj?.usuario?.name ||
+                pObj?.usuario_id?.nombre || pObj?.usuario_id?.fullName || pObj?.usuario_id?.name ||
+                pObj?.nombre || [pObj?.nombres, pObj?.apellidos].filter(Boolean).join(' ') ||
                 [pObj?.firstName, pObj?.lastName].filter(Boolean).join(' ')
               ) || c?.paciente_nombre || c?.pacienteNombre || null;
-              if (pid || name) return { ...it, paciente_id: it.paciente_id || pid || null, paciente: it.paciente || name || '—' };
-            } catch (e) {
-              try { if (process?.env?.NODE_ENV !== 'production') console.debug('[DoctorInicio] fallo /citas/:id', it.id, e?.message); } catch {}
-            }
+              next = { ...next, paciente_id: pid || next.paciente_id || null, paciente: next.paciente || name || '—' };
+            } catch {}
           }
-          return it;
+          return next;
         }));
         try {
           if (process?.env?.NODE_ENV !== 'production') {
@@ -371,7 +358,9 @@ export default function DoctorInicio() {
       const pid = (typeof it?.paciente_id === 'object')
         ? (it?.paciente_id?._id || it?.paciente_id?.id)
         : (it?.paciente_id || null);
-      const key = pid || it?.paciente || it?.id; // fallback robusto
+      // Evitar usar nombres placeholder como '—' que colapsan múltiples entradas
+      const name = (it?.paciente && it.paciente !== '—') ? it.paciente : null;
+      const key = pid || name || it?.id; // fallback robusto: id garantiza unicidad
       if (key) uniquePatients.add(String(key));
     }
     const pacientesDelDia = uniquePatients.size;
@@ -379,6 +368,63 @@ export default function DoctorInicio() {
     const completadas = todayItems.filter(it => it?.estado === 'Completado').length;
     return { pacientesDelDia, citasDelDia, completadas };
   }, [todayItems]);
+
+  // ---------------- Agenda Próxima (dinámica, próximos 7 días) ----------------
+  const [agenda, setAgenda] = useState([]);
+  const [agendaLoading, setAgendaLoading] = useState(false);
+  const [agendaError, setAgendaError] = useState('');
+  const [agendaPage, setAgendaPage] = useState(1);
+  const agendaPageSize = 3;
+
+  const fetchAgendaProxima = useCallback(async () => {
+    try {
+      setAgendaLoading(true);
+      setAgendaError('');
+      const profId = (doctorMedicoId || user?.id || user?._id || null);
+      if (!profId) { setAgenda([]); return; }
+      const resp = await api.get('/citas', { params: { profesional: profId } });
+      let raw = Array.isArray(resp.data) ? resp.data : (resp.data?.citas || []);
+      const now = new Date();
+      const in7 = new Date(now); in7.setDate(in7.getDate() + 7);
+      const normDate = (c) => {
+        const candidates = [c.fecha_hora, c.fecha, c.fecha_cita, c.fechaHora, c.hora_cita, c.when].filter(Boolean);
+        return candidates.length ? new Date(candidates[0]) : null;
+      };
+      const items = raw
+        .map(c => ({ ...c, __dt: normDate(c) }))
+        .filter(c => c.__dt && c.__dt > now && c.__dt <= in7)
+        .sort((a,b) => a.__dt - b.__dt)
+        .map(c => {
+          const pObj = c?.paciente_id || c?.paciente || null;
+          const pid = (typeof pObj === 'object') ? (pObj?._id || pObj?.id) : (typeof c?.paciente_id === 'string' ? c.paciente_id : null);
+          const paciente = (
+            (typeof pObj === 'string' ? pObj : null) ||
+            pObj?.usuario?.nombre || pObj?.usuario?.fullName || pObj?.usuario?.name ||
+            pObj?.usuario_id?.nombre || pObj?.usuario_id?.fullName || pObj?.usuario_id?.name ||
+            pObj?.nombre || [pObj?.nombres, pObj?.apellidos].filter(Boolean).join(' ') ||
+            [pObj?.firstName, pObj?.lastName].filter(Boolean).join(' ') ||
+            '—'
+          );
+          const motivo = c?.motivo || c?.resumen || c?.tipo || '—';
+          return { id: c._id || c.id, when: c.__dt.toISOString(), paciente, motivo, paciente_id: pid };
+        });
+      setAgenda(items);
+      setAgendaPage(1);
+    } catch (e) {
+      setAgendaError('No se pudo cargar la agenda.');
+      setAgenda([]);
+    } finally {
+      setAgendaLoading(false);
+    }
+  }, [doctorMedicoId, user]);
+
+  // Cargar agenda al montar y al refrescar citas
+  useEffect(() => { fetchAgendaProxima(); }, [fetchAgendaProxima]);
+  // También refrescar cuando se refrescan las citas hoy (cada 30s ya existe), enganchamos al mismo intervalo
+  useEffect(() => {
+    const t = setInterval(() => { fetchAgendaProxima(); }, 60000);
+    return () => clearInterval(t);
+  }, [fetchAgendaProxima]);
 
   // Handler para agregar medicamento detallado y enfocarse en el siguiente
   const addMedicamento = () => {
@@ -458,26 +504,73 @@ export default function DoctorInicio() {
             </div>
           </div>
 
-          {/* Agenda Próxima */}
+          {/* Agenda Próxima (dinámica, próximos 7 días) */}
           <div className="card mt-3">
-            <div className="card-header bg-white">
+            <div className="card-header bg-white d-flex justify-content-between align-items-center">
               <h6 className="mb-0">Agenda Próxima</h6>
+              {!agendaLoading && agenda?.length > 0 ? (
+                <span className="small text-muted">{agenda.length} citas</span>
+              ) : null}
             </div>
-            <div className="card-body">
-              <ul className="list-unstyled mb-0 small">
-                <li className="d-flex justify-content-between py-2 border-bottom">
-                  <span>10:00 - Juan Pérez</span>
-                  <span className="text-muted">Consulta General</span>
-                </li>
-                <li className="d-flex justify-content-between py-2 border-bottom">
-                  <span>10:30 - María Soto</span>
-                  <span className="text-muted">Controles</span>
-                </li>
-                <li className="d-flex justify-content-between py-2">
-                  <span>11:00 - Pedro Díaz</span>
-                  <span className="text-muted">Resultados</span>
-                </li>
-              </ul>
+            <div className="card-body p-0">
+              {agendaLoading ? (
+                <div className="p-3 small text-muted">Cargando…</div>
+              ) : agendaError ? (
+                <div className="p-3 small text-danger">{agendaError}</div>
+              ) : (Array.isArray(agenda) && agenda.length > 0) ? (
+                <>
+                  {(() => {
+                    const total = agenda.length;
+                    const totalPages = Math.max(1, Math.ceil(total / agendaPageSize));
+                    const page = Math.min(Math.max(1, agendaPage), totalPages);
+                    const start = (page - 1) * agendaPageSize;
+                    const items = agenda.slice(start, start + agendaPageSize);
+                    return (
+                      <>
+                        <ul className="list-unstyled mb-0" style={{ maxHeight: '240px', overflowY: 'auto', overflowX: 'hidden' }}>
+                          {items.map((a, idx) => (
+                            <li
+                              key={`${a.id}-${idx}`}
+                              className={`px-2 py-2 agenda-row ${idx !== items.length-1 ? 'border-bottom' : ''}`}
+                            >
+                              <div className="d-flex flex-column gap-1" style={{ minWidth: 0 }}>
+                                <div className="d-flex align-items-center justify-content-between gap-2">
+                                  <span className="small fw-semibold text-dark text-truncate" title={a.paciente} style={{ flex: 1, minWidth: 0 }}>
+                                    {a.paciente}
+                                  </span>
+                                  <span className="badge bg-light border text-dark" style={{ fontSize: '0.7rem', padding: '2px 6px', whiteSpace: 'nowrap' }}>
+                                    {formatDateTime(a.when, { style: 'time' })}
+                                  </span>
+                                </div>
+                                <span className="small text-muted text-truncate" title={a.motivo} style={{ fontSize: '0.75rem' }}>
+                                  {a.motivo}
+                                </span>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                        <style>{`
+                          .agenda-row { transition: background-color .12s ease; cursor: default; }
+                          .agenda-row:hover { background: var(--bs-gray-100, #f8f9fa); }
+                        `}</style>
+                        {totalPages > 1 && (
+                          <div className="d-flex justify-content-center align-items-center gap-2 py-2 border-top">
+                            <button className="btn btn-sm btn-link text-muted p-0" disabled={page<=1} onClick={()=>setAgendaPage(p=>Math.max(1,p-1))} style={{ fontSize: '0.75rem' }}>
+                              <i className="fas fa-chevron-left"></i>
+                            </button>
+                            <span className="text-muted" style={{ fontSize: '0.7rem' }}>{page}/{totalPages}</span>
+                            <button className="btn btn-sm btn-link text-muted p-0" disabled={page>=totalPages} onClick={()=>setAgendaPage(p=>Math.min(totalPages,p+1))} style={{ fontSize: '0.75rem' }}>
+                              <i className="fas fa-chevron-right"></i>
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </>
+              ) : (
+                <div className="p-3 small text-muted">No hay citas próximas en los próximos 7 días.</div>
+              )}
             </div>
           </div>
 

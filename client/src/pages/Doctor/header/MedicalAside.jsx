@@ -16,28 +16,9 @@ export default function Aside({ isOpen, onClose, onLogout }) {
         role="button"
         aria-label="Cerrar menú lateral"
       />
-      <aside className={`sidebar ${isOpen ? 'show' : ''}`}>
-        {/*<div className="p-3 p-md-4">
-          <div className="bg-success-10 border border-success-20 rounded-lg p-3 mb-4">
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <i className="fas fa-heart text-success"></i>
-              <span className="small fw-medium text-success">Estado de Salud</span>
-            </div>
-            <div className="d-flex flex-column gap-1">
-              <div className="d-flex justify-content-between small">
-                <span className="text-muted-foreground">Última consulta</span>
-                <span className="fw-medium">15 Ago 2024</span>
-              </div>
-              <div className="d-flex justify-content-between small">
-                <span className="text-muted-foreground">Medicamentos activos</span>
-                <span className="custom-badge bg-success text-white border-success px-1 py-0">3</span>
-              </div>
-            </div>
-          </div>
-        </div>*/}
-
+      <aside className={`sidebar ${isOpen ? 'show' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)' }}>
         {/* Navegación principal del médico */}
-        <nav className="flex-grow-1 px-3 px-md-4" style={{ marginTop: '20px' }}>
+        <nav className="px-3 px-md-4" style={{ marginTop: '20px', overflowY: 'auto', flex: '0 1 auto' }}>
           <div className="d-flex flex-column gap-1">
             <NavLink to="/doctor/inicio" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={onClose}>
               <i className="fas fa-home"></i>
@@ -72,25 +53,26 @@ export default function Aside({ isOpen, onClose, onLogout }) {
               <span>Configuración</span>
             </NavLink>
           </div>
+        </nav>
 
-          <hr className="my-4" />
+        {/* Spacer para empujar footer al final */}
+        <div style={{ flex: '1 1 auto' }}></div>
 
-          {/* Acción de cierre de sesión */}
-          <div className="d-flex flex-column gap-1" style={{ marginBottom: '20px' }}>
-            <button className="nav-link btn btn-link text-start p-0" onClick={onLogout}>
+        {/* Footer: Cerrar sesión + leyendas */}
+        <div style={{ flex: '0 0 auto' }}>
+          <div className="px-3 px-md-4 py-3 border-top border-gray-200">
+            <button className="nav-link btn btn-link text-start p-0 w-100" onClick={onLogout}>
               <i className="fas fa-sign-out-alt"></i>
               <span className="ms-2">Cerrar Sesión</span>
             </button>
           </div>
-        </nav>
-
-        {/* Leyendas y sellos informativos al pie del menú */}
-        <div className="p-3 p-md-4 border-top border-gray-200">
-          <div className="text-center text-muted-foreground small">
-            <p className="mb-1">Protegido por Ley 21.668</p>
-            <div className="d-flex justify-content-center gap-2">
-              <span className="custom-badge border px-1 py-0">FONASA</span>
-              <span className="custom-badge border px-1 py-0">MINSAL</span>
+          <div className="p-3 p-md-4 border-top border-gray-200">
+            <div className="text-center text-muted-foreground small">
+              <p className="mb-1">Protegido por Ley 21.668</p>
+              <div className="d-flex justify-content-center gap-2">
+                <span className="custom-badge border px-1 py-0">FONASA</span>
+                <span className="custom-badge border px-1 py-0">MINSAL</span>
+              </div>
             </div>
           </div>
         </div>
