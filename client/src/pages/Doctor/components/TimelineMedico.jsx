@@ -59,14 +59,15 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
                         <h6 className="fw-medium mb-0" style={{ fontSize: '0.95rem' }}>{item.especialidad}</h6>
                         <p className="text-muted-foreground small mb-0">{item.medico}</p>
                       </div>
-                      <div className="d-flex align-items-center gap-2 ms-2 flex-wrap">
-                        <span className={`badge rounded-pill ${estadoClass}`}>{estado}</span>
-                        <span className="text-muted-foreground small fw-medium">{formatDateTime(item.when)}</span>
+                      <div className="d-flex align-items-center gap-2 ms-2 flex-wrap" style={{ minWidth: 0 }}>
+                        <span className={`badge rounded-pill ${estadoClass}`} style={{ flexShrink: 0 }}>{estado}</span>
+                        <span className="text-muted-foreground small fw-medium text-nowrap" style={{ flexShrink: 0 }}>{formatDateTime(item.when)}</span>
                         <button
                           type="button"
                           className="btn btn-outline-secondary btn-sm py-0 px-2"
                           disabled={isCompleted}
                           title={isCompleted ? 'Atención completada. Para editar contacte al administrador.' : 'Iniciar atención'}
+                          style={{ flexShrink: 0, whiteSpace: 'nowrap', fontSize: '0.75rem' }}
                           onClick={(e) => {
                             e.stopPropagation();
                             onSelect(item.id);
@@ -77,7 +78,7 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
                             onStart && onStart();
                           }}
                         >
-                          {isCompleted ? 'Completada' : 'Iniciar atención'}
+                          {isCompleted ? 'Completada' : 'Iniciar'}
                         </button>
                       </div>
                     </div>

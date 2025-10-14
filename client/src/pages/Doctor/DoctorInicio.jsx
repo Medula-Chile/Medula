@@ -463,7 +463,55 @@ export default function DoctorInicio() {
   };
 
   return (<>
-    <div className="container-fluid">
+    <style>{`
+      .doctor-inicio-wrapper { 
+        overflow-x: hidden; 
+        width: 100%; 
+        max-width: 100vw;
+      }
+      .doctor-inicio-wrapper .row { 
+        margin-left: 0; 
+        margin-right: 0; 
+        max-width: 100%;
+      }
+      .doctor-inicio-wrapper [class*="col-"] { 
+        min-width: 0; 
+        max-width: 100%;
+        overflow: hidden;
+      }
+      .doctor-inicio-wrapper * { 
+        min-width: 0; 
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+      .doctor-inicio-wrapper .card { 
+        overflow: hidden; 
+        max-width: 100%;
+      }
+      .doctor-inicio-wrapper .card-body { 
+        overflow: hidden; 
+        max-width: 100%;
+      }
+      .doctor-inicio-wrapper .table-responsive { 
+        overflow-x: auto; 
+        max-width: 100%;
+      }
+      .doctor-inicio-wrapper .consultation-item,
+      .doctor-inicio-wrapper .d-flex { 
+        min-width: 0; 
+        max-width: 100%;
+      }
+      .doctor-inicio-wrapper .btn,
+      .doctor-inicio-wrapper .badge,
+      .doctor-inicio-wrapper .input-group { 
+        flex-shrink: 1;
+      }
+      @media (max-width: 400px) {
+        .doctor-inicio-wrapper { padding: 0; }
+        .doctor-inicio-wrapper .row { --bs-gutter-x: 0.5rem; }
+      }
+    `}</style>
+    <div className="doctor-inicio-wrapper">
       <div className="row g-3">
         {/* Nueva disposición: Timeline (izq), Detalle (centro) y Sidebar (der) */}
         <div className="col-12 col-lg-5 col-xl-4">
@@ -473,6 +521,7 @@ export default function DoctorInicio() {
           <ConsultationDetailDoctor key={activeId || 'none'} consulta={consultaPreview} />
         </div>
         <div className="col-12 col-xl-3">
+          <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
           {/* Panel del Médico (métricas) */}
           <div className="card">
             <div className="card-header bg-white d-flex justify-content-between align-items-center">
@@ -593,6 +642,7 @@ export default function DoctorInicio() {
           </div>
         </div>
       </div>
+    </div>
     </div>
 
     <ModalAtencion

@@ -5,7 +5,7 @@ import patientsService from '../../../services/patients';
 export default function PerfilPage() {
   // Página de perfil del paciente.
   // Muestra un resumen de datos y permite editar campos de contacto en un modal.
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [datos, setDatos] = React.useState({
     nombre: '',
     run: '',
@@ -19,7 +19,7 @@ export default function PerfilPage() {
     emergRelacion: '',
     emergTelefono: '',
   });
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
 
   // Control del modal de edición y del formulario local (con errores de validación)
@@ -30,6 +30,13 @@ export default function PerfilPage() {
   const [errors, setErrors] = React.useState({});
 
   // Cargar datos del paciente desde la API
+  const didRequestRef = React.useRef(false);
+  // Failsafe: si por alguna razón quedara en loading mucho tiempo, cortamos a los 6s
+  React.useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => setLoading(false), 6000);
+    return () => clearTimeout(t);
+  }, [loading]);
   React.useEffect(() => {
     const loadPatientData = async () => {
       try {
@@ -58,17 +65,37 @@ export default function PerfilPage() {
           emergTelefono: '', // No está en el modelo actual
         });
       } catch (err) {
-        setError('Error al cargar los datos del paciente');
-      console.error('Error loading patient data:', err);
+        const status = err?.response?.status;
+        if (status === 401 || status === 404) {
+          setError('No se encontró un perfil de paciente asociado a esta cuenta. Inicia sesión como paciente o vincula tu perfil.');
+        } else {
+          setError('Error al cargar los datos del paciente');
+        }
+        console.error('Error loading patient data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (user) {
-      loadPatientData();
+    // Esperar a que AuthContext resuelva (evita spinner propio innecesario)
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      setError('Debes iniciar sesión para ver tu perfil de paciente.');
+      return;
     }
-  }, [user]);
+    const role = (user.rol || user.role || '').toString().toLowerCase();
+    if (role && role !== 'paciente') {
+      // Evitar llamada si el usuario no es paciente
+      setLoading(false);
+      setError('Esta vista es solo para pacientes. Inicia sesión con una cuenta de paciente.');
+      return;
+    }
+    if (didRequestRef.current) return; // Evita doble invocación en StrictMode
+    didRequestRef.current = true;
+    setLoading(true);
+    loadPatientData();
+  }, [user, authLoading]);
 
   // Carga inicial desde localStorage para persistir datos entre sesiones (demo)
   React.useEffect(() => {
@@ -121,6 +148,26 @@ export default function PerfilPage() {
     }
   };
 
+  if (error) {
+    return (
+      <div className="row g-3">
+        <div className="col-12">
+          <div className="alert alert-danger">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            {error}
+            {(() => { const role = (user?.rol || user?.role || '').toString().toLowerCase(); return role === 'paciente' ? (
+              <div className="mt-2">
+                <button className="btn btn-sm btn-outline-secondary" onClick={() => { didRequestRef.current = false; setError(null); setLoading(true); }}>
+                  Reintentar
+                </button>
+              </div>
+            ) : null; })()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="row g-3">
@@ -132,19 +179,6 @@ export default function PerfilPage() {
               </div>
               <p className="mt-2">Cargando datos del perfil...</p>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="row g-3">
-        <div className="col-12">
-          <div className="alert alert-danger">
-            <i className="fas fa-exclamation-triangle me-2"></i>
-            {error}
           </div>
         </div>
       </div>

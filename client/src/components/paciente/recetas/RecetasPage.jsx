@@ -11,27 +11,64 @@ export default function RecetasPage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   React.useEffect(() => {
-    // Carga inicial del mock de recetas
+    // Carga inicial del mock de recetas con múltiples fallbacks
     let mounted = true;
     setLoading(true);
     const base = import.meta.env.BASE_URL || '/';
-    // Fallback automático: si recetas.json no existe (renombrado a examenes.json), intenta examenes.json
+    const urls = [
+      `${base}mock/recetas.json`,
+      `${base}mock/pacientes_recetas.json`,
+      `${base}mock/examenes.json`,
+    ];
+
+    const normalize = (arr) => {
+      // Asegurar estructura: { id, doctor, fechaLabel, validaHasta, centro, notas, meds: [{nombre, dosis, frecuencia, duracionDias}] }
+      return (Array.isArray(arr) ? arr : []).map((it, idx) => {
+        const meds = Array.isArray(it.meds)
+          ? it.meds
+          : Array.isArray(it.medicamentos)
+            ? it.medicamentos.map(m => ({
+                nombre: m?.nombre || m?.medicamento || '',
+                dosis: m?.dosis || '',
+                frecuencia: m?.frecuencia || '',
+                duracionDias: m?.duracion || m?.duracionDias || null,
+              }))
+            : [];
+        const fecha = it.fecha || it.fecha_emision || it.createdAt || it.fechaLabel || null;
+        const fechaLabel = it.fechaLabel || (fecha ? new Date(fecha).toLocaleString() : '—');
+        return {
+          id: it.id || it._id || `item-${idx}`,
+          doctor: it.doctor || it.medico || it.medico_id?.nombre || '—',
+          centro: it.centro || it.centro_id?.nombre || '—',
+          fechaLabel,
+          validaHasta: it.validaHasta || it.fecha_validez || '—',
+          status: it.status || it.estado || 'Pendiente',
+          notas: it.notas || it.indicaciones || it.descripcion || '—',
+          meds,
+        };
+      });
+    };
+
     const fetchRecetas = async () => {
       try {
-        const urlRecetas = `${base}mock/recetas.json`;
-        const r = await axios.get(urlRecetas);
+        let data = null;
+        let lastErr = null;
+        for (const u of urls) {
+          try {
+            const r = await axios.get(u);
+            data = normalize(r.data);
+            if (Array.isArray(data) && data.length) break;
+          } catch (e) {
+            lastErr = e;
+          }
+        }
         if (!mounted) return;
-        setRecetas(Array.isArray(r.data) ? r.data : []);
-        setError('');
-      } catch (e1) {
-        try {
-          const urlExamenes = `${base}mock/examenes.json`;
-          const r2 = await axios.get(urlExamenes);
-          if (!mounted) return;
-          setRecetas(Array.isArray(r2.data) ? r2.data : []);
+        if (Array.isArray(data)) {
+          setRecetas(data);
           setError('');
-        } catch (e2) {
-          if (mounted) setError('No se pudo cargar la lista de recetas (recetas.json / examenes.json).');
+        } else {
+          setRecetas([]);
+          setError('No se pudo cargar la lista de recetas.');
         }
       } finally {
         if (mounted) setLoading(false);
@@ -134,7 +171,7 @@ export default function RecetasPage() {
                       </div>
                       {/* Centro médico y breve resumen de medicamentos */}
                       <p className="text-muted-foreground small mb-1">{r.centro}</p>
-                      <p className="small line-clamp-2 mb-0">{r.meds.map(m => `${m.nombre} ${m.dosis}`).join(' • ')}</p>
+                      <p className="small line-clamp-2 mb-0">{Array.isArray(r.meds) ? r.meds.map(m => `${m.nombre || ''} ${m.dosis || ''}`.trim()).join(' • ') : '—'}</p>
                     </div>
                   </div>
                 </div>

@@ -29,7 +29,15 @@ export default function DoctorShell() {
         <MedicalAside isOpen={sidebarOpen} onClose={handleCloseSidebar} onLogout={handleLogout} />
 
         {/* Contenedor principal donde se renderizan las rutas hijas declaradas en App.jsx */}
-        <main className="flex-grow-1 p-3 p-md-4">
+        <style>{`
+          .doctor-main { overflow-x: hidden; width: 100%; max-width: 100vw; }
+          /* Match header paddings: header has px-3 (1rem) and px-md-4 (1.5rem) */
+          .doctor-main { padding-left: 1rem; padding-right: 1rem; padding-top: 1rem; padding-bottom: 1rem; }
+          @media (min-width: 768px) { .doctor-main { padding-left: 1.5rem; padding-right: 1.5rem; padding-top: 1.5rem; padding-bottom: 1.5rem; } }
+          .doctor-main > .row { margin-left: 0; margin-right: 0; max-width: 100%; }
+          .doctor-main [class*="col-"] { min-width: 0; max-width: 100%; }
+        `}</style>
+        <main className="doctor-main flex-grow-1">
           <Outlet />
         </main>
       </div>

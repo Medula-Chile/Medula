@@ -20,14 +20,30 @@ const api = axios.create({
     baseURL
 });
 
-    // Interceptor para incluir el token en las peticiones
-    api.interceptors.request.use((config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+// Interceptor para incluir el token en las peticiones
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
+
+// Interceptor de respuesta para capturar 401 y limpiar sesión (sin forzar redirect)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    if (status === 401) {
+      try {
+        // Limpiar token inválido y notificar listeners; las vistas decidirán si redirigir
+        localStorage.removeItem('token');
+        window.dispatchEvent(new Event('storage'));
+      } catch {}
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;
