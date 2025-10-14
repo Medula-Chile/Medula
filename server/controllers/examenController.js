@@ -55,7 +55,7 @@ exports.obtenerExamenes = async (req, res) => {
         select: 'nombre usuario_id',
         populate: {
           path: 'usuario_id',
-          select: 'nombre email'
+          select: 'nombre rut email'
         }
       })
       .populate({
@@ -108,7 +108,7 @@ exports.obtenerExamenesPorPaciente = async (req, res) => {
         select: 'nombre usuario_id',
         populate: {
           path: 'usuario_id',
-          select: 'nombre email'
+          select: 'nombre rut email'
         }
       })
       .populate({

@@ -1,371 +1,385 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import Timelineexamenesmedicos from './components/Timelineexamenesmedicos';
-import CDexamenesdoctor from './components/CDexamenesdoctor';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
+import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
-export default function DoctorInicio() {
-  // Vista principal del Médico
-  // Estructura: Timeline (izquierda), Detalle (centro), Panel derecho (métricas/avisos)
-  // Obtener el usuario (doctor) activo de la sesión
+export default function DoctorExamenes() {
+  // Vista DOCTOR: navegar pacientes -> exámenes -> detalle (3 columnas)
   const { user } = useAuth();
-  const doctorName = (user?.fullName || user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ')).trim() || 'Médico/a';
-  const doctorSpecialty = (user?.specialty || user?.especialidad || user?.profession || user?.titulo || 'Medicina General');
+  const [examenes, setExamenes] = useState([]);
+  const [pacientes, setPacientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Datos base (mock) de atenciones del día. El nombre/especialidad del médico se inyectan abajo.
-  const baseItems = [
-    { id: 101, especialidad: 'Medicina General', fecha: 'Hoy • 10:00', centro: 'Consulta 1', resumen: 'Juan Pérez, control general.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 102, especialidad: 'Resultados', fecha: 'Hoy • 10:30', centro: 'Consulta 2', resumen: 'Pedro Díaz, revisión de resultados.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 103, especialidad: 'Ginecología', fecha: 'Hoy • 11:00', centro: 'Consulta 3', resumen: 'Control post-tratamiento.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 104, especialidad: 'Cardiología', fecha: 'Hoy • 11:30', centro: 'Consulta 4', resumen: 'Chequeo de hipertensión.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 105, especialidad: 'Endocrinología', fecha: 'Hoy • 12:00', centro: 'Consulta 5', resumen: 'Ajuste terapéutico.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 106, especialidad: 'Hematología', fecha: 'Hoy • 12:30', centro: 'Consulta 6', resumen: 'Control anemia ferropénica.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-    { id: 107, especialidad: 'Oftalmología', fecha: 'Hoy • 13:00', centro: 'Consulta 7', resumen: 'Evaluación de agudeza visual.', observaciones: '—', estado: 'En espera', proximoControl: '—', medicamentos: [], medicamentosDet: [], examenes: [], licencia: { otorga: false, dias: null, nota: '' }, vitals: { presion: null, temperatura: null, pulso: null }, recetaId: null },
-  ];
+  // Filtros de búsqueda
+  const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
-  // Estado: items inicializados con nombre y especialidad del médico activo
-  const [items, setItems] = useState(() => baseItems.map(it => ({ ...it, medico: doctorName, especialidad: doctorSpecialty })));
-  const [activeId, setActiveId] = useState(101);
-  const consulta = items.find(x => x.id === activeId);
-  const [open, setOpen] = useState(false);
-  
-  // Formulario del modal de atención
-  const [form, setForm] = useState({
-    observaciones: '',
-    presion: '',
-    temperatura: '',
-    pulso: '',
-    proximoControl: '',
-    recetaId: '',
-    // Medicamentos detallados (nuevos)
-    medicamentosDet: [],
-    medNombre: '',
-    medDias: '',
-    medFrecuencia: '',
-    // Exámenes solicitados
-    examenes: [],
-    examenNombre: '',
-    // Licencia médica
-    licenciaOtorga: false,
-    licenciaDias: '',
-    licenciaNota: '',
-  });
-  const [errors, setErrors] = useState({});
-
-  // Ref para enfocar el primer campo de medicamentos tras agregar
-  const medNombreRef = useRef(null);
-
-  // Mantener nombre/especialidad sincronizados con la sesión activa
+  // Fetch exámenes desde la base de datos
   useEffect(() => {
-    if (!doctorName && !doctorSpecialty) return;
-    setItems(prev => prev.map(it => ({ ...it, medico: doctorName || it.medico, especialidad: doctorSpecialty || it.especialidad })));
-  }, [doctorName, doctorSpecialty]);
+    let mounted = true;
+    const fetch = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const r = await api.get('/examenes');
+        const arr = Array.isArray(r.data) ? r.data : (Array.isArray(r.data?.examenes) ? r.data.examenes : []);
+        if (!mounted) return;
+        setExamenes(arr);
 
-  const openModal = () => {
-    if (consulta) {
-      setForm({
-        observaciones: consulta.observaciones && consulta.observaciones !== '—' ? consulta.observaciones : '',
-        presion: consulta?.vitals?.presion || '',
-        temperatura: consulta?.vitals?.temperatura || '',
-        pulso: consulta?.vitals?.pulso || '',
-        proximoControl: consulta.proximoControl && consulta.proximoControl !== '—' ? consulta.proximoControl : '',
-        recetaId: consulta.recetaId || '',
-        medicamentos: (consulta.medicamentos || []).join('\n'),
-        medicamentosDet: Array.isArray(consulta.medicamentosDet) ? consulta.medicamentosDet : [],
-        medNombre: '',
-        medDias: '',
-        medFrecuencia: '',
-        examenes: Array.isArray(consulta.examenes) ? consulta.examenes : [],
-        examenNombre: '',
-        licenciaOtorga: Boolean(consulta?.licencia?.otorga) || false,
-        licenciaDias: consulta?.licencia?.dias || '',
-        licenciaNota: consulta?.licencia?.nota || '',
-      });
-      setErrors({});
-    }
-    setOpen(true);
-  };
-
-  // Previsualización en vivo en el detalle: mezclar datos del formulario sobre la consulta activa cuando el modal está abierto
-  const consultaPreview = useMemo(() => {
-    if (!consulta) return null;
-    if (!open) return consulta;
-    return {
-      ...consulta,
-      observaciones: form.observaciones?.trim() || consulta.observaciones,
-      proximoControl: form.proximoControl?.trim() || consulta.proximoControl,
-      recetaId: form.recetaId?.trim() || consulta.recetaId,
-      vitals: {
-        presion: form.presion?.trim() || consulta?.vitals?.presion || null,
-        temperatura: form.temperatura?.trim() || consulta?.vitals?.temperatura || null,
-        pulso: form.pulso?.trim() || consulta?.vitals?.pulso || null,
-      },
-      medicamentos: [],
-      medicamentosDet: Array.isArray(form.medicamentosDet) ? form.medicamentosDet : consulta.medicamentosDet,
-      examenes: Array.isArray(form.examenes) ? form.examenes : consulta.examenes,
-      licencia: {
-        otorga: !!form.licenciaOtorga,
-        dias: form.licenciaOtorga ? (Number(form.licenciaDias) || null) : null,
-        nota: form.licenciaOtorga ? (form.licenciaNota || '') : '',
-      },
-      estado: consulta.estado,
+        // Derivar lista de pacientes con al menos un examen
+        const byPatient = new Map();
+        for (const exam of arr) {
+          const pObj = exam?.paciente_id || exam?.paciente || null;
+          const pid = (typeof pObj === 'object') ? (pObj?._id || pObj?.id) : (typeof exam?.paciente_id === 'string' ? exam.paciente_id : null);
+          const nombre = (
+            (typeof pObj === 'string' ? pObj : null) ||
+            pObj?.usuario?.nombre || pObj?.usuario?.fullName || pObj?.usuario?.name ||
+            pObj?.usuario_id?.nombre || pObj?.usuario_id?.fullName || pObj?.usuario_id?.name ||
+            pObj?.nombre || [pObj?.nombres, pObj?.apellidos].filter(Boolean).join(' ') ||
+            [pObj?.firstName, pObj?.lastName].filter(Boolean).join(' ')
+          ) || 'Paciente';
+          if (!pid) continue;
+          // Extraer RUT del paciente (mismo formato que DoctorRecetas)
+          const run = pObj?.usuario_id?.rut || pObj?.rut || '—';
+          const item = byPatient.get(pid) || { 
+            id: pid, 
+            nombre, 
+            run,
+            examenes: [] 
+          };
+          item.examenes.push(exam);
+          byPatient.set(pid, item);
+        }
+        setPacientes(Array.from(byPatient.values()));
+      } catch (e) {
+        if (mounted) setError('No se pudo cargar la lista de exámenes.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
     };
-  }, [consulta, open, form]);
-  const closeModal = () => setOpen(false);
-  const validate = () => { const e = {}; setErrors(e); return true; };
+    fetch();
+    return () => { mounted = false; };
+  }, []);
 
-  // Handler para agregar medicamento detallado y enfocarse en el siguiente
-  const addMedicamento = () => {
-    const nombre = form.medNombre?.trim();
-    const dias = form.medDias ? Number(form.medDias) : null;
-    const frecuencia = form.medFrecuencia?.trim();
-    if (!nombre) return;
-    const nuevo = { nombre, dias, frecuencia };
-    setForm(prev => ({
-      ...prev,
-      medicamentosDet: [...(prev.medicamentosDet || []), nuevo],
-      medNombre: '', medDias: '', medFrecuencia: ''
-    }));
-    // Reenfocar al primer input para ingresar una nueva línea
-    setTimeout(() => { medNombreRef.current?.focus(); }, 0);
-  };
-  const handleSave = (ev) => {
-    ev.preventDefault();
-    if (!validate()) return;
-    setItems(prev => prev.map(it => it.id !== activeId ? it : ({
-      ...it,
-      observaciones: form.observaciones?.trim() || '—',
-      proximoControl: form.proximoControl?.trim() || '—',
-      recetaId: form.recetaId?.trim() || null,
-      vitals: { presion: form.presion?.trim() || null, temperatura: form.temperatura?.trim() || null, pulso: form.pulso?.trim() || null },
-      medicamentos: [],
-      medicamentosDet: Array.isArray(form.medicamentosDet) ? form.medicamentosDet : [],
-      examenes: Array.isArray(form.examenes) ? form.examenes : [],
-      licencia: { otorga: !!form.licenciaOtorga, dias: form.licenciaOtorga ? Number(form.licenciaDias) || null : null, nota: form.licenciaOtorga ? (form.licenciaNota || '') : '' },
-      estado: 'Completado',
-    })));
-    setOpen(false);
+  // Selección por query (?patient= & ?examen=)
+  const location = useLocation();
+  const getQueryParam = (name) => new URLSearchParams(location.search).get(name);
+
+  const [pacienteSel, setPacienteSel] = useState(null);
+  const [examenSel, setExamenSel] = useState(null);
+
+  // Helper: nombre del médico solicitante
+  const getDoctorName = React.useCallback((exam) => {
+    if (!exam) return '—';
+    // Intentar obtener médico desde múltiples fuentes
+    let m = exam.medico_solicitante ?? exam.medico_id ?? exam.medico ?? exam.doctor ?? null;
+    
+    // Si no hay médico directo, buscar en consulta_id -> cita_id -> profesional_id
+    if (!m && exam.consulta_id) {
+      const cita = exam.consulta_id?.cita_id || exam.consulta_id;
+      m = cita?.profesional_id || cita?.medico_id || cita?.medico || null;
+    }
+    
+    if (!m) return '—';
+    if (typeof m === 'string') return m;
+    return (
+      m?.nombre || m?.name || m?.fullName ||
+      m?.usuario?.nombre || m?.usuario?.fullName || m?.usuario?.name ||
+      m?.usuario_id?.nombre || m?.usuario_id?.fullName || m?.usuario_id?.name ||
+      '—'
+    );
+  }, []);
+
+  // Helper: nombre del médico realizador
+  const getRealizadorName = React.useCallback((exam) => {
+    if (!exam) return '—';
+    const m = exam.medico_realizador ?? exam.realizador ?? null;
+    if (!m) return '—';
+    if (typeof m === 'string') return m;
+    return (
+      m?.nombre || m?.name || m?.fullName ||
+      m?.usuario?.nombre || m?.usuario?.fullName || m?.usuario?.name ||
+      m?.usuario_id?.nombre || m?.usuario_id?.fullName || m?.usuario_id?.name ||
+      '—'
+    );
+  }, []);
+
+  useEffect(() => {
+    if (pacientes.length === 0) return;
+
+    const qPatient = getQueryParam('patient');
+    const qExamen = getQueryParam('examen');
+
+    // Aplicar búsqueda a la lista izquierda
+    const norm = (s) => (s || '').toString().toLowerCase();
+    const qn = norm(q);
+    const filteredPatients = pacientes.filter(p => !qn || norm(p.nombre).includes(qn) || norm(p.run).includes(qn));
+
+    let p = filteredPatients[0] || pacientes[0];
+    if (qPatient) {
+      const found = pacientes.find((x) => x.id === qPatient);
+      if (found) p = found;
+    }
+    let e = p?.examenes?.[0] || null;
+    if (qExamen && p?.examenes?.length) {
+      const fe = p.examenes.find((x) => (x._id || x.id) === qExamen);
+      if (fe) e = fe;
+    }
+    setPacienteSel(p || null);
+    setExamenSel(e);
+  }, [location.search, pacientes, q]);
+
+  // Helpers
+  const statusBadgeClass = (s) => {
+    const estado = (s || '').toLowerCase();
+    if (estado === 'realizado' || estado === 'entregado' || estado === 'completado') {
+      return 'custom-badge border-success text-white bg-success';
+    } else if (estado === 'solicitado' || estado === 'pendiente') {
+      return 'custom-badge border-warning text-dark bg-warning';
+    } else {
+      return 'custom-badge border-secondary text-white bg-secondary';
+    }
   };
 
-  return (<>
-    <div className="container-fluid">
-      <div className="row g-3">
-        {/* Nueva disposición: Timeline (izq), Detalle (centro) y Sidebar (der) */}
-        <div className="col-12 col-lg-5 col-xl-4">
-          <Timelineexamenesmedicos items={items} activeId={activeId} onSelect={setActiveId} onStart={openModal} />
-        </div>
-        <div className="col-12 col-lg-7 col-xl-5">
-          <CDexamenesdoctor consulta={consultaPreview} />
-        </div>
-        <div className="col-12 col-xl-3">
-          {/* Panel del Médico (métricas) */}
-          <div className="card">
-            <div className="card-header bg-white d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Panel del Médico</h5>
-              <span className="custom-badge border-success text-success">Beta</span>
+  // actualiza URL shallow
+  const updateUrl = (pid, examenId) => {
+    const params = new URLSearchParams(location.search);
+    if (pid) params.set('patient', pid); else params.delete('patient');
+    if (examenId) params.set('examen', examenId); else params.delete('examen');
+    const url = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, '', url);
+  };
+
+  // acciones UI
+  const onSelectPaciente = (p) => {
+    setPacienteSel(p);
+    const first = p?.examenes?.[0] || null;
+    setExamenSel(first);
+    updateUrl(p?.id || '', first?._id || first?.id || '');
+  };
+
+  const onSelectExamen = (e) => {
+    setExamenSel(e);
+    updateUrl(pacienteSel?.id || '', e?._id || e?.id || '');
+  };
+
+  if (loading) return <div className="p-3 text-muted small">Cargando exámenes…</div>;
+  if (error) return <div className="alert alert-danger my-2" role="alert">{error}</div>;
+  if (!pacienteSel) return null;
+
+  return (
+    <div className="row g-3">
+      {/* Columna IZQUIERDA: Pacientes con exámenes + búsqueda */}
+      <div className="col-12 col-lg-4 col-xl-3">
+        <div className="card h-100">
+          <div className="card-header bg-white pb-2">
+            <h5 className="card-title mb-2">Pacientes con exámenes</h5>
+            {/* Barra de búsqueda */}
+            <div className="input-group input-group-sm">
+              <span className="input-group-text bg-white"><i className="fas fa-search"/></span>
+              <input className="form-control" placeholder="Buscar por nombre o RUT" value={q} onChange={(e)=>{ setQ(e.target.value); setPage(1); }} />
             </div>
-            <div className="card-body">
-              <div className="row g-3">
-                <div className="col-12">
-                  <div className="p-3 border rounded bg-gray-100 d-flex align-items-center gap-3">
-                    <i className="fas fa-calendar-check text-primary fa-lg" />
-                    <div>
-                      <p className="mb-0 small text-muted">Citas de hoy</p>
-                      <p className="mb-0 fw-semibold">5</p>
+          </div>
+          <div className="card-body p-0">
+            <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+              {pacientes
+                .filter(p => {
+                  const norm = (s) => (s || '').toString().toLowerCase();
+                  const qn = norm(q);
+                  return !qn || norm(p.nombre).includes(qn) || norm(p.run).includes(qn);
+                })
+                .map((p) => (
+                <div
+                  key={p.id}
+                  className={`consultation-item overflow-hidden ${pacienteSel.id === p.id ? 'active' : ''}`}
+                  role="button"
+                  onClick={() => onSelectPaciente(p)}
+                >
+                  <div className="d-flex gap-3">
+                    <div className="bg-primary-10 rounded-circle p-2 flex-shrink-0">
+                      <i className="fas fa-user-injured text-primary"></i>
+                    </div>
+                    <div className="flex-grow-1 min-w-0 text-break">
+                      <div className="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
+                        <div className="flex-grow-1 min-w-0">
+                          <h6 className="fw-medium mb-0">{p.nombre}</h6>
+                          <p className="text-muted-foreground small mb-0">{p.run}</p>
+                        </div>
+                        <span className="text-muted-foreground small fw-medium ms-2">{p.examenes?.length || 0} exam.</span>
+                      </div>
+                      <p className="small line-clamp-2 mb-0 text-break">Último: {(() => {
+                        const es = (p.examenes || []).slice().sort((a,b) => new Date(b.fecha_solicitud || b.createdAt || 0) - new Date(a.fecha_solicitud || a.createdAt || 0));
+                        const last = es[0];
+                        const d = last ? new Date(last.fecha_solicitud || last.createdAt) : null;
+                        return d ? d.toLocaleDateString() : '—';
+                      })()}</p>
                     </div>
                   </div>
                 </div>
-                <div className="col-12">
-                  <div className="p-3 border rounded bg-gray-100 d-flex align-items-center gap-3">
-                    <i className="fas fa-user-md text-success fa-lg" />
-                    <div>
-                      <p className="mb-0 small text-muted">Pacientes en sala</p>
-                      <p className="mb-0 fw-semibold">2</p>
+              ))}
+              {pacientes.length === 0 && (
+                <div className="p-3 text-muted small">No hay pacientes para mostrar.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Columna CENTRAL: Exámenes del paciente seleccionado */}
+      <div className="col-12 col-lg-5 col-xl-4">
+        <div className="card h-100">
+          <div className="card-header bg-white pb-2">
+            <h5 className="card-title mb-0">Exámenes de {pacienteSel.nombre}</h5>
+          </div>
+          <div className="card-body p-0">
+            <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+              {(() => {
+                const all = (pacienteSel.examenes || []).slice().sort((a,b)=> new Date(b.fecha_solicitud || b.createdAt || 0) - new Date(a.fecha_solicitud || a.createdAt || 0));
+                const total = all.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+                const p = Math.min(page, totalPages);
+                const start = (p - 1) * pageSize;
+                const pageItems = all.slice(start, start + pageSize);
+                return pageItems.map((e) => (
+                  <div
+                    key={e._id || e.id}
+                    className={`consultation-item overflow-hidden ${String(examenSel?._id || examenSel?.id) === String(e._id || e.id) ? 'active' : ''}`}
+                    role="button"
+                    onClick={() => onSelectExamen(e)}
+                  >
+                    <div className="d-flex gap-3">
+                      <div className="bg-primary-10 rounded-circle p-2 flex-shrink-0">
+                        <i className="fas fa-flask text-primary"></i>
+                      </div>
+                      <div className="flex-grow-1 min-w-0 text-break">
+                        <div className="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
+                          <div className="flex-grow-1 min-w-0">
+                            <h6 className="fw-medium mb-0">{e.tipo_examen || 'Examen'}</h6>
+                            <p className="text-muted-foreground small mb-0">Solicitado por {getDoctorName(e)}</p>
+                          </div>
+                          <span className={`badge ${statusBadgeClass(e.estado)}`}>{e.estado || 'solicitado'}</span>
+                        </div>
+                        <p className="text-muted-foreground small mb-1">
+                          {(() => { const d = e.fecha_solicitud || e.createdAt; return d ? new Date(d).toLocaleString() : '—'; })()}
+                        </p>
+                        <p className="small line-clamp-2 mb-0 text-break">
+                          {e.descripcion || e.indicaciones || '—'}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
+                ));
+              })()}
+              {(pacienteSel.examenes || []).length === 0 && (
+                <div className="p-3 text-muted small">Este paciente no tiene exámenes.</div>
+              )}
+              {(() => {
+                const total = (pacienteSel.examenes || []).length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+                if (totalPages <= 1) return null;
+                return (
+                  <div className="d-flex justify-content-between align-items-center p-2 border-top">
+                    <button className="btn btn-sm btn-outline-secondary" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Anterior</button>
+                    <span className="small text-muted">Página {page} de {totalPages}</span>
+                    <button className="btn btn-sm btn-outline-secondary" disabled={page>=totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Siguiente</button>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Columna DERECHA: Detalle del examen */}
+      <div className="col-12 col-lg-3 col-xl-5">
+        {examenSel && (
+          <div className="card mb-3">
+            <div className="card-header bg-white">
+              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 className="card-title mb-0">Detalle del Examen</h5>
+                <span className={`badge ${statusBadgeClass(examenSel.estado)}`}>{examenSel.estado || 'solicitado'}</span>
               </div>
             </div>
-          </div>
 
-          {/* Agenda Próxima */}
-          <div className="card mt-3">
-            <div className="card-header bg-white">
-              <h6 className="mb-0">Agenda Próxima</h6>
-            </div>
-            <div className="card-body">
-              <ul className="list-unstyled mb-0 small">
-                <li className="d-flex justify-content-between py-2 border-bottom">
-                  <span>10:00 - Juan Pérez</span>
-                  <span className="text-muted">Consulta General</span>
-                </li>
-                <li className="d-flex justify-content-between py-2 border-bottom">
-                  <span>10:30 - María Soto</span>
-                  <span className="text-muted">Controles</span>
-                </li>
-                <li className="d-flex justify-content-between py-2">
-                  <span>11:00 - Pedro Díaz</span>
-                  <span className="text-muted">Resultados</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+            <div className="card-body text-break">
+              <div className="row mb-3 small">
+                <div className="col-12 mb-2">
+                  <p className="text-muted-foreground mb-0">ID Examen</p>
+                  <p className="fw-medium mb-0"><code className="small">{examenSel._id || examenSel.id}</code></p>
+                </div>
+                <div className="col-6 mb-2">
+                  <p className="text-muted-foreground mb-0">Paciente</p>
+                  <p className="fw-medium mb-0">{pacienteSel.nombre}</p>
+                </div>
+                <div className="col-6 mb-2">
+                  <p className="text-muted-foreground mb-0">ID Paciente</p>
+                  <p className="fw-medium mb-0">{pacienteSel.run}</p>
+                </div>
+                <div className="col-6 mb-2">
+                  <p className="text-muted-foreground mb-0">Tipo de Examen</p>
+                  <p className="fw-medium mb-0">{examenSel.tipo_examen || '—'}</p>
+                </div>
+                <div className="col-6 mb-2">
+                  <p className="text-muted-foreground mb-0">Estado</p>
+                  <p className="fw-medium mb-0">{examenSel.estado || 'solicitado'}</p>
+                </div>
+                <div className="col-6 mb-2">
+                  <p className="text-muted-foreground mb-0">Fecha Solicitud</p>
+                  <p className="fw-medium mb-0">{(() => { const d = examenSel.fecha_solicitud || examenSel.createdAt; return d ? new Date(d).toLocaleString() : '—'; })()}</p>
+                </div>
+                <div className="col-6 mb-2">
+                  <p className="text-muted-foreground mb-0">Fecha Realización</p>
+                  <p className="fw-medium mb-0">{examenSel.fecha_realizacion ? new Date(examenSel.fecha_realizacion).toLocaleString() : '—'}</p>
+                </div>
+                <div className="col-12 mb-2">
+                  <p className="text-muted-foreground mb-0">Médico Solicitante</p>
+                  <p className="fw-medium mb-0">{getDoctorName(examenSel)}</p>
+                </div>
+                <div className="col-12 mb-2">
+                  <p className="text-muted-foreground mb-0">Médico Realizador</p>
+                  <p className="fw-medium mb-0">{getRealizadorName(examenSel)}</p>
+                </div>
+              </div>
 
-          {/* Notificaciones */}
-          <div className="card mt-3">
-            <div className="card-header bg-white">
-              <h6 className="mb-0">Notificaciones</h6>
-            </div>
-            <div className="card-body">
-              <ul className="list-unstyled mb-0 small">
-                <li className="py-2 border-bottom d-flex align-items-center gap-2">
-                  <i className="fas fa-info-circle text-primary" /> Nueva derivación recibida para revisión.
-                </li>
-                <li className="py-2 border-bottom d-flex align-items-center gap-2">
-                  <i className="fas fa-shield-alt text-success" /> Sistema conectado de forma segura.
-                </li>
-                
-              </ul>
+              <div className="mb-3">
+                <h6 className="fw-medium mb-2">Descripción / Indicaciones</h6>
+                <p className="text-muted-foreground small bg-gray-100 p-3 rounded text-break">
+                  {examenSel.descripcion || examenSel.indicaciones || '—'}
+                </p>
+              </div>
+
+              {examenSel.resultado && (
+                <div className="mb-3">
+                  <h6 className="fw-medium mb-2">Resultado</h6>
+                  <p className="text-muted-foreground small bg-gray-100 p-3 rounded text-break">
+                    {examenSel.resultado}
+                  </p>
+                </div>
+              )}
+
+              {examenSel.observaciones && (
+                <div className="mb-3">
+                  <h6 className="fw-medium mb-2">Observaciones</h6>
+                  <p className="text-muted-foreground small bg-gray-100 p-3 rounded text-break">
+                    {examenSel.observaciones}
+                  </p>
+                </div>
+              )}
+
+              {examenSel.archivo_adjunto && (
+                <div className="mb-3">
+                  <h6 className="fw-medium mb-2">Archivo Adjunto</h6>
+                  <a href={examenSel.archivo_adjunto} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
+                    <i className="fas fa-file-download me-1"></i> Descargar Archivo
+                  </a>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
-
-    {/* Modal de registro de atención (estilo PerfilPage) */}
-    {open && (
-      <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1080 }}>
-        <div className="card shadow" style={{ maxWidth: 720, width: '95%' }} role="dialog" aria-modal="true">
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <h5 className="mb-0">Registrar atención</h5>
-            <button className="btn btn-sm btn-ghost" onClick={closeModal} aria-label="Cerrar"><i className="fas fa-times"></i></button>
-          </div>
-          <div className="card-body">
-            <form className="small" onSubmit={handleSave}>
-              <div className="row g-2 g-md-3">
-                <div className="col-12">
-                  <label className="form-label">Observaciones</label>
-                  <textarea className="form-control" rows={3} value={form.observaciones} onChange={(e)=>setForm({ ...form, observaciones: e.target.value })} placeholder="Motivo de consulta, hallazgos, indicaciones..." />
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label">Presión</label>
-                  <input type="text" className="form-control" value={form.presion} onChange={(e)=>setForm({ ...form, presion: e.target.value })} placeholder="120/80" />
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label">Temperatura</label>
-                  <input type="text" className={`form-control ${errors.temperatura ? 'is-invalid' : ''}`} value={form.temperatura} onChange={(e)=>setForm({ ...form, temperatura: e.target.value })} placeholder="36.5°C" />
-                  {errors.temperatura && <div className="invalid-feedback">{errors.temperatura}</div>}
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label">Pulso</label>
-                  <input type="text" className="form-control" value={form.pulso} onChange={(e)=>setForm({ ...form, pulso: e.target.value })} placeholder="72 bpm" />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label">Próximo control</label>
-                  <input type="text" className="form-control" value={form.proximoControl} onChange={(e)=>setForm({ ...form, proximoControl: e.target.value })} placeholder="15 Oct 2025" />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label">Folio de Receta (opcional)</label>
-                  <input type="text" className="form-control" value={form.recetaId} onChange={(e)=>setForm({ ...form, recetaId: e.target.value })} placeholder="R-123" />
-                </div>
-                {/* Se elimina el textarea legacy de medicamentos para usar solo la sección detallada */}
-                {/* Medicamentos detallados (nuevos): nombre, días, frecuencia */}
-                <div className="col-12 mt-2">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <label className="form-label mb-0">Medicamentos detallados</label>
-                  </div>
-                  <div className="row g-2 align-items-end">
-                    <div className="col-12 col-md-5">
-                      <label className="form-label">Nombre</label>
-                      <input ref={medNombreRef} type="text" className="form-control" value={form.medNombre} onChange={(e)=>setForm({ ...form, medNombre: e.target.value })} onKeyDown={(e)=>{ if (e.key==='Enter'){ e.preventDefault(); addMedicamento(); } }} placeholder="Paracetamol 500mg" />
-                    </div>
-                    <div className="col-6 col-md-3">
-                      <label className="form-label">Días</label>
-                      <input type="number" min="1" className="form-control" value={form.medDias} onChange={(e)=>setForm({ ...form, medDias: e.target.value })} onKeyDown={(e)=>{ if (e.key==='Enter'){ e.preventDefault(); addMedicamento(); } }} placeholder="3" />
-                    </div>
-                    <div className="col-6 col-md-3">
-                      <label className="form-label">Frecuencia</label>
-                      <input type="text" className="form-control" value={form.medFrecuencia} onChange={(e)=>setForm({ ...form, medFrecuencia: e.target.value })} onKeyDown={(e)=>{ if (e.key==='Enter'){ e.preventDefault(); addMedicamento(); } }} placeholder="1 cada 8h" />
-                    </div>
-                    <div className="col-12 col-md-1 d-grid">
-                      <button type="button" className="btn btn-outline-primary btn-sm" onClick={addMedicamento}>Agregar</button>
-                    </div>
-                  </div>
-                  {Array.isArray(form.medicamentosDet) && form.medicamentosDet.length > 0 && (
-                    <ul className="list-group list-group-flush mt-2 small">
-                      {form.medicamentosDet.map((m, idx) => (
-                        <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
-                          <span>{m.nombre} {m.dias?`• ${m.dias} días`:''} {m.frecuencia?`• ${m.frecuencia}`:''}</span>
-                          <button type="button" className="btn btn-link btn-sm text-danger" onClick={()=>{
-                            setForm(prev => ({
-                              ...prev,
-                              medicamentosDet: prev.medicamentosDet.filter((_, i)=>i!==idx)
-                            }));
-                          }}>Quitar</button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Exámenes solicitados */}
-                <div className="col-12 mt-3">
-                  <label className="form-label">Solicitar exámenes</label>
-                  <div className="row g-2 align-items-end">
-                    <div className="col-12 col-md-10">
-                      <input type="text" className="form-control" value={form.examenNombre} onChange={(e)=>setForm({ ...form, examenNombre: e.target.value })} placeholder="Hemograma, Radiografía de tórax, etc." />
-                    </div>
-                    <div className="col-12 col-md-2 d-grid">
-                      <button type="button" className="btn btn-outline-primary btn-sm" onClick={()=>{
-                        const nombre = form.examenNombre?.trim();
-                        if (!nombre) return;
-                        setForm(prev => ({ ...prev, examenes: [...(prev.examenes||[]), nombre], examenNombre: '' }));
-                      }}>Agregar</button>
-                    </div>
-                  </div>
-                  {Array.isArray(form.examenes) && form.examenes.length > 0 && (
-                    <ul className="list-group list-group-flush mt-2 small">
-                      {form.examenes.map((ex, idx) => (
-                        <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
-                          <span>{ex}</span>
-                          <button type="button" className="btn btn-link btn-sm text-danger" onClick={()=>{
-                            setForm(prev => ({ ...prev, examenes: prev.examenes.filter((_, i)=>i!==idx) }));
-                          }}>Quitar</button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Licencia médica */}
-                <div className="col-12 mt-3">
-                  <div className="form-check form-switch">
-                    <input className="form-check-input" type="checkbox" id="licenciaSwitch" checked={!!form.licenciaOtorga} onChange={(e)=>setForm({ ...form, licenciaOtorga: e.target.checked })} />
-                    <label className="form-check-label" htmlFor="licenciaSwitch">Otorgar licencia médica</label>
-                  </div>
-                  {form.licenciaOtorga && (
-                    <div className="row g-2 mt-1">
-                      <div className="col-12 col-md-3">
-                        <label className="form-label">Días</label>
-                        <input type="number" min="1" className="form-control" value={form.licenciaDias} onChange={(e)=>setForm({ ...form, licenciaDias: e.target.value })} placeholder="7" />
-                      </div>
-                      <div className="col-12 col-md-9">
-                        <label className="form-label">Notas</label>
-                        <input type="text" className="form-control" value={form.licenciaNota} onChange={(e)=>setForm({ ...form, licenciaNota: e.target.value })} placeholder="Motivo y recomendaciones" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="d-flex justify-content-end gap-2 mt-3">
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={closeModal}>Cancelar</button>
-                <button type="submit" className="btn btn-primary btn-sm">Guardar</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    )}
-  </>);
+  );
 }
-

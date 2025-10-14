@@ -159,24 +159,31 @@ exports.crearCita = async (req, res) => {
   }
 };
 
-// Obtener exámenes
+// Obtener exámenes con populate completo 
 exports.obtenerExamenes = async (req, res) => {
   try {
     const examenes = await Examen.find()
-      .populate('paciente_id', 'usuario_id')
-      .populate('medico_solicitante', 'usuario_id')
-      .populate('medico_realizador', 'usuario_id')
       .populate({
         path: 'paciente_id',
-        populate: { path: 'usuario_id', select: 'nombre' }
+        populate: { path: 'usuario_id', select: 'nombre rut email' }
       })
       .populate({
         path: 'medico_solicitante',
-        populate: { path: 'usuario_id', select: 'nombre' }
+        populate: { path: 'usuario_id', select: 'nombre email' }
       })
       .populate({
         path: 'medico_realizador',
-        populate: { path: 'usuario_id', select: 'nombre' }
+        populate: { path: 'usuario_id', select: 'nombre email' }
+      })
+      .populate({
+        path: 'consulta_id',
+        populate: {
+          path: 'cita_id',
+          populate: {
+            path: 'profesional_id',
+            select: 'nombre email'
+          }
+        }
       })
       .sort({ fecha_solicitud: -1 });
 

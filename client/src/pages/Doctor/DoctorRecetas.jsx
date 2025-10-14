@@ -1,6 +1,4 @@
 import React from 'react';
-import ActiveMedicationsCard from '../../components/paciente/shared/ActiveMedicationsCard';
-import QuickActionsCard from '../../components/paciente/shared/QuickActionsCard';
 import { useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -328,12 +326,6 @@ export default function RecetasDoctor() {
                 </h5>
                 <div className="d-flex align-items-center gap-2 flex-wrap flex-shrink-0">
                   <span className={statusBadgeClass(recetaSel.status || (recetaSel.activa ? 'Vigente' : 'Pendiente'))}>{recetaSel.status || (recetaSel.activa ? 'Vigente' : 'Pendiente')}</span>
-                  <button className="btn btn-outline-secondary btn-sm" title="Verificar validez" onClick={handleVerify}>
-                    <i className="fas fa-shield-check me-1"></i> Verificar
-                  </button>
-                  <button className="btn btn-outline-secondary btn-sm" title="Descargar PDF" onClick={handleDownloadPdf}>
-                    <i className="fas fa-file-pdf me-1"></i> PDF
-                  </button>
                 </div>
               </div>
             </div>
@@ -375,22 +367,7 @@ export default function RecetasDoctor() {
                 </div>
               </div>
 
-              <div>
-                <h6 className="fw-medium mb-2">Medicamentos Prescritos</h6>
-                <div className="d-flex flex-column gap-2">
-                  {(Array.isArray(recetaSel?.medicamentos) ? recetaSel.medicamentos : []).map((m, idx) => (
-                    <div key={idx} className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
-                      <i className="fas fa-pills text-success"></i>
-                      <span className="small">
-                        {m.nombre} {m.dosis || ''}{' '}
-                        <span className="text-muted">
-                          • {m.frecuencia || '—'}{m.duracion ? ` x ${m.duracion}` : ''}
-                        </span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Se removió el contenedor de Medicamentos Prescritos a solicitud */}
 
               <div className="mt-3 small">
                 <p className="text-muted-foreground mb-1">Código de verificación</p>
@@ -400,7 +377,7 @@ export default function RecetasDoctor() {
           </div>
         )}
 
-        {/* Alertas + tarjetas complementarias */}
+        {/* Alertas complementarias (sin tarjetas extra) */}
         {pacienteSel?.alergias?.length > 0 && (
           <div className="alert border-destructive bg-destructive-5 d-flex align-items-center">
             <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
@@ -411,8 +388,6 @@ export default function RecetasDoctor() {
           </div>
         )}
 
-        <ActiveMedicationsCard />
-        <QuickActionsCard />
       </div>
     </div>
   );

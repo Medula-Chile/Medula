@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import TimeLineDoctor from './components/TimeLineDoctor';
 import ConsultationDetailHistorial from './components/ConsultationDetailHistorial';
-import ActiveMedicationsCard from '../../components/paciente/shared/ActiveMedicationsCard.jsx';
-import QuickActionsCard from '../../components/paciente/shared/QuickActionsCard.jsx';
 import NextAppointmentCard from '../../components/paciente/shared/NextAppointmentCard.jsx';
 
 export default function DoctorHistorial() {
@@ -234,8 +232,6 @@ export default function DoctorHistorial() {
           </div>
         </div>
 
-        <ActiveMedicationsCard />
-        <QuickActionsCard />
         {/* Puedes calcular la próxima cita desde los datos si lo deseas;
            por ahora dejamos un ejemplo fijo */}
         <NextAppointmentCard fechaHora="25 Ago 2024 • 10:30" medico="Dr. Juan Pérez" />
