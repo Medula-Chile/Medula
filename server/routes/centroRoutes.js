@@ -7,12 +7,16 @@ const {
     actualizarCentro,
     eliminarCentro,
     toggleCentro,
-    buscarCentros
+    buscarCentros,
+    obtenerCentrosPorEspecialidad,
+    crearCentrosBulk 
 } = require('../controllers/centroController');
 
 router.post('/', crearCentro);
+router.post('/bulk', crearCentrosBulk);
 router.get('/', obtenerCentros);
 router.get('/buscar', buscarCentros);
+router.get('/especialidad/:especialidadId', obtenerCentrosPorEspecialidad);
 router.get('/:id', obtenerCentroPorId);
 router.put('/:id', actualizarCentro);
 router.delete('/:id', eliminarCentro);

@@ -1,132 +1,155 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
 
 const CentrosMedicos = () => {
+    const [centrosMedicos, setCentrosMedicos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     const [busqueda, setBusqueda] = useState('');
     const [filtroRegion, setFiltroRegion] = useState('');
     const [filtroComuna, setFiltroComuna] = useState('');
     const [filtroTipo, setFiltroTipo] = useState('');
+    const [filtroEspecialidad, setFiltroEspecialidad] = useState('');
 
-    const centrosMedicos = [
-        {
-            id: 1,
-            nombre: "Hospital Clínico Universidad de Chile",
-            tipo: "Hospital",
-            nivel: "Terciario",
-            direccion: "Av. Santos Dumont 999",
-            comuna: "Independencia",
-            region: "Metropolitana",
-            telefono: "+56 2 2978 0000",
-            horario: "24/7",
-            servicios: ["Urgencia", "Consulta Médica", "Exámenes", "Hospitalización"]
-        },
-        {
-            id: 2,
-            nombre: "Hospital San Juan de Dios",
-            tipo: "Hospital",
-            nivel: "Terciario",
-            direccion: "Huérfanos 3255",
-            comuna: "Santiago",
-            region: "Metropolitana",
-            telefono: "+56 2 2575 5000",
-            horario: "24/7",
-            servicios: ["Urgencia", "Especialidades", "Cirugía"]
-        },
-        {
-            id: 3,
-            nombre: "CESFAM Santa Ana",
-            tipo: "Centro de Salud Familiar",
-            nivel: "Primario",
-            direccion: "Santo Domingo 123",
-            comuna: "Santiago",
-            region: "Metropolitana",
-            telefono: "+56 2 2634 5678",
-            horario: "L-V 8:00-17:00",
-            servicios: ["Medicina General", "Control Niño Sano", "Vacunación"]
-        },
-        {
-            id: 4,
-            nombre: "Hospital Gustavo Fricke",
-            tipo: "Hospital",
-            nivel: "Terciario",
-            direccion: "Álvarez 1532",
-            comuna: "Viña del Mar",
-            region: "Valparaíso",
-            telefono: "+56 32 235 2000",
-            horario: "24/7",
-            servicios: ["Urgencia", "Maternidad", "Pediatría"]
-        },
-        {
-            id: 5,
-            nombre: "CESFAM Valparaíso",
-            tipo: "Centro de Salud Familiar",
-            nivel: "Primario",
-            direccion: "Brasil 1450",
-            comuna: "Valparaíso",
-            region: "Valparaíso",
-            telefono: "+56 32 225 6789",
-            horario: "L-V 8:00-16:30",
-            servicios: ["Atención Primaria", "Dental", "Matronería"]
-        },
-        {
-            id: 6,
-            nombre: "Hospital Regional de Concepción",
-            tipo: "Hospital",
-            nivel: "Terciario",
-            direccion: "San Martín 1436",
-            comuna: "Concepción",
-            region: "Biobío",
-            telefono: "+56 41 220 3000",
-            horario: "24/7",
-            servicios: ["Urgencia", "Traumatología", "Oncología"]
-        },
-        {
-            id: 7,
-            nombre: "SAPU La Florida",
-            tipo: "SAPU",
-            nivel: "Secundario",
-            direccion: "Av. La Florida 1234",
-            comuna: "La Florida",
-            region: "Metropolitana",
-            telefono: "+56 2 2789 0123",
-            horario: "20:00-08:00",
-            servicios: ["Urgencia", "Pediatría", "Traumatología"]
-        }
-    ];
+    // Cargar centros médicos al montar el componente
+    useEffect(() => {
+        const fetchCentrosMedicos = async () => {
+            try {
+                setLoading(true);
+                // URL CORREGIDA
+                const response = await axios.get('http://localhost:5000/api/centros');
+                setCentrosMedicos(response.data);
+                setError(null);
+            } catch (err) {
+                setError('Error al cargar los centros médicos');
+                console.error('Error:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    // Obtener valores únicos para los filtros
+        fetchCentrosMedicos();
+    }, []);
+
+    // Búsqueda en tiempo real con debounce
+    useEffect(() => {
+        const buscarCentros = async () => {
+            if (busqueda.trim()) {
+                try {
+                    setLoading(true);
+                    // URL CORREGIDA
+                    const response = await axios.get(`http://localhost:5000/api/centros/buscar?q=${encodeURIComponent(busqueda)}`);
+                    setCentrosMedicos(response.data);
+                } catch (err) {
+                    console.error('Error en búsqueda:', err);
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                const fetchAllCentros = async () => {
+                    try {
+                        setLoading(true);
+                        // URL CORREGIDA
+                        const response = await axios.get('http://localhost:5000/api/centros');
+                        setCentrosMedicos(response.data);
+                    } catch (err) {
+                        console.error('Error:', err);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchAllCentros();
+            }
+        };
+
+        const timeoutId = setTimeout(buscarCentros, 500);
+        return () => clearTimeout(timeoutId);
+    }, [busqueda]);
+
+    // ... el resto de tu código se mantiene igual ...
+    // Obtener valores únicos para los filtros desde los datos de la API
     const regiones = useMemo(() =>
-        [...new Set(centrosMedicos.map(centro => centro.region))],
-        []
+        [...new Set(centrosMedicos.map(centro => centro.region))].sort(),
+        [centrosMedicos]
     );
 
     const comunas = useMemo(() =>
-        [...new Set(centrosMedicos.map(centro => centro.comuna))],
-        []
+        [...new Set(centrosMedicos.map(centro => centro.comuna))].sort(),
+        [centrosMedicos]
     );
 
     const tipos = useMemo(() =>
-        [...new Set(centrosMedicos.map(centro => centro.tipo))],
-        []
+        [...new Set(centrosMedicos.map(centro => centro.tipo))].sort(),
+        [centrosMedicos]
     );
 
-    // Filtrar centros médicos
-    const centrosFiltrados = useMemo(() => {
-        return centrosMedicos.filter(centro => {
-            const coincideBusqueda = centro.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                centro.direccion.toLowerCase().includes(busqueda.toLowerCase());
-            const coincideRegion = !filtroRegion || centro.region === filtroRegion;
-            const coincideComuna = !filtroComuna || centro.comuna === filtroComuna;
-            const coincideTipo = !filtroTipo || centro.tipo === filtroTipo;
+    const especialidadesUnicas = useMemo(() => {
+        const todasEspecialidades = centrosMedicos.flatMap(centro =>
+            centro.especialidades
+                ?.filter(esp => esp.activo !== false)
+                ?.map(esp => esp.nombre) || []
+        );
+        return [...new Set(todasEspecialidades)].sort();
+    }, [centrosMedicos]);
 
-            return coincideBusqueda && coincideRegion && coincideComuna && coincideTipo;
-        });
-    }, [busqueda, filtroRegion, filtroComuna, filtroTipo]);
+    // Filtrar centros médicos localmente
+    const centrosFiltrados = useMemo(() => {
+        let filtrados = centrosMedicos.filter(centro => centro.activo !== false);
+
+        // Filtro por búsqueda local
+        if (busqueda) {
+            filtrados = filtrados.filter(centro =>
+                centro.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+                centro.direccion?.toLowerCase().includes(busqueda.toLowerCase()) ||
+                centro.comuna?.toLowerCase().includes(busqueda.toLowerCase()) ||
+                centro.region?.toLowerCase().includes(busqueda.toLowerCase()) ||
+                centro.telefono?.includes(busqueda) ||
+                centro.especialidades?.some(esp =>
+                    esp.nombre.toLowerCase().includes(busqueda.toLowerCase())
+                )
+            );
+        }
+
+        // Filtro por región
+        if (filtroRegion) {
+            filtrados = filtrados.filter(centro =>
+                centro.region === filtroRegion
+            );
+        }
+
+        // Filtro por comuna
+        if (filtroComuna) {
+            filtrados = filtrados.filter(centro =>
+                centro.comuna === filtroComuna
+            );
+        }
+
+        // Filtro por tipo
+        if (filtroTipo) {
+            filtrados = filtrados.filter(centro =>
+                centro.tipo === filtroTipo
+            );
+        }
+
+        // Filtro por especialidad
+        if (filtroEspecialidad) {
+            filtrados = filtrados.filter(centro =>
+                centro.especialidades?.some(esp =>
+                    esp.activo !== false && esp.nombre === filtroEspecialidad
+                )
+            );
+        }
+
+        return filtrados;
+    }, [centrosMedicos, busqueda, filtroRegion, filtroComuna, filtroTipo, filtroEspecialidad]);
 
     const limpiarFiltros = () => {
         setBusqueda('');
         setFiltroRegion('');
         setFiltroComuna('');
         setFiltroTipo('');
+        setFiltroEspecialidad('');
     };
 
     const llamarCentro = (telefono) => {
@@ -134,27 +157,56 @@ const CentrosMedicos = () => {
     };
 
     const abrirGoogleMaps = (direccion, comuna) => {
+        const direccionCompleta = `${direccion}, ${comuna}, Chile`;
         const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionCompleta)}`;
         window.open(url, '_blank');
     };
 
+    if (loading) {
+        return (
+            <div className="flex-grow-1 p-3 p-md-4">
+                <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+                    <div className="text-center">
+                        <div className="spinner-border text-primary mb-3" role="status">
+                            <span className="visually-hidden">Cargando...</span>
+                        </div>
+                        <p>Cargando centros médicos...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex-grow-1 p-3 p-md-4">
+                <div className="alert alert-danger" role="alert">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    {error}
+                </div>
+            </div>
+        );
+    }
+
     return (
-      <div className="flex-grow-1 p-3 p-md-4">
-          <div className="row g-3">
-              <div className="col-12 main-content p-4">
-                  <div className="content-wrapper">
-                      <div className="section-content active">
-                          <div className="section-header mb-4">
-                              <h5 className="card-title mb-1">Centros Médicos Públicos</h5>
-                              <p className="text-muted small mb-0">Encuentra centros de salud públicos cerca de ti</p>
-                          </div>
+        <div className="flex-grow-1 p-3 p-md-4">
+            <div className="row g-3">
+                <div className="col-12 main-content p-4">
+                    <div className="content-wrapper">
+                        <div className="section-content active">
+                            <div className="section-header mb-4">
+                                <h5 className="card-title mb-1">Centros Médicos Públicos</h5>
+                                <p className="text-muted small mb-0">
+                                    {centrosMedicos.length} centros de salud disponibles
+                                </p>
+                            </div>
 
                             {/* Barra de búsqueda y filtros */}
                             <div className="card mb-4">
                                 <div className="card-body">
                                     <div className="row g-3">
                                         {/* Barra de búsqueda */}
-                                        <div className="col-md-6">
+                                        <div className="col-md-4">
                                             <div className="input-group">
                                                 <span className="input-group-text">
                                                     <i className="fas fa-search"></i>
@@ -162,7 +214,7 @@ const CentrosMedicos = () => {
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    placeholder="Buscar por nombre o dirección..."
+                                                    placeholder="Buscar por nombre, dirección o especialidad..."
                                                     value={busqueda}
                                                     onChange={(e) => setBusqueda(e.target.value)}
                                                 />
@@ -208,13 +260,29 @@ const CentrosMedicos = () => {
                                                 ))}
                                             </select>
                                         </div>
+
+                                        <div className="col-md-2">
+                                            <select
+                                                className="form-select"
+                                                value={filtroEspecialidad}
+                                                onChange={(e) => setFiltroEspecialidad(e.target.value)}
+                                            >
+                                                <option value="">Todas las especialidades</option>
+                                                {especialidadesUnicas.map(especialidad => (
+                                                    <option key={especialidad} value={especialidad}>{especialidad}</option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
 
                                     {/* Contador y botón limpiar */}
                                     <div className="row mt-3">
                                         <div className="col-md-6">
                                             <small className="text-muted">
-                                                {centrosFiltrados.length} centro(s) encontrado(s)
+                                                {centrosFiltrados.length} centro(s) encontrado(s) de {centrosMedicos.length}
+                                                {busqueda && ` para "${busqueda}"`}
+                                                {filtroRegion && ` en ${filtroRegion}`}
+                                                {filtroEspecialidad && ` con ${filtroEspecialidad}`}
                                             </small>
                                         </div>
                                         <div className="col-md-6 text-end">
@@ -245,9 +313,10 @@ const CentrosMedicos = () => {
                                                 <thead className="table-light">
                                                     <tr>
                                                         <th>Centro Médico</th>
-                                                        <th>Tipo</th>
+                                                        <th>Tipo/Nivel</th>
+                                                        <th>Especialidades</th>
                                                         <th>Dirección</th>
-                                                        <th>Comuna</th>
+                                                        <th>Ubicación</th>
                                                         <th>Teléfono</th>
                                                         <th>Horario</th>
                                                         <th>Acciones</th>
@@ -255,16 +324,19 @@ const CentrosMedicos = () => {
                                                 </thead>
                                                 <tbody>
                                                     {centrosFiltrados.map(centro => (
-                                                        <tr key={centro.id}>
+                                                        <tr key={centro._id}>
                                                             <td>
                                                                 <div className="d-flex flex-column">
                                                                     <span className="fw-medium">{centro.nombre}</span>
                                                                     <div>
                                                                         <span className={`badge ${centro.nivel === 'Terciario' ? 'bg-primary' :
-                                                                                centro.nivel === 'Secundario' ? 'bg-warning text-dark' : 'bg-success'
+                                                                            centro.nivel === 'Secundario' ? 'bg-warning text-dark' : 'bg-success'
                                                                             }`}>
                                                                             {centro.nivel}
                                                                         </span>
+                                                                        {centro.activo === false && (
+                                                                            <span className="badge bg-secondary ms-1">Inactivo</span>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             </td>
@@ -274,12 +346,40 @@ const CentrosMedicos = () => {
                                                                 </span>
                                                             </td>
                                                             <td>
+                                                                {centro.especialidades && centro.especialidades.length > 0 ? (
+                                                                    <div className="d-flex flex-wrap gap-1">
+                                                                        {centro.especialidades.slice(0, 2).map((especialidad, index) => (
+                                                                            <span
+                                                                                key={especialidad._id || index}
+                                                                                className="badge bg-info text-white small"
+                                                                                title={especialidad.descripcion}
+                                                                            >
+                                                                                {especialidad.nombre}
+                                                                            </span>
+                                                                        ))}
+                                                                        {centro.especialidades.length > 2 && (
+                                                                            <span
+                                                                                className="badge bg-secondary small"
+                                                                                title={centro.especialidades.slice(2).map(esp => esp.nombre).join(', ')}
+                                                                            >
+                                                                                +{centro.especialidades.length - 2}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <small className="text-muted">Sin especialidades</small>
+                                                                )}
+                                                            </td>
+                                                            <td>
                                                                 <small className="text-muted">
                                                                     {centro.direccion}
                                                                 </small>
                                                             </td>
                                                             <td>
-                                                                <span className="text-muted">{centro.comuna}</span>
+                                                                <div className="d-flex flex-column">
+                                                                    <span className="text-muted">{centro.comuna}</span>
+                                                                    <small className="text-muted">{centro.region}</small>
+                                                                </div>
                                                             </td>
                                                             <td>
                                                                 <small>{centro.telefono}</small>
@@ -342,7 +442,7 @@ const CentrosMedicos = () => {
                                                 </li>
                                                 <li className="mb-0">
                                                     <i className="fas fa-check text-success me-2"></i>
-                                                    SAPU: Atención nocturna
+                                                    Especialidades según nivel de atención
                                                 </li>
                                             </ul>
                                         </div>
