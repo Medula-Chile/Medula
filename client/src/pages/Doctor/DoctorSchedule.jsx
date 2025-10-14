@@ -1,20 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
- 
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import api from '../../services/api.js';
+
 export default function DoctorSchedule() {
   const [view, setView] = useState('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date()); // Día seleccionado
   const [appointments, setAppointments] = useState([]);
   const navigate = useNavigate();
- 
+  const { user } = useAuth();
+  const doctorId = user?.id;
+
   useEffect(() => {
-    setAppointments([
-      { id: 1, date: '2025-10-15', time: '10:00', patient: 'Juan Pérez', status: 'pending' },
-      { id: 2, date: '2025-10-15', time: '11:00', patient: 'María González', status: 'past' },
-      { id: 3, date: '2025-10-16', time: '09:00', patient: 'Carlos Rodríguez', status: 'pending' },
-    ]);
-  }, []);
+    if (doctorId) {
+      console.log('doctorId:', doctorId);
+      const fetchAppointments = async () => {
+        try {
+          const response = await api.get(`/citas/doctor/${doctorId}`);
+          const data = response.data;
+          console.log('fetched data:', data);
+          // Transformar datos de BD al formato esperado por el componente
+          const transformed = data.map(cita => ({
+            id: cita._id,
+            date: new Date(cita.fecha_hora).toISOString().split('T')[0], // YYYY-MM-DD
+            time: new Date(cita.fecha_hora).toISOString().split('T')[1].substring(0, 5), // HH:MM
+            patient: cita.paciente_id?.usuario_id?.nombre || 'Paciente desconocido',
+            status: cita.estado === 'programada' || cita.estado === 'confirmada' ? 'pending' : 'past'
+          }));
+          console.log('transformed:', transformed);
+          setAppointments(transformed);
+          // Set current date to the first appointment date if available
+          if (transformed.length > 0) {
+            const firstDate = new Date(transformed[0].date);
+            setCurrentDate(firstDate);
+            setSelectedDate(firstDate);
+          }
+        } catch (error) {
+          console.error('Error loading appointments:', error);
+        }
+      };
+      fetchAppointments();
+    } else {
+      console.log('No doctorId available');
+    }
+  }, [doctorId]);
  
   const getPrevMonth = (date) => {
     const newDate = new Date(date);
@@ -90,18 +120,21 @@ export default function DoctorSchedule() {
  
   const handleViewChange = (newView) => {
     setView(newView);
+    if (newView === 'week' || newView === 'day') {
+      setSelectedDate(currentDate);
+    }
   };
  
   const handlePrev = () => {
     if (view === 'month') setCurrentDate(getPrevMonth(currentDate));
-    else if (view === 'week') setCurrentDate(addDays(currentDate, -5));
-    else setCurrentDate(addDays(currentDate, -1));
+    else if (view === 'week') setSelectedDate(addDays(selectedDate, -7));
+    else setSelectedDate(addDays(selectedDate, -1));
   };
  
   const handleNext = () => {
     if (view === 'month') setCurrentDate(getNextMonth(currentDate));
-    else if (view === 'week') setCurrentDate(addDays(currentDate, 5));
-    else setCurrentDate(addDays(currentDate, 1));
+    else if (view === 'week') setSelectedDate(addDays(selectedDate, 7));
+    else setSelectedDate(addDays(selectedDate, 1));
   };
  
   const handleSlotClick = (date, hour) => {
@@ -161,7 +194,7 @@ export default function DoctorSchedule() {
                   <div key={dayIndex} className={dayClass} onClick={() => handleDayClick(day)} style={{ cursor: 'pointer' }}>
                     <div className="day-number fw-semibold small mb-auto p-1">{day.getDate()}</div>
                     <div className="flex-grow-1">
-                      {dayApps.map(app => (
+                      {dayApps.sort((a, b) => a.time.localeCompare(b.time)).map(app => (
                         <div key={app.id} className={`appointment small rounded p-1 mb-1 text-white ${app.status === 'pending' ? 'bg-primary' : 'bg-secondary'}`}>
                           {app.patient} - {app.time}
                         </div>
@@ -179,7 +212,7 @@ export default function DoctorSchedule() {
       </div>
     );
   } else if (view === 'week') {
-    let weekStart = getWeekStart(currentDate);
+    let weekStart = getWeekStart(selectedDate || currentDate);
     const weekDays = [];
     for (let i = 0; i < 5; i++) {
       const day = addDays(weekStart, i);
@@ -194,44 +227,32 @@ export default function DoctorSchedule() {
           <h6 className="mb-0 fw-semibold">Semana del {weekStart.getDate()}/{weekStart.getMonth() + 1}</h6>
           <button className="btn btn-outline-primary btn-sm" onClick={handleNext}>Siguiente</button>
         </div>
-        <div className="table-responsive">
-          <table className="table table-sm table-bordered">
-            <thead className="table-light">
-              <tr>
-                <th>Hora</th>
-                {weekDays.map((day, index) => (
-                  <th key={index} className={`text-center small ${isToday(day) ? 'bg-info text-white' : ''} ${isSelected(day) ? 'border-primary' : ''}`}>
-                    {formatDay(day)}<br /><span className="fw-semibold">{day.getDate()}</span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {hours.map(hour => (
-                <tr key={hour}>
-                  <th className="text-end small">{hour}:00</th>
-                  {weekDays.map((day, index) => {
-                    const dayStr = formatDate(day);
-                    const app = appointments.find(a => a.date === dayStr && parseInt(a.time.split(':')[0]) === hour);
-                    const isCurrent = new Date().getHours() === hour && isToday(day);
-                    const cellClass = `p-1 small text-center ${app ? (app.status === 'pending' ? 'bg-primary text-white' : 'bg-secondary text-white') : 'bg-success text-white'} ${isCurrent ? 'bg-warning text-dark fw-semibold' : ''} ${isSelected(day) ? 'border-primary' : ''}`;
-                    return (
-                      <td key={index} className={cellClass} onClick={() => handleDayClick(day)} style={{ cursor: 'pointer' }}>
-                        {app ? `${app.patient}` : 'disponible'}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="row row-cols-5 g-2">
+          {weekDays.map((day, index) => {
+            const dayStr = formatDate(day);
+            const dayApps = appointments.filter(app => app.date === dayStr).sort((a, b) => a.time.localeCompare(b.time));
+            const isCurrentMonth = isSameMonth(day, currentDate);
+            const dayClass = `col p-2 border border-end-0 border-bottom-0 h-100 d-flex flex-column ${!isCurrentMonth ? 'opacity-50 bg-light' : ''} ${isToday(day) ? 'bg-info text-white' : ''} ${isSelected(day) ? 'border-primary' : ''}`;
+            return (
+              <div key={index} className={dayClass} onClick={() => handleDayClick(day)} style={{ cursor: 'pointer', minHeight: '200px' }}>
+                <div className="day-number fw-semibold small mb-2 p-1">{formatDay(day)} {day.getDate()}</div>
+                <div className="flex-grow-1">
+                  {dayApps.map(app => (
+                    <div key={app.id} className={`appointment small rounded p-1 mb-1 text-white ${app.status === 'pending' ? 'bg-primary' : 'bg-secondary'}`}>
+                      {app.patient} - {app.time}
+                    </div>
+                  ))}
+                  {dayApps.length === 0 && <small className="text-muted">Sin citas</small>}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   } else if (view === 'day') {
     const dayStr = formatDate(selectedDate || currentDate);
-    const dayApps = appointments.filter(app => app.date === dayStr);
-    const hours = Array.from({ length: 12 }, (_, i) => i + 8);
+    const dayApps = appointments.filter(app => app.date === dayStr).sort((a, b) => a.time.localeCompare(b.time));
  
     content = (
       <div className="day-view">
@@ -240,23 +261,26 @@ export default function DoctorSchedule() {
           <h6 className="mb-0 fw-semibold">{selectedDate.getDate()}/{selectedDate.getMonth() + 1}/{selectedDate.getFullYear()}</h6>
           <button className="btn btn-outline-primary btn-sm" onClick={handleNext}>Siguiente</button>
         </div>
-        <div className="table-responsive">
-          <table className="table table-sm table-bordered">
-            <tbody>
-              {hours.map(hour => {
-                const app = dayApps.find(a => parseInt(a.time.split(':')[0]) === hour);
-                const isCurrent = new Date().getHours() === hour && isToday(selectedDate);
-                const rowClass = ` ${app ? (app.status === 'pending' ? 'table-primary' : 'table-secondary') : 'table-success'} ${isCurrent ? 'table-warning' : ''}`;
-                return (
-                  <tr key={hour} className={rowClass}>
-                    <td className="p-2 small fw-semibold" style={{ cursor: 'pointer' }} onClick={() => handleSlotClick(selectedDate, hour)}>
-                      {hour}:00 - {app ? `${app.patient} - ${app.time}` : 'hora disponible'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="card">
+          <div className="card-body">
+            <h6 className="card-title">Citas del día</h6>
+            {dayApps.length === 0 ? (
+              <p className="text-muted">No hay citas programadas para este día.</p>
+            ) : (
+              <div className="list-group">
+                {dayApps.map(app => (
+                  <div key={app.id} className="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong>{app.patient}</strong> - {app.time}
+                      <br />
+                      <small className="text-muted">{app.status === 'pending' ? 'Pendiente' : 'Completada'}</small>
+                    </div>
+                    <span className={`badge ${app.status === 'pending' ? 'bg-primary' : 'bg-secondary'}`}>{app.status === 'pending' ? 'Pendiente' : 'Completada'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

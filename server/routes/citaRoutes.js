@@ -5,11 +5,13 @@ const {
     obtenerCitas,
     obtenerCitaPorId,
     actualizarCita,
-    eliminarCita
+    eliminarCita,
+    getCitasByDoctor
 } = require('../controllers/citaController');
 
 router.post('/', crearCita);
 router.get('/', obtenerCitas);
+router.get('/doctor/:doctorId', getCitasByDoctor);
 router.get('/:id', obtenerCitaPorId);
 router.put('/:id', actualizarCita);
 router.delete('/:id', eliminarCita);

@@ -149,3 +149,24 @@ exports.eliminarCita = async (req, res) => {
         });
     }
 };
+
+exports.getCitasByDoctor = async (req, res) => {
+    try {
+        const { doctorId } = req.params;
+        const citas = await CitaMedica.find({ profesional_id: doctorId })
+            .populate({
+                path: 'paciente_id',
+                populate: { path: 'usuario_id', select: 'nombre rut' }
+            })
+            .populate('profesional_id', 'nombre')
+            .populate('centro_id', 'nombre direccion')
+            .sort({ fecha_hora: 1 });
+
+        res.json(citas);
+    } catch (error) {
+        res.status(500).json({
+            message: 'Error al obtener citas del doctor',
+            error: error.message
+        });
+    }
+};
