@@ -30,7 +30,7 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
             return (
               <div
                 key={item.id}
-                className={`consultation-item ${isActive ? 'active' : ''}`}
+                className={`consultation-item overflow-hidden ${isActive ? 'active' : ''}`}
                 onClick={() => onSelect(item.id)}
                 role="button"
               >
@@ -39,13 +39,13 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
                     <i className="fas fa-user-injured text-primary"></i>
                   </div>
 
-                  <div className="flex-grow-1 min-w-0">
-                    <div className="d-flex justify-content-between align-items-start mb-1">
+                  <div className="flex-grow-1 min-w-0 text-break">
+                    <div className="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
                       <div className="flex-grow-1 min-w-0">
                         <h6 className="fw-medium mb-0">{item.especialidad}</h6>
                         <p className="text-muted-foreground small mb-0">{item.medico}</p>
                       </div>
-                      <div className="d-flex align-items-center gap-2 ms-2">
+                      <div className="d-flex align-items-center gap-2 ms-2 flex-wrap">
                         <span className={`badge rounded-pill ${estadoClass}`}>{estado}</span>
                         <span className="text-muted-foreground small fw-medium">{item.fecha}</span>
                         <button
@@ -69,12 +69,12 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
                     </div>
 
                     {/* Paciente y centro */}
-                    <p className="text-muted-foreground small mb-1">
+                    <p className="text-muted-foreground small mb-1 text-break">
                       <i className="fas fa-user me-1"></i>
                       {item.paciente && item.paciente !== '—' ? item.paciente : (item.paciente_id || '—')}
                       {item.centro ? (<span className="ms-2 text-muted">• {item.centro}</span>) : null}
                     </p>
-                    <p className="small line-clamp-2 mb-0">{item.resumen}</p>
+                    <p className="small line-clamp-2 mb-0 text-break">{item.resumen}</p>
                   </div>
                 </div>
               </div>

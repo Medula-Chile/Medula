@@ -111,13 +111,28 @@ export default function DoctorPacientes() {
       if (toD) { const end = new Date(toD); end.setHours(23,59,59,999); if (d > end) return false; }
       return true;
     };
-    const byDate = (a, b) => new Date(a.when || 0) - new Date(b.when || 0);
+    const isToday = (iso) => {
+      if (!iso) return false;
+      const d = new Date(iso);
+      const now = new Date();
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    };
+    const cmp = (a, b) => {
+      const aD = new Date(a.when || 0);
+      const bD = new Date(b.when || 0);
+      const aT = isToday(a.when);
+      const bT = isToday(b.when);
+      if (aT && !bT) return -1; // Hoy primero
+      if (!aT && bT) return 1;
+      if (aT && bT) return aD - bD; // Dentro de hoy, ascendente
+      return bD - aD; // Resto, de futuro a pasado (descendente)
+    };
     return items
       .filter(it => !qn || norm(it.paciente).includes(qn) || norm(it.resumen).includes(qn) || norm(it.centro).includes(qn))
       .filter(it => !estado || it.estado === estado)
       .filter(it => inRange(it.when))
       .slice()
-      .sort(byDate);
+      .sort(cmp);
   }, [items, q, estado, from, to]);
 
   const active = useMemo(() => filtered.find(x => String(x.id) === String(activeId)) || items.find(x => String(x.id) === String(activeId)) || null, [filtered, items, activeId]);
@@ -173,7 +188,6 @@ export default function DoctorPacientes() {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="mb-0">Pacientes asignados</h4>
         <div className="d-flex gap-2">
-          <button className="btn btn-primary btn-sm" onClick={openNew}><i className="fas fa-plus me-2"/>Agregar</button>
           <button className="btn btn-outline-secondary btn-sm" onClick={fetchCitas} disabled={loading}><i className="fas fa-rotate me-2"/>Actualizar</button>
         </div>
       </div>
@@ -257,7 +271,7 @@ export default function DoctorPacientes() {
         </div>
 
         <div className="col-12 col-lg-6 col-xl-7">
-          <ConsultationDetailDoctor consulta={active} />
+          <ConsultationDetailDoctor key={active?.id || 'none'} consulta={active} />
         </div>
       </div>
 

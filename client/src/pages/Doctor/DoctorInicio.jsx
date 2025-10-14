@@ -40,22 +40,20 @@ export default function DoctorInicio() {
     setAllItems(init.map(it => ({ ...it, medico: doctorName || it.medico, especialidad: doctorSpecialty || it.especialidad })));
     return () => unsub();
   }, [doctorName, doctorSpecialty, user]);
-
   // Cargar citas del backend y sincronizar store local
   const fetchCitasHoy = useCallback(async () => {
       try {
         // Resolver userId localmente para evitar problemas de cierre/orden
         const uid = user?.id || user?._id || null;
+        if (!uid) return; // Evitar cargar todas las citas sin filtro antes de que el usuario esté listo
         // Filtrar por el profesional (usuario) en sesión para no traer citas de otros médicos
-        const resp = await api.get('/citas', { params: uid ? { profesional: uid } : {} });
+        const resp = await api.get('/citas', { params: { profesional: uid } });
         let raw = Array.isArray(resp.data) ? resp.data : (resp.data?.citas || []);
         // Salvaguarda: filtrar en cliente por profesional_id si el backend no aplicó el filtro
-        if (uid) {
-          raw = raw.filter(c => {
-            const pid = (typeof c?.profesional_id === 'object') ? (c?.profesional_id?._id || c?.profesional_id?.id) : c?.profesional_id;
-            return String(pid) === String(uid);
-          });
-        }
+        raw = raw.filter(c => {
+          const pid = (typeof c?.profesional_id === 'object') ? (c?.profesional_id?._id || c?.profesional_id?.id) : c?.profesional_id;
+          return String(pid) === String(uid);
+        });
         const now = new Date();
         const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
         const start = new Date(y, m, d, 0, 0, 0, 0);

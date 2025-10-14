@@ -2,30 +2,66 @@ import React from 'react';
 import ActiveMedicationsCard from '../../components/paciente/shared/ActiveMedicationsCard';
 import QuickActionsCard from '../../components/paciente/shared/QuickActionsCard';
 import { useLocation } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function RecetasDoctor() {
   // Vista DOCTOR: navegar pacientes -> recetas -> detalle
+  const { user } = useAuth();
+  const [recetas, setRecetas] = React.useState([]);
   const [pacientes, setPacientes] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
+  // Filtros de búsqueda (como DoctorPacientes)
+  const [q, setQ] = React.useState('');
+  const [from, setFrom] = React.useState('');
+  const [to, setTo] = React.useState('');
+
+  // Paginación para la lista de recetas del paciente seleccionado
+  const [page, setPage] = React.useState(1);
+  const pageSize = 10;
+
   React.useEffect(() => {
     let mounted = true;
-    setLoading(true);
-    const base = import.meta.env.BASE_URL || '/';
-    axios
-      .get(`${base}mock/pacientes_recetas.json`)
-      .then((r) => {
-        if (!mounted) return;
-        const arr = Array.isArray(r.data) ? r.data : [];
-        setPacientes(arr);
+    const fetch = async () => {
+      try {
+        setLoading(true);
         setError('');
-      })
-      .catch(() => mounted && setError('No se pudo cargar la lista de pacientes.'))
-      .finally(() => mounted && setLoading(false));
+        // Traer todas las recetas. Si queremos limitar por médico autenticado, añadir params medico=user._id
+        const params = {};
+        // const uid = user?.id || user?._id; if (uid) params.medico = uid;
+        const r = await api.get('/recetas', { params });
+        const arr = Array.isArray(r.data) ? r.data : (Array.isArray(r.data?.recetas) ? r.data.recetas : []);
+        if (!mounted) return;
+        setRecetas(arr);
+        // Derivar lista de pacientes con al menos una receta
+        const byPatient = new Map();
+        for (const rec of arr) {
+          const pObj = rec?.paciente_id || rec?.paciente || null;
+          const pid = (typeof pObj === 'object') ? (pObj?._id || pObj?.id) : (typeof rec?.paciente_id === 'string' ? rec.paciente_id : null);
+          const nombre = (
+            (typeof pObj === 'string' ? pObj : null) ||
+            pObj?.usuario?.nombre || pObj?.usuario?.fullName || pObj?.usuario?.name ||
+            pObj?.usuario_id?.nombre || pObj?.usuario_id?.fullName || pObj?.usuario_id?.name ||
+            pObj?.nombre || [pObj?.nombres, pObj?.apellidos].filter(Boolean).join(' ') ||
+            [pObj?.firstName, pObj?.lastName].filter(Boolean).join(' ')
+          ) || 'Paciente';
+          if (!pid) continue;
+          const item = byPatient.get(pid) || { id: pid, nombre, run: pObj?.usuario_id?.rut || pObj?.rut || '—', recetas: [], centro: rec?.centro_id?.nombre || '—' };
+          item.recetas.push(rec);
+          byPatient.set(pid, item);
+        }
+        setPacientes(Array.from(byPatient.values()));
+      } catch (e) {
+        if (mounted) setError('No se pudo cargar la lista de recetas.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetch();
     return () => { mounted = false; };
-  }, []);
+  }, [user?.id, user?._id]);
 
   // ---- selección por query (?patient= & ?folio=)
   const location = useLocation();
@@ -34,13 +70,32 @@ export default function RecetasDoctor() {
   const [pacienteSel, setPacienteSel] = React.useState(null);
   const [recetaSel, setRecetaSel] = React.useState(null);
 
+  // Helper: nombre del médico emisor de la receta, con múltiples formatos posibles
+  const getDoctorName = React.useCallback((rec) => {
+    if (!rec) return '—';
+    const m = rec.medico_id ?? rec.medico ?? rec.doctor ?? null;
+    if (!m) return '—';
+    if (typeof m === 'string') return m;
+    return (
+      m?.nombre || m?.name ||
+      m?.usuario?.nombre || m?.usuario?.fullName || m?.usuario?.name ||
+      m?.usuario_id?.nombre || m?.usuario_id?.fullName || m?.usuario_id?.name ||
+      '—'
+    );
+  }, []);
+
   React.useEffect(() => {
     if (pacientes.length === 0) return;
 
     const qPatient = getQueryParam('patient');
     const qFolio = getQueryParam('folio');
 
-    let p = pacientes[0];
+    // Aplicar búsqueda a la lista izquierda
+    const norm = (s) => (s || '').toString().toLowerCase();
+    const qn = norm(q);
+    const filteredPatients = pacientes.filter(p => !qn || norm(p.nombre).includes(qn) || norm(p.run).includes(qn) || norm(p.centro).includes(qn));
+
+    let p = filteredPatients[0] || pacientes[0];
     if (qPatient) {
       const found = pacientes.find((x) => x.id === qPatient);
       if (found) p = found;
@@ -52,7 +107,7 @@ export default function RecetasDoctor() {
     }
     setPacienteSel(p || null);
     setRecetaSel(r);
-  }, [location.search, pacientes]);
+  }, [location.search, pacientes, q]);
 
   // helpers
   const printAreaRef = React.useRef(null);
@@ -131,24 +186,35 @@ export default function RecetasDoctor() {
     updateUrl(pacienteSel?.id || '', r?.id || '');
   };
 
-  if (loading) return <div className="p-3 text-muted small">Cargando pacientes…</div>;
+  if (loading) return <div className="p-3 text-muted small">Cargando recetas…</div>;
   if (error) return <div className="alert alert-danger my-2" role="alert">{error}</div>;
   if (!pacienteSel) return null;
 
   return (
     <div className="row g-3">
-      {/* Columna IZQUIERDA: Pacientes */}
+      {/* Columna IZQUIERDA: Pacientes con recetas + búsqueda */}
       <div className="col-12 col-lg-4 col-xl-3">
         <div className="card h-100">
           <div className="card-header bg-white pb-2">
-            <h5 className="card-title mb-0">Pacientes</h5>
+            <h5 className="card-title mb-2">Pacientes con recetas</h5>
+            {/* Barra de búsqueda */}
+            <div className="input-group input-group-sm">
+              <span className="input-group-text bg-white"><i className="fas fa-search"/></span>
+              <input className="form-control" placeholder="Buscar por nombre, RUN o centro" value={q} onChange={(e)=>{ setQ(e.target.value); setPage(1); }} />
+            </div>
           </div>
           <div className="card-body p-0">
             <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
-              {pacientes.map((p) => (
+              {pacientes
+                .filter(p => {
+                  const norm = (s) => (s || '').toString().toLowerCase();
+                  const qn = norm(q);
+                  return !qn || norm(p.nombre).includes(qn) || norm(p.run).includes(qn) || norm(p.centro).includes(qn);
+                })
+                .map((p) => (
                 <div
                   key={p.id}
-                  className={`consultation-item ${pacienteSel.id === p.id ? 'active' : ''}`}
+                  className={`consultation-item overflow-hidden ${pacienteSel.id === p.id ? 'active' : ''}`}
                   role="button"
                   onClick={() => onSelectPaciente(p)}
                 >
@@ -156,16 +222,21 @@ export default function RecetasDoctor() {
                     <div className="bg-primary-10 rounded-circle p-2 flex-shrink-0">
                       <i className="fas fa-user-injured text-primary"></i>
                     </div>
-                    <div className="flex-grow-1 min-w-0">
-                      <div className="d-flex justify-content-between align-items-start mb-1">
+                    <div className="flex-grow-1 min-w-0 text-break">
+                      <div className="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
                         <div className="flex-grow-1 min-w-0">
                           <h6 className="fw-medium mb-0">{p.nombre}</h6>
                           <p className="text-muted-foreground small mb-0">{p.run}</p>
                         </div>
-                        <span className="text-muted-foreground small fw-medium ms-2">{p.id}</span>
+                        <span className="text-muted-foreground small fw-medium ms-2">{p.recetas?.length || 0} rec.</span>
                       </div>
                       <p className="text-muted-foreground small mb-1">{p.centro}</p>
-                      <p className="small line-clamp-2 mb-0">{p.recetas?.length || 0} receta(s)</p>
+                      <p className="small line-clamp-2 mb-0 text-break">Última: {(() => {
+                        const rs = (p.recetas || []).slice().sort((a,b) => new Date(b.fecha_emision || b.createdAt || 0) - new Date(a.fecha_emision || a.createdAt || 0));
+                        const last = rs[0];
+                        const d = last ? new Date(last.fecha_emision || last.createdAt) : null;
+                        return d ? d.toLocaleDateString() : '—';
+                      })()}</p>
                     </div>
                   </div>
                 </div>
@@ -186,36 +257,59 @@ export default function RecetasDoctor() {
           </div>
           <div className="card-body p-0">
             <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
-              {(pacienteSel.recetas || []).map((r) => (
-                <div
-                  key={r.id}
-                  className={`consultation-item ${recetaSel?.id === r.id ? 'active' : ''}`}
-                  role="button"
-                  onClick={() => onSelectReceta(r)}
-                >
-                  <div className="d-flex gap-3">
-                    <div className="bg-primary-10 rounded-circle p-2 flex-shrink-0">
-                      <i className="fas fa-file-prescription text-primary"></i>
-                    </div>
-                    <div className="flex-grow-1 min-w-0">
-                      <div className="d-flex justify-content-between align-items-start mb-1">
-                        <div className="flex-grow-1 min-w-0">
-                          <h6 className="fw-medium mb-0">Receta {r.id}</h6>
-                          <p className="text-muted-foreground small mb-0">Emitida por {r.doctor}</p>
-                        </div>
-                        <span className="text-muted-foreground small fw-medium ms-2">{r.fechaLabel}</span>
+              {(() => {
+                const all = (pacienteSel.recetas || []).slice().sort((a,b)=> new Date(b.fecha_emision || b.createdAt || 0) - new Date(a.fecha_emision || a.createdAt || 0));
+                const total = all.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+                const p = Math.min(page, totalPages);
+                const start = (p - 1) * pageSize;
+                const pageItems = all.slice(start, start + pageSize);
+                return pageItems.map((r) => (
+                  <div
+                    key={r.id || r._id}
+                    className={`consultation-item overflow-hidden ${String(recetaSel?.id || recetaSel?._id) === String(r.id || r._id) ? 'active' : ''}`}
+                    role="button"
+                    onClick={() => onSelectReceta(r)}
+                  >
+                    <div className="d-flex gap-3">
+                      <div className="bg-primary-10 rounded-circle p-2 flex-shrink-0">
+                        <i className="fas fa-file-prescription text-primary"></i>
                       </div>
-                      <p className="text-muted-foreground small mb-1">{r.centro}</p>
-                      <p className="small line-clamp-2 mb-0">
-                        {r.meds.map((m) => `${m.nombre} ${m.dosis}`).join(' • ')}
-                      </p>
+                      <div className="flex-grow-1 min-w-0 text-break">
+                        <div className="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
+                          <div className="flex-grow-1 min-w-0">
+                            <h6 className="fw-medium mb-0 d-flex align-items-center gap-2">
+                              <span>Receta</span>
+                              <span className="text-muted opacity-25 small d-none d-sm-inline" style={{ fontSize: '0.33em' }}>#{r.id || r._id}</span>
+                            </h6>
+                            <p className="text-muted-foreground small mb-0">Emitida por {getDoctorName(r)}</p>
+                          </div>
+                          <span className="text-muted-foreground small fw-medium ms-2">{(() => { const d = r.fecha_emision || r.createdAt; return d ? new Date(d).toLocaleString() : '—'; })()}</span>
+                        </div>
+                        <p className="text-muted-foreground small mb-1">{r?.centro_id?.nombre || r?.centro || '—'}</p>
+                        <p className="small line-clamp-2 mb-0 text-break">
+                          {Array.isArray(r?.medicamentos) ? r.medicamentos.map((m) => `${m.nombre} ${m.dosis || ''}`.trim()).join(' • ') : '—'}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ));
+              })()}
               {(pacienteSel.recetas || []).length === 0 && (
                 <div className="p-3 text-muted small">Este paciente no tiene recetas.</div>
               )}
+              {(() => {
+                const total = (pacienteSel.recetas || []).length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+                if (totalPages <= 1) return null;
+                return (
+                  <div className="d-flex justify-content-between align-items-center p-2 border-top">
+                    <button className="btn btn-sm btn-outline-secondary" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Anterior</button>
+                    <span className="small text-muted">Página {page} de {totalPages}</span>
+                    <button className="btn btn-sm btn-outline-secondary" disabled={page>=totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Siguiente</button>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -227,10 +321,13 @@ export default function RecetasDoctor() {
         {recetaSel && (
           <div className="card mb-3" ref={printAreaRef}>
             <div className="card-header bg-white">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="card-title mb-0">Receta {recetaSel.id}</h5>
-                <div className="d-flex align-items-center gap-2">
-                  <span className={statusBadgeClass(recetaSel.status)}>{recetaSel.status}</span>
+              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 className="card-title mb-0 d-flex align-items-center gap-2">
+                  <span>Receta</span>
+                  <span className="text-muted opacity-25 small d-none d-sm-inline" style={{ fontSize: '0.33em' }}>#{recetaSel.id || recetaSel._id}</span>
+                </h5>
+                <div className="d-flex align-items-center gap-2 flex-wrap flex-shrink-0">
+                  <span className={statusBadgeClass(recetaSel.status || (recetaSel.activa ? 'Vigente' : 'Pendiente'))}>{recetaSel.status || (recetaSel.activa ? 'Vigente' : 'Pendiente')}</span>
                   <button className="btn btn-outline-secondary btn-sm" title="Verificar validez" onClick={handleVerify}>
                     <i className="fas fa-shield-check me-1"></i> Verificar
                   </button>
@@ -241,10 +338,10 @@ export default function RecetasDoctor() {
               </div>
             </div>
 
-            <div className="card-body position-relative watermark-bg">
+            <div className="card-body position-relative watermark-bg text-break">
               <div className="mb-4">
                 <h6 className="fw-medium mb-2">Indicaciones de la Receta</h6>
-                <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{recetaSel.notas}</p>
+                <p className="text-muted-foreground small bg-gray-100 p-3 rounded text-break">{recetaSel.indicaciones || recetaSel.notas || '—'}</p>
               </div>
 
               <div className="row mb-4 small">
@@ -258,36 +355,36 @@ export default function RecetasDoctor() {
                 </div>
                 <div className="col-6 mb-2">
                   <p className="text-muted-foreground mb-0">Médico</p>
-                  <p className="fw-medium mb-0">{recetaSel.doctor}</p>
+                  <p className="fw-medium mb-0">{getDoctorName(recetaSel)}</p>
                 </div>
                 <div className="col-6 mb-2">
                   <p className="text-muted-foreground mb-0">Centro médico</p>
-                  <p className="fw-medium mb-0">{recetaSel.centro}</p>
+                  <p className="fw-medium mb-0">{recetaSel?.centro_id?.nombre || recetaSel.centro || '—'}</p>
                 </div>
                 <div className="col-6 mb-2">
                   <p className="text-muted-foreground mb-0">Folio</p>
-                  <p className="fw-medium mb-0">{recetaSel.id}</p>
+                  <p className="fw-medium mb-0 small text-muted opacity-50" style={{ fontSize: '0.33em' }}>#{recetaSel.id || recetaSel._id}</p>
                 </div>
                 <div className="col-6 mb-2">
                   <p className="text-muted-foreground mb-0">Inicio</p>
-                  <p className="fw-medium mb-0">{recetaSel.fechaLabel}</p>
+                  <p className="fw-medium mb-0">{(() => { const d = recetaSel.fecha_emision || recetaSel.createdAt; return d ? new Date(d).toLocaleString() : '—'; })()}</p>
                 </div>
                 <div className="col-6 mb-2">
                   <p className="text-muted-foreground mb-0">Válida hasta</p>
-                  <p className="fw-medium mb-0">{recetaSel.validaHasta}</p>
+                  <p className="fw-medium mb-0">{recetaSel.validaHasta || '—'}</p>
                 </div>
               </div>
 
               <div>
                 <h6 className="fw-medium mb-2">Medicamentos Prescritos</h6>
                 <div className="d-flex flex-column gap-2">
-                  {recetaSel.meds.map((m, idx) => (
+                  {(Array.isArray(recetaSel?.medicamentos) ? recetaSel.medicamentos : []).map((m, idx) => (
                     <div key={idx} className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
                       <i className="fas fa-pills text-success"></i>
                       <span className="small">
-                        {m.nombre} {m.dosis}{' '}
+                        {m.nombre} {m.dosis || ''}{' '}
                         <span className="text-muted">
-                          • {m.frecuencia}{m.duracionDias ? ` x ${m.duracionDias} días` : ''}
+                          • {m.frecuencia || '—'}{m.duracion ? ` x ${m.duracion}` : ''}
                         </span>
                       </span>
                     </div>
