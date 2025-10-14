@@ -214,7 +214,20 @@ export default function DoctorInicio() {
             console.debug('[DoctorInicio] citas enriquecidas (preview):', enriched.slice(0, 5).map(it => ({ id: it.id, paciente_id: it.paciente_id, paciente: it.paciente })));
           }
         } catch {}
-        setAssignments(enriched);
+        // Preservar estado 'Completado' si ya fue marcado localmente (optimistic UI)
+        try {
+          const prev = getAssignments();
+          const mergedFinal = enriched.map(it => {
+            const old = prev.find(x => String(x.id) === String(it.id));
+            if (old && old.estado === 'Completado') {
+              return { ...it, estado: 'Completado' };
+            }
+            return it;
+          });
+          setAssignments(mergedFinal);
+        } catch {
+          setAssignments(enriched);
+        }
       } catch (err) {
         // No romper la UI si el backend no responde
         // console.error('fetchCitasHoy error', err);
@@ -351,6 +364,22 @@ export default function DoctorInicio() {
   const closeModal = () => setOpen(false);
   const validate = () => { const e = {}; setErrors(e); return true; };
 
+  // Métricas dinámicas del día (para el Panel del Médico)
+  const stats = useMemo(() => {
+    const uniquePatients = new Set();
+    for (const it of todayItems) {
+      const pid = (typeof it?.paciente_id === 'object')
+        ? (it?.paciente_id?._id || it?.paciente_id?.id)
+        : (it?.paciente_id || null);
+      const key = pid || it?.paciente || it?.id; // fallback robusto
+      if (key) uniquePatients.add(String(key));
+    }
+    const pacientesDelDia = uniquePatients.size;
+    const citasDelDia = todayItems.length;
+    const completadas = todayItems.filter(it => it?.estado === 'Completado').length;
+    return { pacientesDelDia, citasDelDia, completadas };
+  }, [todayItems]);
+
   // Handler para agregar medicamento detallado y enfocarse en el siguiente
   const addMedicamento = () => {
     const nombre = form.medNombre?.trim();
@@ -410,17 +439,17 @@ export default function DoctorInicio() {
                   <div className="p-3 border rounded bg-gray-100 d-flex align-items-center gap-3">
                     <i className="fas fa-calendar-check text-primary fa-lg" />
                     <div>
-                      <p className="mb-0 small text-muted">Citas de hoy</p>
-                      <p className="mb-0 fw-semibold">5</p>
+                      <p className="mb-0 small text-muted">Pacientes del día</p>
+                      <p className="mb-0 fw-semibold">{stats.pacientesDelDia}</p>
                     </div>
                   </div>
                 </div>
                 <div className="col-12">
                   <div className="p-3 border rounded bg-gray-100 d-flex align-items-center gap-3">
-                    <i className="fas fa-user-md text-success fa-lg" />
+                    <i className="fas fa-clipboard-check text-success fa-lg" />
                     <div>
-                      <p className="mb-0 small text-muted">Pacientes en sala</p>
-                      <p className="mb-0 fw-semibold">2</p>
+                      <p className="mb-0 small text-muted">Consultas completadas</p>
+                      <p className="mb-0 fw-semibold">{stats.completadas}</p>
                     </div>
                   </div>
                 </div>

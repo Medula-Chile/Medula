@@ -64,7 +64,7 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
                             onStart && onStart();
                           }}
                         >
-                          Iniciar atención
+                          {isCompleted ? 'Completada' : 'Iniciar atención'}
                         </button>
                       </div>
                     </div>
