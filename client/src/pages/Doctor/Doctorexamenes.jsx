@@ -15,6 +15,9 @@ export default function DoctorExamenes() {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  // Paginación de la lista de pacientes (columna izquierda)
+  const [patientsPage, setPatientsPage] = useState(1);
+  const patientsPageSize = 15;
 
   // Fetch exámenes desde la base de datos
   useEffect(() => {
@@ -179,50 +182,70 @@ export default function DoctorExamenes() {
             {/* Barra de búsqueda */}
             <div className="input-group input-group-sm">
               <span className="input-group-text bg-white"><i className="fas fa-search"/></span>
-              <input className="form-control" placeholder="Buscar por nombre o RUT" value={q} onChange={(e)=>{ setQ(e.target.value); setPage(1); }} />
+              <input className="form-control" placeholder="Buscar por nombre o RUT" value={q} onChange={(e)=>{ setQ(e.target.value); setPage(1); setPatientsPage(1); }} />
             </div>
           </div>
           <div className="card-body p-0">
             <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
-              {pacientes
-                .filter(p => {
-                  const norm = (s) => (s || '').toString().toLowerCase();
-                  const qn = norm(q);
-                  return !qn || norm(p.nombre).includes(qn) || norm(p.run).includes(qn);
-                })
-                .map((p) => (
-                <div
-                  key={p.id}
-                  className={`consultation-item overflow-hidden ${pacienteSel.id === p.id ? 'active' : ''}`}
-                  role="button"
-                  onClick={() => onSelectPaciente(p)}
-                >
-                  <div className="d-flex gap-3">
-                    <div className="bg-primary-10 rounded-circle p-2 flex-shrink-0">
-                      <i className="fas fa-user-injured text-primary"></i>
-                    </div>
-                    <div className="flex-grow-1 min-w-0 text-break">
-                      <div className="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
-                        <div className="flex-grow-1 min-w-0">
-                          <h6 className="fw-medium mb-0">{p.nombre}</h6>
-                          <p className="text-muted-foreground small mb-0">{p.run}</p>
-                        </div>
-                        <span className="text-muted-foreground small fw-medium ms-2">{p.examenes?.length || 0} exam.</span>
+              {(() => {
+                const norm = (s) => (s || '').toString().toLowerCase();
+                const qn = norm(q);
+                const filtered = pacientes.filter(p => !qn || norm(p.nombre).includes(qn) || norm(p.run).includes(qn));
+                if (filtered.length === 0) {
+                  return (<div className="p-3 text-muted small">No hay pacientes para mostrar.</div>);
+                }
+                const total = filtered.length;
+                const totalPages = Math.max(1, Math.ceil(total / patientsPageSize));
+                const pnum = Math.min(patientsPage, totalPages);
+                const start = (pnum - 1) * patientsPageSize;
+                const pageItems = filtered.slice(start, start + patientsPageSize);
+                return pageItems.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`consultation-item overflow-hidden ${pacienteSel.id === p.id ? 'active' : ''}`}
+                    role="button"
+                    onClick={() => onSelectPaciente(p)}
+                  >
+                    <div className="d-flex gap-3">
+                      <div className="bg-primary-10 rounded-circle p-2 flex-shrink-0">
+                        <i className="fas fa-user-injured text-primary"></i>
                       </div>
-                      <p className="small line-clamp-2 mb-0 text-break">Último: {(() => {
-                        const es = (p.examenes || []).slice().sort((a,b) => new Date(b.fecha_solicitud || b.createdAt || 0) - new Date(a.fecha_solicitud || a.createdAt || 0));
-                        const last = es[0];
-                        const d = last ? new Date(last.fecha_solicitud || last.createdAt) : null;
-                        return d ? d.toLocaleDateString() : '—';
-                      })()}</p>
+                      <div className="flex-grow-1 min-w-0 text-break">
+                        <div className="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
+                          <div className="flex-grow-1 min-w-0">
+                            <h6 className="fw-medium mb-0">{p.nombre}</h6>
+                            <p className="text-muted-foreground small mb-0">{p.run}</p>
+                          </div>
+                          <span className="text-muted-foreground small fw-medium ms-2">{p.examenes?.length || 0} exam.</span>
+                        </div>
+                        <p className="small line-clamp-2 mb-0 text-break">Último: {(() => {
+                          const es = (p.examenes || []).slice().sort((a,b) => new Date(b.fecha_solicitud || b.createdAt || 0) - new Date(a.fecha_solicitud || a.createdAt || 0));
+                          const last = es[0];
+                          const d = last ? new Date(last.fecha_solicitud || last.createdAt) : null;
+                          return d ? d.toLocaleDateString() : '—';
+                        })()}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              {pacientes.length === 0 && (
-                <div className="p-3 text-muted small">No hay pacientes para mostrar.</div>
-              )}
+                ));
+              })()}
             </div>
+            {(() => {
+              const norm = (s) => (s || '').toString().toLowerCase();
+              const qn = norm(q);
+              const filtered = pacientes.filter(p => !qn || norm(p.nombre).includes(qn) || norm(p.run).includes(qn));
+              const total = filtered.length;
+              const totalPages = Math.max(1, Math.ceil(total / patientsPageSize));
+              if (totalPages <= 1) return null;
+              const pnum = Math.min(patientsPage, totalPages);
+              return (
+                <div className="d-flex justify-content-between align-items-center p-2 border-top">
+                  <button className="btn btn-sm btn-outline-secondary" disabled={pnum<=1} onClick={()=>setPatientsPage(p=>Math.max(1,p-1))}>Anterior</button>
+                  <span className="small text-muted">Página {pnum} de {totalPages}</span>
+                  <button className="btn btn-sm btn-outline-secondary" disabled={pnum>=totalPages} onClick={()=>setPatientsPage(p=>Math.min(totalPages,p+1))}>Siguiente</button>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
