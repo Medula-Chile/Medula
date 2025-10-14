@@ -5,6 +5,7 @@ import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
 import ModalAtencion from './components/ModalAtencion';
 import { useAuth } from '../../contexts/AuthContext';
 import { subscribe, getAssignments, seedIfEmpty, upsertAssignment, setAssignments } from './data/assignmentsStore';
+import { formatDateTime } from '../../utils/datetime';
 
 export default function DoctorInicio() {
   // Vista principal del Médico
@@ -60,6 +61,7 @@ export default function DoctorInicio() {
         const end = new Date(y, m, d, 23, 59, 59, 999);
         const parseWhen = (c) => {
           const candidates = [
+            c.fecha_hora,
             c.fecha,
             c.fecha_cita,
             c.fechaHora,
@@ -73,13 +75,6 @@ export default function DoctorInicio() {
           return dt ? dt.toISOString() : new Date().toISOString();
         };
         const inToday = (iso) => { const dt = new Date(iso); return dt >= start && dt <= end; };
-        const fmtFecha = (iso) => {
-          const dt = new Date(iso);
-          const label = dt.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
-          const hh = String(dt.getHours()).padStart(2, '0');
-          const mm = String(dt.getMinutes()).padStart(2, '0');
-          return `${label} • ${hh}:${mm}`;
-        };
         const mapItem = (c) => {
           const whenIso = parseWhen(c);
           const pacienteRaw = c?.paciente_id || c?.paciente || null;
@@ -122,7 +117,7 @@ export default function DoctorInicio() {
             tratamiento: c?.tratamiento || null,
             estado: estadoNorm,
             when: whenIso,
-            fecha: fmtFecha(whenIso),
+            fecha: formatDateTime(whenIso),
             observaciones: c?.observaciones || '—',
             proximoControl: c?.proximoControl || '—',
             recetaId: c?.recetaId || null,

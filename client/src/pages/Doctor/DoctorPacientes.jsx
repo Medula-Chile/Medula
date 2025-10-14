@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import axios from 'axios';
+import { formatDateTime } from '../../utils/datetime';
 import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
 import { useAuth } from '../../contexts/AuthContext';
 import { subscribe, getAssignments, setAssignments, upsertAssignment, seedIfEmpty } from './data/assignmentsStore';
@@ -252,7 +253,7 @@ export default function DoctorPacientes() {
                             </div>
                             <div className="text-end">
                               <span className="badge bg-light text-dark border me-2">{it.estado}</span>
-                              <span className="text-muted-foreground small fw-medium">{it.fecha}</span>
+                              <span className="text-muted-foreground small fw-medium">{formatDateTime(it.when)}</span>
                             </div>
                           </div>
                           <p className="small line-clamp-2 mb-1">{it.resumen}</p>

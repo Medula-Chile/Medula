@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatDateTime } from '../../../utils/datetime';
 
 /**
  * TimeLineDoctor
@@ -20,16 +21,8 @@ import React from 'react';
  * - onSelect: (id) => void
  */
 export default function TimeLineDoctor({ items = [], activeId, onSelect }) {
-  const tz = 'America/Santiago';
-  const fmtFecha = (value) => {
-    if (!value) return '—';
-    const d = typeof value === 'string' ? new Date(value) : value;
-    if (Number.isNaN(d?.getTime?.())) return String(value);
-    return new Intl.DateTimeFormat('es-CL', {
-      timeZone: tz,
-      day: '2-digit', month: 'short', year: 'numeric'
-    }).format(d);
-  };
+  // Fechas: siempre renderizar desde ISO `when`
+  const fmtFromWhen = (when) => formatDateTime(when);
 
   const handleKey = (e, id) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -58,7 +51,7 @@ export default function TimeLineDoctor({ items = [], activeId, onSelect }) {
             const estado = item.estado || 'Completada';
             const hasVitals =
               item?.vitals?.presion || item?.vitals?.temperatura || item?.vitals?.pulso;
-            const fechaLabel = fmtFecha(item.fecha);
+            const fechaLabel = fmtFromWhen(item.when || item.fecha);
 
             const estadoClass =
               estado === 'Completada'

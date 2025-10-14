@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import api from '../../../services/api';
+import { formatDateTime } from '../../../utils/datetime';
 
 export default function ConsultationDetailDoctor({ consulta }) {
   // Detalle de consulta para el flujo del Médico.
@@ -175,7 +176,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
     <div className="card">
       <div className="card-header bg-white">
         <div className="d-flex justify-content-between align-items-center">
-          <h5 className="card-title mb-0">Atención del {detalle?.fecha || '—'}</h5>
+          <h5 className="card-title mb-0">Atención del {formatDateTime(consulta?.when || detalle?.when, { style: 'detail' })}</h5>
           <span className={estadoClass}>{estado}</span>
         </div>
       </div>
@@ -196,7 +197,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
           {detalle?.lastUpdated ? (
             <div className="col-12 mt-1">
               <p className="text-muted-foreground small mb-0">
-                Última actualización: {new Date(detalle.lastUpdated).toLocaleString()}
+                Última actualización: {formatDateTime(detalle.lastUpdated, { style: 'detail' })}
               </p>
             </div>
           ) : null}

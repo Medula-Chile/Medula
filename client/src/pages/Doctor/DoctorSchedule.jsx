@@ -21,13 +21,20 @@ export default function DoctorSchedule() {
           const data = response.data;
           console.log('fetched data:', data);
           // Transformar datos de BD al formato esperado por el componente
-          const transformed = data.map(cita => ({
-            id: cita._id,
-            date: new Date(cita.fecha_hora).toISOString().split('T')[0], // YYYY-MM-DD
-            time: new Date(cita.fecha_hora).toISOString().split('T')[1].substring(0, 5), // HH:MM
-            patient: cita.paciente_id?.usuario_id?.nombre || 'Paciente desconocido',
-            status: cita.estado === 'programada' || cita.estado === 'confirmada' ? 'pending' : 'past'
-          }));
+          const transformed = data.map(cita => {
+            const d = new Date(cita.fecha_hora);
+            const whenIso = d.toISOString();
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; // YYYY-MM-DD en TZ local
+            const timeStr = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }).format(d); // HH:MM local
+            return {
+              id: cita._id,
+              when: whenIso,
+              date: dateStr,
+              time: timeStr,
+              patient: cita.paciente_id?.usuario_id?.nombre || 'Paciente desconocido',
+              status: cita.estado === 'programada' || cita.estado === 'confirmada' ? 'pending' : 'past'
+            };
+          });
           console.log('transformed:', transformed);
           setAppointments(transformed);
           // Set current date to the first appointment date if available

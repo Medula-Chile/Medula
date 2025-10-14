@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatDateTime } from '../../../utils/datetime';
 
 export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
   // Timeline para el médico: lista de pacientes en espera.
@@ -47,7 +48,7 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
                       </div>
                       <div className="d-flex align-items-center gap-2 ms-2 flex-wrap">
                         <span className={`badge rounded-pill ${estadoClass}`}>{estado}</span>
-                        <span className="text-muted-foreground small fw-medium">{item.fecha}</span>
+                        <span className="text-muted-foreground small fw-medium">{formatDateTime(item.when)}</span>
                         <button
                           type="button"
                           className="btn btn-outline-secondary btn-sm py-0 px-2"
