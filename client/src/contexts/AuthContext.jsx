@@ -2,7 +2,7 @@ import { createContext, useState, useContext, useEffect, useCallback } from 'rea
 import api from '../services/api';
 
 const AuthContext = createContext();
-
+export { AuthContext };
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
