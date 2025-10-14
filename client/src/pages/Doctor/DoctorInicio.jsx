@@ -41,19 +41,40 @@ export default function DoctorInicio() {
     setAllItems(init.map(it => ({ ...it, medico: doctorName || it.medico, especialidad: doctorSpecialty || it.especialidad })));
     return () => unsub();
   }, [doctorName, doctorSpecialty, user]);
+  // Estado: _id del modelo Medico del usuario actual
+  const [doctorMedicoId, setDoctorMedicoId] = useState(null);
+  // Resolver el _id del modelo Medico a partir del usuario autenticado
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const doctorUserId = user?.id || user?._id || null;
+        if (!doctorUserId) { setDoctorMedicoId(null); return; }
+        const resp = await api.get('/medicos');
+        const arr = Array.isArray(resp.data) ? resp.data : [];
+        const found = arr.find(m => String(m?.usuario_id?._id || m?.usuario_id) === String(doctorUserId));
+        if (!cancelled) setDoctorMedicoId(found?._id || null);
+      } catch {
+        if (!cancelled) setDoctorMedicoId(null);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [user]);
+
   // Cargar citas del backend y sincronizar store local
   const fetchCitasHoy = useCallback(async () => {
       try {
-        // Resolver userId localmente para evitar problemas de cierre/orden
-        const uid = user?.id || user?._id || null;
-        if (!uid) return; // Evitar cargar todas las citas sin filtro antes de que el usuario esté listo
-        // Filtrar por el profesional (usuario) en sesión para no traer citas de otros médicos
-        const resp = await api.get('/citas', { params: { profesional: uid } });
+        // Usar el _id del modelo Medico si está disponible; fallback al _id de usuario
+        const profId = (doctorMedicoId || user?.id || user?._id || null);
+        if (!profId) return; // Evitar cargar sin filtro antes de que el usuario esté listo
+        // Filtrar por el profesional (médico) en sesión para no traer citas de otros médicos
+        const resp = await api.get('/citas', { params: { profesional: profId } });
         let raw = Array.isArray(resp.data) ? resp.data : (resp.data?.citas || []);
         // Salvaguarda: filtrar en cliente por profesional_id si el backend no aplicó el filtro
         raw = raw.filter(c => {
           const pid = (typeof c?.profesional_id === 'object') ? (c?.profesional_id?._id || c?.profesional_id?.id) : c?.profesional_id;
-          return String(pid) === String(uid);
+          return String(pid) === String(profId);
         });
         const now = new Date();
         const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
@@ -198,7 +219,7 @@ export default function DoctorInicio() {
         // No romper la UI si el backend no responde
         // console.error('fetchCitasHoy error', err);
       }
-  }, [doctorName, doctorSpecialty]);
+  }, [doctorName, doctorSpecialty, doctorMedicoId, user]);
 
   // Cargar al montar + polling ligero
   useEffect(() => {
@@ -224,26 +245,7 @@ export default function DoctorInicio() {
   }, [allItems]);
   const consulta = useMemo(() => (todayItems.find(x => String(x.id) === String(activeId)) || null), [todayItems, activeId]);
   const [open, setOpen] = useState(false);
-  const [doctorMedicoId, setDoctorMedicoId] = useState(null);
 
-  // Resolver el _id del modelo Medico a partir del usuario autenticado
-  useEffect(() => {
-    let cancelled = false;
-    const run = async () => {
-      try {
-        if (!doctorUserId) { setDoctorMedicoId(null); return; }
-        const resp = await api.get('/medicos');
-        const arr = Array.isArray(resp.data) ? resp.data : [];
-        // Coincidir por usuario_id del Medico con el id del usuario autenticado
-        const found = arr.find(m => String(m?.usuario_id?._id || m?.usuario_id) === String(doctorUserId));
-        if (!cancelled) setDoctorMedicoId(found?._id || null);
-      } catch {
-        if (!cancelled) setDoctorMedicoId(null);
-      }
-    };
-    run();
-    return () => { cancelled = true; };
-  }, [doctorUserId]);
   const pacienteId = useMemo(() => {
     if (!consulta) return null;
     return consulta?.paciente_id?._id || consulta?.paciente_id || consulta?.pacienteId || null;

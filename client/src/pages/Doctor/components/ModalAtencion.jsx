@@ -13,6 +13,7 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
   });
   // Exámenes y Licencia
   const [examenNombre, setExamenNombre] = useState('');
+  // examenes: [{ nombre: string, adjuntoUrl?: string }]
   const [examenes, setExamenes] = useState([]);
   const [licenciaOtorga, setLicenciaOtorga] = useState(false);
   const [licenciaDias, setLicenciaDias] = useState('');
@@ -148,11 +149,26 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
   const addExamen = () => {
     const nombre = (examenNombre || '').trim();
     if (!nombre) return;
-    setExamenes(prev => [...prev, nombre]);
+    setExamenes(prev => [...prev, { nombre, adjuntoUrl: null }]);
     setExamenNombre('');
   };
   const removeExamen = (idx) => {
     setExamenes(prev => prev.filter((_, i) => i !== idx));
+  };
+  const handleUploadAdjunto = async (file, idx) => {
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const r = await api.post('/examenes/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const url = r.data?.file?.url || null;
+      if (url) {
+        setExamenes(prev => prev.map((ex, i) => i === idx ? { ...ex, adjuntoUrl: url } : ex));
+      }
+    } catch (e) {
+      // noop, mostrar en UI con alerta si se desea
+      setSubmitError(prev => (prev ? prev + ' • ' : '') + 'No se pudo subir adjunto de examen');
+    }
   };
 
   // Autocomplete medicamentos
@@ -244,7 +260,8 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
         cita_id: citaId || null,
         consulta: {
           ...consulta,
-          examenes: examenes.slice(),
+          // solo nombres para la consulta
+          examenes: Array.isArray(examenes) ? examenes.map(x => x?.nombre).filter(Boolean) : [],
           licencia: {
             otorga: !!licenciaOtorga,
             dias: licenciaOtorga ? Number(licenciaDias) || null : null,
@@ -254,6 +271,33 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
         receta: stepReceta ? { ...receta } : null
       };
       const resp = await api.post('/consultas', payload);
+      // Crear exámenes en paralelo (no bloqueante)
+      try {
+        const pid = receta.paciente_id || pacienteId || null;
+        const mid = doctorId || receta.medico_id || null;
+        const consultaId = resp?.data?.consulta?._id || null;
+        if (pid && mid && Array.isArray(examenes) && examenes.length > 0) {
+          const tasks = examenes.map((ex) => api.post('/examenes', {
+            paciente_id: pid,
+            medico_solicitante: mid,
+            consulta_id: consultaId,
+            tipo_examen: String(ex?.nombre || '').trim(),
+            observaciones: consulta?.observaciones || '',
+            archivo_adjunto: ex?.adjuntoUrl || undefined
+          }));
+          const results = await Promise.allSettled(tasks);
+          const ok = results.filter(r => r.status === 'fulfilled').length;
+          const fail = results.length - ok;
+          if (ok > 0) {
+            setSubmitSuccess(prev => (prev ? `${prev} • ` : '') + `Exámenes creados: ${ok}${fail ? ` (fallidos: ${fail})` : ''}`);
+          } else if (fail > 0) {
+            setSubmitError(prev => (prev ? `${prev} • ` : '') + `No se pudieron crear ${fail} exámenes`);
+          }
+        }
+      } catch (exErr) {
+        // no bloquear flujo; sólo informar
+        setSubmitError(prev => (prev ? `${prev} • ` : '') + 'Fallo al crear exámenes');
+      }
       // Marcar cita como completada en BD si se entregó citaId
       if (citaId) {
         try { await api.put(`/citas/${citaId}`, { estado: 'completada' }); } catch { /* no romper si falla */ }
@@ -430,9 +474,24 @@ export default function ModalAtencion({ open, onClose, pacienteId, doctorId, cit
               {Array.isArray(examenes) && examenes.length > 0 && (
                 <ul className="list-group list-group-flush mt-2 small">
                   {examenes.map((ex, idx) => (
-                    <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
-                      <span>{ex}</span>
-                      <button type="button" className="btn btn-link btn-sm text-danger" onClick={()=>removeExamen(idx)}>Quitar</button>
+                    <li key={idx} className="list-group-item">
+                      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                        <div className="flex-grow-1">
+                          <span className="fw-medium">{ex?.nombre}</span>
+                          {ex?.adjuntoUrl ? (
+                            <a href={ex.adjuntoUrl} target="_blank" rel="noreferrer" className="ms-2 text-decoration-underline">Adjunto</a>
+                          ) : (
+                            <span className="ms-2 text-muted">Sin adjunto</span>
+                          )}
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                          <label className="btn btn-outline-secondary btn-sm mb-0">
+                            Subir adjunto
+                            <input type="file" accept="application/pdf,image/*" hidden onChange={(e)=>handleUploadAdjunto(e.target.files?.[0], idx)} />
+                          </label>
+                          <button type="button" className="btn btn-link btn-sm text-danger" onClick={()=>removeExamen(idx)}>Quitar</button>
+                        </div>
+                      </div>
                     </li>
                   ))}
                 </ul>

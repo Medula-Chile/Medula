@@ -1,4 +1,5 @@
 const Examen = require('../models/examen');
+const path = require('path');
 
 exports.crearExamen = async (req, res) => {
   try {
@@ -20,9 +21,34 @@ exports.crearExamen = async (req, res) => {
   }
 };
 
+// Subida de adjuntos (se usa desde ruta con multer). Devuelve URL pública.
+exports.subirAdjunto = async (req, res, opts = {}) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Archivo no proporcionado' });
+    const subdir = opts?.subdir || '';
+    const fileName = req.file.filename;
+    const publicUrl = `/uploads/${subdir ? subdir + '/' : ''}${fileName}`;
+    return res.status(201).json({ message: 'Archivo subido', file: { name: fileName, url: publicUrl } });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error al subir archivo', error: error.message });
+  }
+};
+
 exports.obtenerExamenes = async (req, res) => {
   try {
-    const examenes = await Examen.find()
+    const { paciente, medico, estado, desde, hasta, consulta } = req.query;
+    const filter = {};
+    if (paciente) filter.paciente_id = paciente;
+    if (medico) filter.medico_solicitante = medico;
+    if (estado) filter.estado = estado;
+    if (consulta) filter.consulta_id = consulta;
+    if (desde || hasta) {
+      filter.fecha_solicitud = {};
+      if (desde) filter.fecha_solicitud.$gte = new Date(desde);
+      if (hasta) filter.fecha_solicitud.$lte = new Date(hasta);
+    }
+
+    const examenes = await Examen.find(filter)
       .populate('paciente_id', 'nombre usuario_id')
       .populate('medico_solicitante', 'nombre especialidad')
       .sort({ fecha_solicitud: -1 });

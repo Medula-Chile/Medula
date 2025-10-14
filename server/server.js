@@ -36,6 +36,8 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Archivos subidos (adjuntos)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Conectar a MongoDB
 connectDB();

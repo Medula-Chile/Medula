@@ -19,6 +19,7 @@ export default function AdminShell() {
     { path: '/admin/pacientes', label: 'Gestionar Pacientes' },
     { path: '/admin/medicos', label: 'Gestionar Médicos' },
     { path: '/admin/recetas/lista', label: 'Ver Recetas' },
+    { path: '/admin/examenes', label: 'Ver Exámenes' },
     { path: '/admin/citas', label: 'Gestionar citas' },
     { path: '/admin/consultas', label: 'Gestionar Consultas' },
     { path: '/admin/especialidades', label: 'Gestionar Especialidades' },

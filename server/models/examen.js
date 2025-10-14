@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const examenSchema = new mongoose.Schema({
+    consulta_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Consulta',
+        default: null,
+        index: true
+    },
     paciente_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Paciente',

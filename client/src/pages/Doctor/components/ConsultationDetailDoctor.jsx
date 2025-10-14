@@ -80,6 +80,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
             const recetaId = saved?.recetaId || recetaObj?._id || recetaObj?.folio || recetaObj?.id || null;
             const merged = {
               ...consulta,
+              _id: saved?._id || consulta?._id || null,
               motivo: cdata?.motivo ?? consulta?.motivo ?? consulta?.resumen ?? null,
               sintomas: cdata?.sintomas ?? consulta?.sintomas ?? null,
               diagnostico: cdata?.diagnostico ?? consulta?.diagnostico ?? null,
@@ -133,6 +134,33 @@ export default function ConsultationDetailDoctor({ consulta }) {
   }, [pacienteId, pacienteNombreGuess]);
 
   const pacienteNombre = pacienteNombreFetched || pacienteNombreGuess;
+  // Exámenes vinculados a la consulta/paciente
+  const [examenesVinculados, setExamenesVinculados] = useState([]);
+  const [examenesLoading, setExamenesLoading] = useState(false);
+  const [estadoFiltro, setEstadoFiltro] = useState(''); // '', solicitado, realizado, analizado, entregado
+  const fetchExamenes = async () => {
+    let cancelled = false;
+    try {
+      setExamenesLoading(true);
+      const params = {};
+      if (detalle?._id) params.consulta = detalle._id;
+      else if (pacienteId) params.paciente = pacienteId;
+      else { setExamenesVinculados([]); setExamenesLoading(false); return; }
+      if (estadoFiltro) params.estado = estadoFiltro;
+      const r = await api.get('/examenes', { params });
+      if (!cancelled) setExamenesVinculados(Array.isArray(r.data) ? r.data : []);
+    } catch {
+      setExamenesVinculados([]);
+    } finally {
+      setExamenesLoading(false);
+    }
+    return () => { cancelled = true; };
+  };
+  useEffect(() => {
+    // refetch when consulta id, paciente or filter changes
+    fetchExamenes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detalle?._id, pacienteId, estadoFiltro]);
 
   // Medicamentos desde receta guardada
   const medsFromReceta = Array.isArray(detalle?.receta?.medicamentos)
@@ -217,6 +245,59 @@ export default function ConsultationDetailDoctor({ consulta }) {
         <div className="mb-4">
           <h6 className="fw-medium mb-2">Tratamiento indicado</h6>
           <p className="text-muted-foreground small bg-gray-100 p-3 rounded">{detalle?.tratamiento || '—'}</p>
+        </div>
+
+        {/* Exámenes vinculados */}
+        <div className="mb-4">
+          <div className="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
+            <h6 className="fw-medium mb-0">Exámenes vinculados</h6>
+            <div className="d-flex align-items-center gap-2">
+              <select className="form-select form-select-sm" value={estadoFiltro} onChange={(e)=>setEstadoFiltro(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="solicitado">Solicitado</option>
+                <option value="realizado">Realizado</option>
+                <option value="analizado">Analizado</option>
+                <option value="entregado">Entregado</option>
+              </select>
+              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={fetchExamenes} disabled={examenesLoading}>
+                {examenesLoading ? 'Actualizando…' : 'Refrescar'}
+              </button>
+            </div>
+          </div>
+          {Array.isArray(examenesVinculados) && examenesVinculados.length > 0 ? (
+            <div className="table-responsive">
+              <table className="table table-sm align-middle">
+                <thead>
+                  <tr>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Solicitado</th>
+                    <th>Realización</th>
+                    <th>Adjunto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {examenesVinculados.map(ex => (
+                    <tr key={ex._id}>
+                      <td>{ex.tipo_examen}</td>
+                      <td><span className="badge bg-light text-dark border">{ex.estado}</span></td>
+                      <td>{ex.fecha_solicitud ? formatDateTime(ex.fecha_solicitud, { style: 'detail' }) : '—'}</td>
+                      <td>{ex.fecha_realizacion ? formatDateTime(ex.fecha_realizacion, { style: 'detail' }) : '—'}</td>
+                      <td>
+                        {ex.archivo_adjunto ? (
+                          <a href={ex.archivo_adjunto} target="_blank" rel="noreferrer">Ver</a>
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-muted-foreground small mb-0">No hay exámenes vinculados.</p>
+          )}
         </div>
 
         <div className="mb-4">
