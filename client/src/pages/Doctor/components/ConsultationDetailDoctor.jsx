@@ -2,28 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import api from '../../../services/api';
 import { formatDateTime } from '../../../utils/datetime';
-
 export default function ConsultationDetailDoctor({ consulta }) {
   // Detalle de consulta para el flujo del Médico.
   const { user } = useAuth();
-  const doctorName = (user?.fullName || user?.name || user?.nombre || [user?.firstName, user?.lastName].filter(Boolean).join(' ')).trim() || 'Médico/a';
-  const doctorSpecialty = (user?.specialty || user?.especialidad || user?.profession || user?.titulo || 'Medicina General');
-  if (!consulta) {
-    return (
-      <div className="card">
-        <div className="card-header bg-white">
-          <h5 className="card-title mb-0">Detalle de atención</h5>
-        </div>
-        <div className="card-body">
-          <div className="text-center text-muted-foreground">
-            <i className="fas fa-notes-medical fa-2x mb-3"></i>
-            <p className="mb-1">No hay una atención seleccionada.</p>
-            <p className="small mb-0">Selecciona un paciente del listado de la izquierda o inicia una nueva atención.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const doctorNameAuth = (user?.fullName || user?.name || user?.nombre || [user?.firstName, user?.lastName].filter(Boolean).join(' ')).trim() || 'Médico/a';
+  const doctorSpecialtyAuth = (user?.specialty || user?.especialidad || user?.profession || user?.titulo || 'Medicina General');
   // Estado local con detalle enriquecido desde backend (consulta guardada)
   const [detalle, setDetalle] = useState(consulta || null);
   const presion = detalle?.vitals?.presion ?? '—';
@@ -48,36 +31,57 @@ export default function ConsultationDetailDoctor({ consulta }) {
     [pacienteObj?.nombres, pacienteObj?.apellidos].filter(Boolean).join(' ')
   ) || detalle?.paciente || '—';
 
-  // Cargar desde backend la consulta guardada asociada a la cita seleccionada
+  // Cargar desde backend el detalle de la consulta
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
       try {
-        if (!consulta?.id) { setDetalle(consulta || null); return; }
-        // Ya tenemos todo? si hay diagnostico u observaciones reales, evita request
-        const hasContent = (consulta?.diagnostico && consulta.diagnostico !== '—') ||
-                           (Array.isArray(consulta?.examenes) && consulta.examenes.length > 0) ||
-                           (consulta?.licencia && (consulta.licencia.otorga || consulta.licencia.dias || consulta.licencia.nota));
-        if (hasContent && consulta?.recetaId) { setDetalle(consulta); return; }
-        // Buscar por cita (intentar cita_id y citaId)
-        let arr = [];
+        if (!consulta) { setDetalle(null); return; }
+        // Si ya viene con contenido útil, no disparamos request
+        const alreadyRich = (consulta?.diagnostico && consulta.diagnostico !== '—') ||
+                            (Array.isArray(consulta?.examenes) && consulta.examenes.length > 0) ||
+                            (consulta?.recetaId || consulta?.receta) ||
+                            (consulta?.observaciones && consulta.observaciones !== '—');
+        if (alreadyRich) { setDetalle(consulta); return; }
+
+        // 1) Intentar por ID de Consulta (caso Historial)
+        let saved = null;
         try {
-          const r1 = await api.get('/consultas', { params: { cita_id: consulta.id } });
-          arr = Array.isArray(r1.data) ? r1.data : (Array.isArray(r1.data?.consultas) ? r1.data.consultas : []);
+          // /consultas/:id
+          const r = await api.get(`/consultas/${consulta.id || consulta._id}`);
+          saved = r.data || null;
         } catch {}
-        if (!arr.length) {
+        if (!saved) {
+          // /consultas?_id=:id o ?consulta=:id
           try {
-            const r2 = await api.get('/consultas', { params: { citaId: consulta.id } });
-            arr = Array.isArray(r2.data) ? r2.data : (Array.isArray(r2.data?.consultas) ? r2.data.consultas : []);
+            const r = await api.get('/consultas', { params: { _id: (consulta.id || consulta._id) } });
+            const arr = Array.isArray(r.data) ? r.data : (Array.isArray(r.data?.consultas) ? r.data.consultas : []);
+            saved = arr[0] || null;
           } catch {}
         }
-        const saved = arr.find(x => String(x?.cita_id || x?.citaId || x?.cita || x?.consulta?.cita_id || x?.consulta?.citaId) === String(consulta.id)) || arr[0] || null;
+
+        // 2) Fallback: buscar por cita_id (caso Inicio)
+        if (!saved && consulta?.id) {
+          try {
+            const r1 = await api.get('/consultas', { params: { cita_id: consulta.id } });
+            const arr1 = Array.isArray(r1.data) ? r1.data : (Array.isArray(r1.data?.consultas) ? r1.data.consultas : []);
+            saved = arr1.find(x => String(x?.cita_id || x?.citaId) === String(consulta.id)) || arr1[0] || null;
+          } catch {}
+          if (!saved) {
+            try {
+              const r2 = await api.get('/consultas', { params: { citaId: consulta.id } });
+              const arr2 = Array.isArray(r2.data) ? r2.data : (Array.isArray(r2.data?.consultas) ? r2.data.consultas : []);
+              saved = arr2.find(x => String(x?.cita_id || x?.citaId) === String(consulta.id)) || arr2[0] || null;
+            } catch {}
+          }
+        }
+
         if (!cancelled) {
           if (saved) {
-            // Normalizar campos y fusionar con info de la card
             const cdata = saved?.consulta || saved || {};
             const recetaObj = saved?.receta || cdata?.receta || null;
             const recetaId = saved?.recetaId || recetaObj?._id || recetaObj?.folio || recetaObj?.id || null;
+            const whenGuess = consulta?.when || cdata?.when || saved?.createdAt || recetaObj?.fecha_emision || saved?.fecha || null;
             const merged = {
               ...consulta,
               _id: saved?._id || consulta?._id || null,
@@ -92,6 +96,11 @@ export default function ConsultationDetailDoctor({ consulta }) {
               receta: recetaObj,
               recetaId: recetaId ?? consulta?.recetaId ?? null,
               lastUpdated: saved?.updatedAt || saved?.fechaActualizacion || saved?.fecha || saved?.createdAt || null,
+              when: whenGuess ? (new Date(whenGuess).toISOString()) : (consulta?.when || null),
+              // Datos del médico que atendió
+              medicoNombre: consulta?.medicoNombre || cdata?.receta?.medico_id?.nombre || cdata?.medicoNombre || null,
+              medicoRut: consulta?.medicoRut || cdata?.receta?.medico_id?.rut || cdata?.medicoRut || null,
+              medicoEspecialidad: consulta?.medicoEspecialidad || cdata?.receta?.medico_especialidad || cdata?.medicoEspecialidad || null,
             };
             setDetalle(merged);
           } else {
@@ -105,6 +114,26 @@ export default function ConsultationDetailDoctor({ consulta }) {
     run();
     return () => { cancelled = true; };
   }, [consulta]);
+
+  // Enriquecer con Centro desde la Cita (usa cita_id)
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const cid = consulta?.cita_id || detalle?.cita_id || consulta?.citaId || detalle?.citaId;
+        if (!cid) return;
+        const r = await api.get(`/citas/${cid}`);
+        const c = r.data || {};
+        const centroNombre = c?.centro_id?.nombre || c?.centro?.nombre || c?.centro || null;
+        const centroDireccion = c?.centro_id?.direccion || c?.centro?.direccion || null;
+        if (!cancelled && (centroNombre || centroDireccion)) {
+          setDetalle(prev => ({ ...(prev || {}), centro: centroNombre || prev?.centro || '—', centroDireccion: centroDireccion || prev?.centroDireccion || null }));
+        }
+      } catch {}
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [consulta?.cita_id, detalle?.cita_id]);
 
   // Si el "nombre" parece un ObjectId o un ID sin espacios, intentar obtener nombre real desde API
   useEffect(() => {
@@ -134,6 +163,28 @@ export default function ConsultationDetailDoctor({ consulta }) {
   }, [pacienteId, pacienteNombreGuess]);
 
   const pacienteNombre = pacienteNombreFetched || pacienteNombreGuess;
+  // Datos clínicos del paciente
+  const [pacienteAlergias, setPacienteAlergias] = useState([]);
+  const [pacienteCronicas, setPacienteCronicas] = useState([]);
+
+  // Fetch de alergias y enfermedades crónicas desde Paciente
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        if (!pacienteId) { if (!cancelled) { setPacienteAlergias([]); setPacienteCronicas([]); } return; }
+        const r = await api.get(`/pacientes/${pacienteId}`);
+        const d = r.data || {};
+        const alerg = Array.isArray(d?.alergias) ? d.alergias.filter(Boolean) : [];
+        const cr = Array.isArray(d?.enfermedades_cronicas) ? d.enfermedades_cronicas.filter(Boolean) : [];
+        if (!cancelled) { setPacienteAlergias(alerg); setPacienteCronicas(cr); }
+      } catch {
+        if (!cancelled) { setPacienteAlergias([]); setPacienteCronicas([]); }
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [pacienteId]);
   // Exámenes vinculados a la consulta/paciente
   const [examenesVinculados, setExamenesVinculados] = useState([]);
   const [examenesLoading, setExamenesLoading] = useState(false);
@@ -200,12 +251,44 @@ export default function ConsultationDetailDoctor({ consulta }) {
       ? 'custom-badge border-warning text-dark bg-warning'
       : 'custom-badge border-secondary text-white bg-secondary');
 
+  // Datos del médico que realizó la consulta (preferir datos de la consulta sobre el usuario autenticado)
+  const displayDoctorName = (detalle?.medicoNombre || consulta?.medicoNombre || detalle?.medico || consulta?.medico || doctorNameAuth);
+  const displayDoctorRut = (detalle?.medicoRut || consulta?.medicoRut || null);
+  const displayDoctorSpec = (detalle?.medicoEspecialidad || consulta?.medicoEspecialidad || detalle?.especialidad || consulta?.especialidad || doctorSpecialtyAuth);
+
   return (
     <div className="card">
       <div className="card-header bg-white">
         <div className="d-flex justify-content-between align-items-center">
           <h5 className="card-title mb-0">Atención del {formatDateTime(consulta?.when || detalle?.when, { style: 'detail' })}</h5>
           <span className={estadoClass}>{estado}</span>
+        </div>
+        {/* Alergias y Enfermedades crónicas */}
+        <div className="row mb-4 small">
+          <div className="col-12 col-md-6 mb-2">
+            <p className="text-muted-foreground mb-1">Alergias</p>
+            {Array.isArray(pacienteAlergias) && pacienteAlergias.length > 0 ? (
+              <div className="d-flex flex-wrap gap-2">
+                {pacienteAlergias.map((a, idx) => (
+                  <span key={`alg-${idx}`} className="badge bg-danger-subtle text-danger border">{a}</span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted mb-0">—</p>
+            )}
+          </div>
+          <div className="col-12 col-md-6 mb-2">
+            <p className="text-muted-foreground mb-1">Enfermedades crónicas</p>
+            {Array.isArray(pacienteCronicas) && pacienteCronicas.length > 0 ? (
+              <div className="d-flex flex-wrap gap-2">
+                {pacienteCronicas.map((e, idx) => (
+                  <span key={`cr-${idx}`} className="badge bg-warning-subtle text-dark border">{e}</span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted mb-0">—</p>
+            )}
+          </div>
         </div>
       </div>
       <div className="card-body watermark-bg">
@@ -221,6 +304,9 @@ export default function ConsultationDetailDoctor({ consulta }) {
           <div className="col-12 col-md-4 mb-2">
             <p className="text-muted-foreground mb-0">Centro</p>
             <p className="fw-medium mb-0">{detalle?.centro || '—'}</p>
+            {detalle?.centroDireccion && (
+              <p className="text-muted small mb-0">{detalle.centroDireccion}</p>
+            )}
           </div>
           {detalle?.lastUpdated ? (
             <div className="col-12 mt-1">
@@ -303,14 +389,6 @@ export default function ConsultationDetailDoctor({ consulta }) {
         {/* Se removió la sección de Signos Vitales a solicitud */}
 
         <div className="row mb-4 small">
-          <div className="col-6 col-md-6 mb-2">
-            <p className="text-muted-foreground mb-0">Médico</p>
-            <p className="fw-medium mb-0">{doctorName}</p>
-          </div>
-          <div className="col-6 col-md-6 mb-2">
-            <p className="text-muted-foreground mb-0">Especialidad</p>
-            <p className="fw-medium mb-0">{doctorSpecialty}</p>
-          </div>
           <div className="col-6 col-md-6 mb-2">
             <p className="text-muted-foreground mb-0">Próximo control</p>
             <p className="fw-medium mb-0">{detalle?.proximoControl || '—'}</p>

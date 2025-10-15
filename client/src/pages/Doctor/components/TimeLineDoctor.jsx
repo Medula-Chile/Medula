@@ -96,13 +96,31 @@ export default function TimeLineDoctor({ items = [], activeId, onSelect }) {
                               <i className="fas fa-file-prescription me-1"></i>Receta
                             </span>
                           )}
+                          {Array.isArray(item.examIds) && item.examIds.length > 0 && (
+                            <span className="badge bg-info text-white rounded-pill text-truncate" title={`Exámenes vinculados: ${item.examIds.join(', ')}`}>
+                              <i className="fas fa-vials me-1"></i>{item.examIds.length} Exám.
+                            </span>
+                          )}
                           {hasVitals && (
                             <span className="badge bg-light text-dark border rounded-pill text-truncate" title="Incluye signos vitales">
                               <i className="fas fa-heartbeat me-1"></i>SV
                             </span>
                           )}
                         </div>
-                        <p className="text-muted-foreground small mb-0 text-truncate" title={item.medico}>{item.medico}</p>
+                        <div
+                          className="doctor-meta text-muted-foreground small mb-0"
+                          title={`${item.medicoNombre || item.medico || '—'} · RUT ${item.medicoRut || '—'} · ${item.medicoEspecialidad || item.especialidad || '—'} · Paciente: ${item.pacienteNombre || '—'}`}
+                        >
+                          <div className="d-flex flex-wrap align-items-center gap-1">
+                            <span className="me-2">Dr: <strong>{(item.medicoNombre && String(item.medicoNombre).trim()) || (item.medico && String(item.medico).trim()) || '—'}</strong></span>
+                            <span className="me-2 hide-xxs">· RUT: {item.medicoRut || '—'}</span>
+                            <span className="me-2">
+                              <span className="badge bg-light text-dark border">Esp: {item.medicoEspecialidad || item.especialidad || '—'}</span>
+                            </span>
+                            <span className="me-2 w-100 d-block d-md-none"></span>
+                            <span className="me-2">· Paciente: {item.pacienteNombre || '—'}</span>
+                          </div>
+                        </div>
                       </div>
                       <span className="text-muted-foreground small fw-medium ms-2 text-nowrap">{fechaLabel}</span>
                     </div>
@@ -139,6 +157,15 @@ export default function TimeLineDoctor({ items = [], activeId, onSelect }) {
         }
         /* Asegurar cortes de palabra en textos largos */
         .text-break { word-break: break-word; overflow-wrap: anywhere; }
+        /* Meta responsiva: colapsar en múltiples líneas en móviles */
+        .doctor-meta span { line-height: 1.2; }
+        @media (max-width: 576px){
+          .doctor-meta span { display: inline; }
+        }
+        /* Ocultar RUT en pantallas muy pequeñas (<400px) */
+        @media (max-width: 400px){
+          .hide-xxs { display: none !important; }
+        }
       `}</style>
     </div>
   );

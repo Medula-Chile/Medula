@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import TimeLineDoctor from './components/TimeLineDoctor';
-import ConsultationDetailHistorial from './components/ConsultationDetailHistorial';
+import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
 import ActiveMedicationsCard from '../../components/paciente/shared/ActiveMedicationsCard.jsx';
 import QuickActionsCard from '../../components/paciente/shared/QuickActionsCard.jsx';
 import NextAppointmentCard from '../../components/paciente/shared/NextAppointmentCard.jsx';
+import api from '../../services/api';
 
 // === Helper: parsear "15 Ago 2024" a Date ===
 const MESES_ES = {
@@ -37,27 +38,92 @@ function parseFechaES(fechaStr) {
 
 export default function DoctorHistorial() {
   // Estado del item activo
-  const [activeId, setActiveId] = useState(1);
+  const [activeId, setActiveId] = useState(null);
 
   // === Buscador (exacto al de Pacientes) ===
   const [q, setQ] = useState('');
   const [estado, setEstado] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  // Búsqueda por RUT (guardado crudo en BD: ej 167812307)
+  const [rut, setRut] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Mock de timeline (en producción, del backend)
-  const timelineItems = useMemo(
-    () => [
-      { id: 1, especialidad: 'Medicina General', medico: 'Dr. Ana Silva', fecha: '15 Ago 2024', centro: 'CESFAM Norte', resumen: 'Control rutinario anual. Paciente en buen estado general.', observaciones: 'Control rutinario anual. Paciente en buen estado general.', estado: 'Completada', proximoControl: '15 Feb 2025', medicamentos: ['Paracetamol 500mg','Ibuprofeno 200mg','Omeprazol 20mg'], vitals: { presion: '120/80', temperatura: '36.5°C', pulso: '72 bpm' }, recetaId: 'R-001' },
-      { id: 2, especialidad: 'Ginecología', medico: 'Dr. Carlos Mendoza', fecha: '02 Jul 2024', centro: 'Hospital Regional', resumen: 'Control ginecológico anual. Papanicolaou normal.', observaciones: 'Control ginecológico anual. Papanicolaou normal.', estado: 'Completada', proximoControl: '02 Ene 2025', medicamentos: ['Losartán 50mg','Metformina 500mg'], vitals: { presion: null, temperatura: '36.7°C', pulso: null }, recetaId: 'R-002' },
-      { id: 3, especialidad: 'Oftalmología', medico: 'Dr. Roberto Sánchez', fecha: '18 May 2024', centro: 'Hospital El Salvador', resumen: 'Control vista. Prescripción de lentes correctivos.', observaciones: 'Prescripción de lentes correctivos.', estado: 'Completada', proximoControl: '18 Nov 2024', medicamentos: ['Vitamina D 1000UI','Calcio 600mg'], vitals: { presion: '110/70', temperatura: null, pulso: '68 bpm' }, recetaId: 'R-003' },
-      { id: 4, especialidad: 'Medicina General', medico: 'Dr. Juan Rivas', fecha: '28 Mar 2024', centro: 'Hospital El Salvador', resumen: 'Cuadro infeccioso tratado con antibiótico.', observaciones: 'Infección bacteriana, completar tratamiento con amoxicilina.', estado: 'Completada', proximoControl: '28 Abr 2024', medicamentos: ['Amoxicilina 500mg'], vitals: { presion: '118/76', temperatura: '37.6°C', pulso: '80 bpm' }, recetaId: 'R-004' },
-      { id: 5, especialidad: 'Endocrinología', medico: 'Dra. Marcela Pérez', fecha: '10 Feb 2024', centro: 'CESFAM Oriente', resumen: 'Control endocrino con ajuste terapéutico.', observaciones: 'Se mantiene Levotiroxina y se indica Atorvastatina.', estado: 'Completada', proximoControl: '10 May 2024', medicamentos: ['Levotiroxina 50mcg','Atorvastatina 20mg'], vitals: { presion: '122/82', temperatura: '36.6°C', pulso: '74 bpm' }, recetaId: 'R-005' },
-      { id: 6, especialidad: 'Hematología', medico: 'Dr. Ricardo Soto', fecha: '22 Jul 2024', centro: 'Clínica Dávila', resumen: 'Anemia ferropénica, suplemento de hierro.', observaciones: 'Control en 3 meses. Considerar efectos GI del hierro.', estado: 'Completada', proximoControl: '22 Oct 2024', medicamentos: ['Hierro 325mg'], vitals: { presion: '116/78', temperatura: '36.4°C', pulso: '70 bpm' }, recetaId: 'R-006' },
-      { id: 7, especialidad: 'Cardiología', medico: 'Dra. Paula Contreras', fecha: '05 Ene 2024', centro: 'Clínica Alemana', resumen: 'Control cardiológico, beta bloqueador indicado.', observaciones: 'Se indica Atenolol 25mg diario.', estado: 'Completada', proximoControl: '05 Abr 2024', medicamentos: ['Atenolol 25mg'], vitals: { presion: '130/85', temperatura: '36.5°C', pulso: '66 bpm' }, recetaId: 'R-008' },
-    ],
-    []
-  );
+  // Timeline desde backend (sin mock inicial)
+  const [timelineItems, setTimelineItems] = useState([]);
+
+  // Formatear fecha a "DD Mon YYYY"
+  const formatFecha = (dLike) => {
+    const d = new Date(dLike);
+    if (isNaN(d)) return '—';
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${String(d.getDate()).padStart(2,'0')} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+  };
+
+  // Buscar por RUT en backend y mapear al timeline existente
+  const fetchByRut = async () => {
+    setError('');
+    const rutClean = (rut || '').trim();
+    if (!rutClean) { setError('Ingresa un RUT sin puntos ni guion, p.ej: 167812307'); return; }
+    try {
+      setLoading(true);
+      const params = {
+        rut: rutClean,
+        desde: from || undefined,
+        hasta: to || undefined,
+        q: q || undefined,
+      };
+      const { data } = await api.get('/consultas', { params });
+      const mapped = (Array.isArray(data) ? data : []).map((c) => {
+        // medico_id en receta referencia a Usuario directamente (no a Medico)
+        const medicoUsuario = c?.receta?.medico_id || {};
+        const medicoEspecialidad = c?.receta?.medico_especialidad || c?.especialidad || '—';
+        const medicoNombre = medicoUsuario?.nombre || '—';
+        const medicoRut = medicoUsuario?.rut || '—';
+        const pacienteObj = c?.receta?.paciente_id || null;
+        const pacienteId = pacienteObj?._id || pacienteObj?.id || null;
+        const pacienteNombre = c?.receta?.paciente_id?.usuario_id?.nombre || '—';
+
+        const medico = medicoNombre ? `Dr. ${medicoNombre}` : '—';
+        const fecha = c?.receta?.fecha_emision || c?.createdAt;
+        const whenIso = fecha ? new Date(fecha).toISOString() : null;
+        const resumen = c?.motivo || c?.diagnostico || c?.observaciones || '—';
+        const meds = Array.isArray(c?.receta?.medicamentos) ? c.receta.medicamentos.map(m => `${m.nombre || ''} ${m.dosis || ''}`.trim()).filter(Boolean) : [];
+        return {
+          id: c?._id || Math.random().toString(36).slice(2),
+          _id: c?._id || null,
+          cita_id: c?.cita_id || null,
+          especialidad: medicoEspecialidad || '—',
+          medico,
+          medicoNombre,
+          medicoRut,
+          medicoEspecialidad,
+          pacienteNombre,
+          paciente: pacienteNombre,
+          paciente_id: pacienteId,
+          fecha: formatFecha(fecha),
+          when: whenIso,
+          centro: c?.centro || '—',
+          resumen,
+          observaciones: c?.observaciones || resumen,
+          estado: c?.estado || 'Completada',
+          proximoControl: '—',
+          medicamentos: meds,
+          vitals: { presion: null, temperatura: null, pulso: null },
+          recetaId: c?.recetaId || c?.receta?._id || '—',
+          examIds: Array.isArray(c?.examenes) ? c.examenes : [],
+          examenes: Array.isArray(c?.examenes) ? c.examenes : [],
+        };
+      });
+      setTimelineItems(mapped);
+      if (mapped.length) setActiveId(mapped[0].id);
+    } catch (e) {
+      setError('No se pudo cargar el historial para ese RUT');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // === Normalización a la forma que usa el buscador de Pacientes ===
   const itemsNormalizados = useMemo(() => {
@@ -139,21 +205,39 @@ export default function DoctorHistorial() {
     <>
       {/* === FILTROS A TODO EL ANCHO (mismo diseño que Pacientes, pero fuera de la grilla) === */}
       <div className="card mb-3">
-        <div className="card-body">
-          <div className="row g-3 align-items-end">
-            <div className="col-12 col-md-6 col-lg-6">
-              <label className="form-label small">Buscar</label>
-              <input
-                className="form-control form-control-lg"
-                placeholder="Paciente, centro o resumen"
-                value={q}
-                onChange={(e)=>setQ(e.target.value)}
-              />
+        <div className="card-body doctor-search">
+          <div className="row g-2 align-items-end">
+            <div className="col-12 col-md-3 col-lg-2">
+              <label className="form-label small mb-1">RUT</label>
+              <div className="input-group input-group-sm">
+                <span className="input-group-text"><i className="fas fa-id-card"></i></span>
+                <input
+                  className="form-control"
+                  placeholder="167812307"
+                  value={rut}
+                  onChange={(e)=>setRut(e.target.value)}
+                  onKeyDown={(e)=>{ if (e.key === 'Enter') fetchByRut(); }}
+                />
+              </div>
             </div>
-            <div className="col-12 col-sm-6 col-md-3 col-lg-2">
-              <label className="form-label small">Estado</label>
+
+            <div className="col-12 col-md-5 col-lg-5">
+              <label className="form-label small mb-1">Buscar</label>
+              <div className="input-group input-group-sm">
+                <span className="input-group-text"><i className="fas fa-search"></i></span>
+                <input
+                  className="form-control"
+                  placeholder="Paciente, centro o resumen"
+                  value={q}
+                  onChange={(e)=>setQ(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="col-6 col-md-2 col-lg-2">
+              <label className="form-label small mb-1">Estado</label>
               <select
-                className="form-select form-select-lg"
+                className="form-select form-select-sm"
                 value={estado}
                 onChange={(e)=>setEstado(e.target.value)}
               >
@@ -165,23 +249,35 @@ export default function DoctorHistorial() {
                 <option>No presentado</option>
               </select>
             </div>
-            <div className="col-6 col-md-3 col-lg-2">
-              <label className="form-label small">Desde</label>
+
+            <div className="col-6 col-md-1 col-lg-1">
+              <label className="form-label small mb-1">Desde</label>
               <input
                 type="date"
-                className="form-control form-control-lg"
+                className="form-control form-control-sm"
                 value={from}
                 onChange={(e)=>setFrom(e.target.value)}
               />
             </div>
-            <div className="col-6 col-md-3 col-lg-2">
-              <label className="form-label small">Hasta</label>
+            <div className="col-6 col-md-1 col-lg-1">
+              <label className="form-label small mb-1">Hasta</label>
               <input
                 type="date"
-                className="form-control form-control-lg"
+                className="form-control form-control-sm"
                 value={to}
                 onChange={(e)=>setTo(e.target.value)}
               />
+            </div>
+
+            <div className="col-12 col-md-12 col-lg-1 d-flex gap-2 justify-content-start justify-content-lg-end">
+              <button className="btn btn-sm btn-primary" onClick={fetchByRut} disabled={loading} title="Buscar por RUT">
+                <i className="fas fa-search me-1"/> Buscar
+              </button>
+            </div>
+
+            <div className="col-12 col-lg-12 d-flex gap-3 mt-1">
+              {loading && <span className="small text-muted d-flex align-items-center"><i className="fas fa-spinner fa-spin me-2"/>Cargando…</span>}
+              {error && <span className="small text-danger d-flex align-items-center"><i className="fas fa-circle-exclamation me-2"/>{error}</span>}
             </div>
           </div>
         </div>
@@ -189,34 +285,32 @@ export default function DoctorHistorial() {
 
       {/* === GRILLA PRINCIPAL === */}
       <div className="row g-3">
-        {/* Columna izquierda: timeline */}
-        <div className="col-12 col-lg-5 col-xl-4 d-flex flex-column">
-          <TimeLineDoctor
-            items={itemsFiltrados}
-            activeId={consulta?.id ?? activeId}
-            onSelect={setActiveId}
-          />
-        </div>
-
-        {/* Columna central: detalle */}
-        <div className="col-12 col-lg-7 col-xl-5 d-flex">
-          <ConsultationDetailHistorial consulta={consulta} />
-        </div>
-
-        {/* Columna derecha: alertas + tarjetas informativas */}
-        <div className="col-12 col-xl-3 d-flex flex-column gap-3">
-          <div className="alert border-destructive bg-destructive-5 d-flex align-items-center text-break">
-            <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
-            <div className="text-destructive small">
-              <span className="fw-normal">ALERGIAS:</span>
-              <br />
-              Penicilina
+        <div className="col-12 col-lg-6 col-xl-5">
+          <div className="card h-100">
+            <div className="card-header bg-white d-flex justify-content-between align-items-center">
+              <h6 className="mb-0">Historial de consultas</h6>
+            </div>
+            <div className="card-body p-0">
+              <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+                {Array.isArray(itemsFiltrados) && itemsFiltrados.length > 0 ? (
+                  <TimeLineDoctor
+                    items={itemsFiltrados}
+                    activeId={consulta?.id ?? activeId}
+                    onSelect={setActiveId}
+                  />
+                ) : (
+                  <div className="p-3 text-muted small">
+                    <p className="mb-1"><i className="fas fa-info-circle me-2"></i>No hay resultados para mostrar.</p>
+                    <p className="mb-0">Ingresa un <strong>RUT</strong> en el buscador y presiona <strong>Buscar</strong> para obtener información del paciente.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+        </div>
 
-          <ActiveMedicationsCard />
-          <QuickActionsCard />
-          <NextAppointmentCard fechaHora="25 Ago 2024 • 10:30" medico="Dr. Juan Pérez" />
+        <div className="col-12 col-lg-6 col-xl-7">
+          <ConsultationDetailDoctor consulta={consulta} />
         </div>
       </div>
     </>

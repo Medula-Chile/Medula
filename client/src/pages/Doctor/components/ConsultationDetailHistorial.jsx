@@ -69,13 +69,16 @@ export default function ConsultationDetailHistorial({ consulta }) {
 
         {/* Metadatos: especialista, especialidad, centro, próximo control y receta */}
         <div className="row mb-4 small">
-          <div className="col-6 col-md-6 mb-2">
-            <p className="text-muted-foreground mb-0">Especialista</p>
-            <p className="fw-normal mb-0">{consulta.medico || '—'}</p>
+          <div className="col-12 col-md-6 mb-2">
+            <p className="text-muted-foreground mb-0">Médico que atiende</p>
+            <p className="fw-normal mb-0">
+              {consulta.medicoNombre ? `Dr. ${consulta.medicoNombre}` : (consulta.medico || '—')}
+              {consulta.medicoRut ? <span className="text-muted-foreground"> · RUT: {consulta.medicoRut}</span> : null}
+            </p>
           </div>
-          <div className="col-6 col-md-6 mb-2">
+          <div className="col-12 col-md-6 mb-2">
             <p className="text-muted-foreground mb-0">Especialidad</p>
-            <p className="fw-normal mb-0">{consulta.especialidad || '—'}</p>
+            <p className="fw-normal mb-0">{consulta.medicoEspecialidad || consulta.especialidad || '—'}</p>
           </div>
           <div className="col-6 col-md-6 mb-2">
             <p className="text-muted-foreground mb-0">Centro médico</p>

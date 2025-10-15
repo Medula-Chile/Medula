@@ -67,6 +67,7 @@ export default function RecetasDoctor() {
 
   const [pacienteSel, setPacienteSel] = React.useState(null);
   const [recetaSel, setRecetaSel] = React.useState(null);
+  const [centroReceta, setCentroReceta] = React.useState(null);
 
   // Helper: nombre del médico emisor de la receta, con múltiples formatos posibles
   const getDoctorName = React.useCallback((rec) => {
@@ -179,9 +180,34 @@ export default function RecetasDoctor() {
     updateUrl(p?.id || '', first?.id || '');
   };
 
-  const onSelectReceta = (r) => {
+  const onSelectReceta = async (r) => {
     setRecetaSel(r);
     updateUrl(pacienteSel?.id || '', r?.id || '');
+    // Buscar centro desde la consulta asociada (usando paciente RUT)
+    setCentroReceta(null);
+    try {
+      const pacienteRut = pacienteSel?.run;
+      if (!pacienteRut) return;
+      // Buscar consultas del paciente por RUT
+      const resp = await api.get('/consultas', { params: { rut: pacienteRut } });
+      const consultas = Array.isArray(resp.data) ? resp.data : [];
+      // Buscar la consulta que tenga esta receta (por _id de receta embebida)
+      const recetaId = r?._id || r?.id;
+      const consultaConReceta = consultas.find(c => 
+        String(c?.receta?._id) === String(recetaId) || 
+        String(c?.recetaId) === String(recetaId)
+      );
+      if (consultaConReceta) {
+        const citaId = consultaConReceta?.cita_id?._id || consultaConReceta?.cita_id;
+        if (citaId) {
+          const citaResp = await api.get(`/citas/${citaId}`);
+          const centro = citaResp.data?.centro_id?.nombre || null;
+          setCentroReceta(centro);
+        }
+      }
+    } catch (e) {
+      console.error('Error obteniendo centro:', e);
+    }
   };
 
   if (loading) return <div className="p-3 text-muted small">Cargando recetas…</div>;
@@ -189,18 +215,37 @@ export default function RecetasDoctor() {
   if (!pacienteSel) return null;
 
   return (
-    <div className="row g-3">
-      {/* Columna IZQUIERDA: Pacientes con recetas + búsqueda */}
-      <div className="col-12 col-lg-4 col-xl-3">
-        <div className="card h-100">
-          <div className="card-header bg-white pb-2">
-            <h5 className="card-title mb-2">Pacientes con recetas</h5>
-            {/* Barra de búsqueda */}
-            <div className="input-group input-group-sm">
-              <span className="input-group-text bg-white"><i className="fas fa-search"/></span>
-              <input className="form-control" placeholder="Buscar por nombre, RUN o centro" value={q} onChange={(e)=>{ setQ(e.target.value); setPage(1); }} />
+    <>
+      {/* Barra de búsqueda superior */}
+      <div className="card mb-3">
+        <div className="card-body">
+          <div className="row g-2">
+            <div className="col-12 col-md-6">
+              <label className="form-label small">Buscar paciente</label>
+              <div className="input-group input-group-sm">
+                <span className="input-group-text"><i className="fas fa-search"/></span>
+                <input className="form-control" placeholder="Nombre o RUT del paciente" value={q} onChange={(e)=>{ setQ(e.target.value); setPage(1); }} />
+              </div>
+            </div>
+            <div className="col-6 col-md-3">
+              <label className="form-label small">Desde</label>
+              <input type="date" className="form-control form-control-sm" value={from} onChange={(e)=>setFrom(e.target.value)} />
+            </div>
+            <div className="col-6 col-md-3">
+              <label className="form-label small">Hasta</label>
+              <input type="date" className="form-control form-control-sm" value={to} onChange={(e)=>setTo(e.target.value)} />
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="row g-3">
+        {/* Columna IZQUIERDA: Pacientes con recetas */}
+        <div className="col-12 col-lg-4 col-xl-3">
+          <div className="card h-100">
+            <div className="card-header bg-white pb-2">
+              <h5 className="card-title mb-0">Pacientes con recetas</h5>
+            </div>
           <div className="card-body p-0">
             <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 240px)' }}>
               {pacientes
@@ -351,7 +396,7 @@ export default function RecetasDoctor() {
                 </div>
                 <div className="col-6 mb-2">
                   <p className="text-muted-foreground mb-0">Centro médico</p>
-                  <p className="fw-medium mb-0">{recetaSel?.centro_id?.nombre || recetaSel.centro || '—'}</p>
+                  <p className="fw-medium mb-0">{centroReceta || recetaSel?.centro_id?.nombre || recetaSel.centro || '—'}</p>
                 </div>
                 <div className="col-6 mb-2">
                   <p className="text-muted-foreground mb-0">Folio</p>
@@ -367,7 +412,31 @@ export default function RecetasDoctor() {
                 </div>
               </div>
 
-              {/* Se removió el contenedor de Medicamentos Prescritos a solicitud */}
+              {/* Medicamentos Prescritos */}
+              <div className="mb-4">
+                <h6 className="fw-medium mb-2">Medicamentos Prescritos</h6>
+                <div className="d-flex flex-column gap-2">
+                  {Array.isArray(recetaSel?.medicamentos) && recetaSel.medicamentos.length > 0 ? (
+                    recetaSel.medicamentos.map((m, idx) => (
+                      <div key={idx} className="d-flex align-items-start gap-2 p-2 bg-gray-100 rounded">
+                        <i className="fas fa-pills text-success mt-1"></i>
+                        <div className="flex-grow-1 small">
+                          <div className="fw-medium">{m.nombre || m.medicamento || '—'}</div>
+                          {m.dosis && <div className="text-muted">Dosis: {m.dosis}</div>}
+                          {m.frecuencia && <div className="text-muted">Frecuencia: {m.frecuencia}</div>}
+                          {m.duracion && <div className="text-muted">Duración: {m.duracion} días</div>}
+                          {m.instrucciones && <div className="text-muted">Instrucciones: {m.instrucciones}</div>}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="d-flex align-items-center gap-2 p-2 bg-gray-100 rounded">
+                      <i className="fas fa-pills text-muted"></i>
+                      <span className="small text-muted">No hay medicamentos prescritos</span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <div className="mt-3 small">
                 <p className="text-muted-foreground mb-1">Código de verificación</p>
@@ -390,5 +459,6 @@ export default function RecetasDoctor() {
 
       </div>
     </div>
+    </>
   );
 }

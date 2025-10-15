@@ -2,6 +2,7 @@ const Consulta = require('../models/consulta');
 const Receta = require('../models/receta');
 const Paciente = require('../models/paciente');
 const Medico = require('../models/medico');
+const Usuario = require('../models/User');
 
 // POST /api/consultas
 exports.crearConsulta = async (req, res) => {
@@ -205,7 +206,7 @@ exports.eliminarConsulta = async (req, res) => {
 // GET /api/consultas
 exports.listarConsultas = async (req, res) => {
   try {
-    const { paciente, medico, desde, hasta, q, cita_id, citaId } = req.query;
+    const { paciente, medico, desde, hasta, q, cita_id, citaId, rut } = req.query;
     const filter = {};
     if (q) {
       const rx = new RegExp(q, 'i');
@@ -216,6 +217,30 @@ exports.listarConsultas = async (req, res) => {
       if (desde) filter.createdAt.$gte = new Date(desde);
       if (hasta) filter.createdAt.$lte = new Date(hasta);
     }
+    // Permitir filtrar por RUT de Usuario (ej: 167812307) resolviendo paciente_id
+    if (rut && !paciente) {
+      try {
+        const user = await Usuario.findOne({ rut: String(rut) }).select('_id');
+        if (user) {
+          const p = await Paciente.findOne({ usuario_id: user._id }).select('_id');
+          if (p) {
+            // Coincidir tanto por Paciente._id (correcto) como por Usuario._id (legacy)
+            filter.$or = [
+              { 'receta.paciente_id': p._id },
+              { 'receta.paciente_id': user._id }
+            ];
+          } else {
+            // Sin documento Paciente: intentar legacy directo por usuario
+            filter['receta.paciente_id'] = user._id;
+          }
+        } else {
+          return res.json([]); // RUT no encontrado
+        }
+      } catch (e) {
+        return res.status(500).json({ message: 'Error resolviendo RUT', error: e.message });
+      }
+    }
+
     if (paciente) filter['receta.paciente_id'] = paciente;
     if (medico) filter['receta.medico_id'] = medico;
     // Permitir filtrar por vínculo con cita
@@ -227,7 +252,33 @@ exports.listarConsultas = async (req, res) => {
         path: 'receta.paciente_id',
         populate: { path: 'usuario_id', select: 'nombre rut' }
       })
-      .populate({ path: 'receta.medico_id', select: 'nombre email' });
+      // medico_id referencia a Usuario (no a Medico); populamos los datos del usuario
+      .populate({ path: 'receta.medico_id', select: 'nombre rut email' });
+
+    // Enriquecer con especialidad del médico buscando por usuario_id en colección Medico
+    try {
+      const usuarioIds = cs
+        .map(c => c?.receta?.medico_id?._id)
+        .filter(Boolean);
+      const uniqueUsuarioIds = [...new Set(usuarioIds.map(id => String(id)))];
+      if (uniqueUsuarioIds.length > 0) {
+        const medicos = await Medico.find({ usuario_id: { $in: uniqueUsuarioIds } })
+          .select('usuario_id especialidad')
+          .lean();
+        const espMap = new Map(medicos.map(m => [String(m.usuario_id), m.especialidad]));
+        // Adjuntar campo derivado en cada documento para la respuesta JSON
+        const enriched = cs.map(doc => {
+          const obj = doc.toObject({ virtuals: false });
+          const uid = obj?.receta?.medico_id?._id ? String(obj.receta.medico_id._id) : null;
+          obj.receta = obj.receta || {};
+          obj.receta.medico_especialidad = uid ? (espMap.get(uid) || null) : null;
+          return obj;
+        });
+        return res.json(enriched);
+      }
+    } catch {}
+
+    // Si no hay médicos o algo falló, devolvemos tal cual
     res.json(cs);
   } catch (error) {
     return res.status(500).json({ message: 'Error al listar consultas', error: error.message });

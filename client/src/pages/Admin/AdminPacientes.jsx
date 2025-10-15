@@ -4,7 +4,7 @@ import axios from 'axios';
 export default function AdminPacientes() {
   const [pacientes, setPacientes] = useState([]);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 20;
   const [usuarios, setUsuarios] = useState([]);
   const [userFilter, setUserFilter] = useState('');
   const [selectedPaciente, setSelectedPaciente] = useState(null);
@@ -171,7 +171,6 @@ export default function AdminPacientes() {
 
       // Preparar datos para enviar (solo los campos del paciente)
       const pacienteData = {
-        usuario_id: formData.usuario_id,
         fecha_nacimiento: formData.fecha_nacimiento,
         sexo: formData.sexo,
         direccion: formData.direccion,
@@ -182,11 +181,12 @@ export default function AdminPacientes() {
       };
 
       if (editing && selectedPaciente) {
-        // Actualizar paciente existente
+        // Actualizar paciente existente (sin usuario_id, no se puede cambiar)
         await axios.put(`http://localhost:5000/api/pacientes/${selectedPaciente._id}`, pacienteData);
         alert('Paciente actualizado exitosamente');
       } else {
-        // Crear nuevo paciente
+        // Crear nuevo paciente (incluir usuario_id)
+        pacienteData.usuario_id = formData.usuario_id;
         await axios.post('http://localhost:5000/api/pacientes', pacienteData);
         alert('Paciente creado exitosamente');
       }
@@ -476,11 +476,11 @@ export default function AdminPacientes() {
             <div className="card-header">
               <h5>Lista de Pacientes ({pacientes.length})</h5>
             </div>
-            <div className="card-body">
+            <div className="card-body p-0">
               {pacientes.length === 0 ? (
-                <p className="text-center text-muted">No hay pacientes registrados</p>
+                <p className="text-center text-muted p-3">No hay pacientes registrados</p>
               ) : (
-                <div className="table-responsive">
+                <div className="table-responsive" style={{ maxHeight: '600px', overflowY: 'auto' }}>
                   <table className="table table-striped table-hover">
                     <thead>
                       <tr>
@@ -539,7 +539,7 @@ export default function AdminPacientes() {
                     </tbody>
                   </table>
                   {/* Paginación */}
-                  <div className="d-flex justify-content-between align-items-center mt-2">
+                  <div className="d-flex justify-content-between align-items-center mt-2 px-3 pb-3">
                     <div className="small text-muted">
                       Mostrando {(Math.min((page-1)*pageSize+1, pacientes.length))}-{Math.min(page*pageSize, pacientes.length)} de {pacientes.length}
                     </div>
