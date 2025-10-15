@@ -1,141 +1,238 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Timeline from './Timeline';
 import ConsultationDetail from './ConsultationDetail';
 import ActiveMedicationsCard from '../shared/ActiveMedicationsCard';
 import QuickActionsCard from '../shared/QuickActionsCard';
 import NextAppointmentCard from '../shared/NextAppointmentCard';
+import axios from 'axios';
 
 export default function HistorialPage() {
-  // Página principal del historial médico del paciente.
-  // Se compone de 3 columnas:
-  // - Izquierda: Timeline (lista de consultas con resumen).
-  // - Centro: Detalle de la consulta seleccionada.
-  // - Derecha: Tarjetas informativas (medicamentos/acciones/próxima cita).
-  const [activeId, setActiveId] = useState(1);
+  const [activeId, setActiveId] = useState(null);
+  const [timelineItems, setTimelineItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Datos de ejemplo (mock) para el timeline. En producción, esto vendría del backend.
-  // Se usa useMemo para no recrear el arreglo en cada render.
-  const timelineItems = useMemo(
-    () => [
-      {
-        id: 1,
-        especialidad: 'Medicina General',
-        medico: 'Dr. Ana Silva',
-        fecha: '15 Ago 2024',
-        centro: 'CESFAM Norte',
-        resumen: 'Control rutinario anual. Paciente en buen estado general.',
-        observaciones: 'Control rutinario anual. Paciente en buen estado general.',
-        estado: 'Completada',
-        proximoControl: '15 Feb 2025',
-        medicamentos: ['Paracetamol 500mg', 'Ibuprofeno 200mg', 'Omeprazol 20mg'],
-        vitals: { presion: '120/80', temperatura: '36.5°C', pulso: '72 bpm' },
-        recetaId: 'R-001',
-      },
-      {
-        id: 2,
-        especialidad: 'Ginecología',
-        medico: 'Dr. Carlos Mendoza',
-        fecha: '02 Jul 2024',
-        centro: 'Hospital Regional',
-        resumen: 'Control ginecológico anual. Papanicolaou normal.',
-        observaciones: 'Control ginecológico anual. Papanicolaou normal.',
-        estado: 'Completada',
-        proximoControl: '02 Ene 2025',
-        medicamentos: ['Losartán 50mg', 'Metformina 500mg'],
-        vitals: { presion: null, temperatura: '36.7°C', pulso: null },
-        recetaId: 'R-002',
-      },
-      {
-        id: 3,
-        especialidad: 'Oftalmología',
-        medico: 'Dr. Roberto Sánchez',
-        fecha: '18 May 2024',
-        centro: 'Hospital El Salvador',
-        resumen: 'Control vista. Prescripción de lentes correctivos.',
-        observaciones: 'Prescripción de lentes correctivos.',
-        estado: 'Completada',
-        proximoControl: '18 Nov 2024',
-        medicamentos: ['Vitamina D 1000UI', 'Calcio 600mg'],
-        vitals: { presion: '110/70', temperatura: null, pulso: '68 bpm' },
-        recetaId: 'R-003',
-      },
-      {
-        id: 4,
-        especialidad: 'Medicina General',
-        medico: 'Dr. Juan Rivas',
-        fecha: '28 Mar 2024',
-        centro: 'Hospital El Salvador',
-        resumen: 'Cuadro infeccioso tratado con antibiótico.',
-        observaciones: 'Infección bacteriana, completar tratamiento con amoxicilina.',
-        estado: 'Completada',
-        proximoControl: '28 Abr 2024',
-        medicamentos: ['Amoxicilina 500mg'],
-        vitals: { presion: '118/76', temperatura: '37.6°C', pulso: '80 bpm' },
-        recetaId: 'R-004',
-      },
-      {
-        id: 5,
-        especialidad: 'Endocrinología',
-        medico: 'Dra. Marcela Pérez',
-        fecha: '10 Feb 2024',
-        centro: 'CESFAM Oriente',
-        resumen: 'Control endocrino con ajuste terapéutico.',
-        observaciones: 'Se mantiene Levotiroxina y se indica Atorvastatina.',
-        estado: 'Completada',
-        proximoControl: '10 May 2024',
-        medicamentos: ['Levotiroxina 50mcg', 'Atorvastatina 20mg'],
-        vitals: { presion: '122/82', temperatura: '36.6°C', pulso: '74 bpm' },
-        recetaId: 'R-005',
-      },
-      {
-        id: 6,
-        especialidad: 'Hematología',
-        medico: 'Dr. Ricardo Soto',
-        fecha: '22 Jul 2024',
-        centro: 'Clínica Dávila',
-        resumen: 'Anemia ferropénica, suplemento de hierro.',
-        observaciones: 'Control en 3 meses. Considerar efectos GI del hierro.',
-        estado: 'Completada',
-        proximoControl: '22 Oct 2024',
-        medicamentos: ['Hierro 325mg'],
-        vitals: { presion: '116/78', temperatura: '36.4°C', pulso: '70 bpm' },
-        recetaId: 'R-006',
-      },
-      {
-        id: 7,
-        especialidad: 'Cardiología',
-        medico: 'Dra. Paula Contreras',
-        fecha: '05 Ene 2024',
-        centro: 'Clínica Alemana',
-        resumen: 'Control cardiológico, beta bloqueador indicado.',
-        observaciones: 'Se indica Atenolol 25mg diario.',
-        estado: 'Completada',
-        proximoControl: '05 Abr 2024',
-        medicamentos: ['Atenolol 25mg'],
-        vitals: { presion: '130/85', temperatura: '36.5°C', pulso: '66 bpm' },
-        recetaId: 'R-008',
-      },
-    ],
-    []
-  );
+  // Cargar consultas del paciente desde la API
+  useEffect(() => {
+    const fetchConsultasPaciente = async () => {
+      try {
+        setLoading(true);
+        
+        console.log('🔍 Iniciando carga de consultas...');
+        
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('No se encontró token de autenticación. Por favor, inicia sesión nuevamente.');
+          setLoading(false);
+          return;
+        }
 
-  // Consulta activa seleccionada en base al id.
+        // 1. Primero obtener el paciente actual
+        console.log('📝 Obteniendo datos del paciente...');
+        const pacienteResponse = await axios.get('http://localhost:5000/api/pacientes/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const pacienteId = pacienteResponse.data._id;
+        console.log('✅ ID del paciente:', pacienteId);
+
+        // 2. Obtener consultas filtrando por el ID del paciente
+        console.log('🔍 Buscando consultas para paciente:', pacienteId);
+        const consultasResponse = await axios.get('http://localhost:5000/api/consultas', {
+          params: {
+            paciente: pacienteId
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('✅ Respuesta de consultas:', consultasResponse.data);
+
+        if (consultasResponse.data && Array.isArray(consultasResponse.data)) {
+          console.log(`📊 Encontradas ${consultasResponse.data.length} consultas para el paciente`);
+          
+          if (consultasResponse.data.length === 0) {
+            setError('No se encontraron consultas para este paciente en la base de datos.');
+            setTimelineItems([]);
+            setLoading(false);
+            return;
+          }
+
+          // Filtrar solo consultas que tienen cita_id (consultas reales)
+          const consultasConCita = consultasResponse.data.filter(consulta => 
+            consulta.cita_id && consulta.cita_id !== null
+          );
+
+          console.log(`📋 Consultas con cita: ${consultasConCita.length} de ${consultasResponse.data.length}`);
+
+          if (consultasConCita.length === 0) {
+            setError('No se encontraron consultas completadas para este paciente.');
+            setTimelineItems([]);
+            setLoading(false);
+            return;
+          }
+
+          // Transformar los datos
+          const consultasTransformadas = consultasConCita.map((consulta, index) => {
+            return {
+              id: consulta._id,
+              especialidad: consulta.receta?.medico_especialidad || 'Medicina General',
+              medico: consulta.receta?.medico_id?.nombre || 'Médico no especificado',
+              fecha: new Date(consulta.createdAt).toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+              }),
+              centro: 'Centro Médico',
+              resumen: consulta.diagnostico || consulta.motivo || 'Consulta médica',
+              observaciones: consulta.observaciones || consulta.diagnostico || 'Sin observaciones',
+              estado: 'Completada',
+              proximoControl: 'Por definir',
+              medicamentos: consulta.receta?.medicamentos?.map(m => 
+                `${m.nombre} ${m.dosis} • ${m.frecuencia}`
+              ) || [],
+              vitals: {
+                presion: '—',
+                temperatura: '—',
+                pulso: '—'
+              },
+              recetaId: consulta.recetaId || consulta.receta?._id || null,
+              diagnostico: consulta.diagnostico,
+              sintomas: consulta.sintomas,
+              tratamiento: consulta.tratamiento,
+              examenes: consulta.examenes || [],
+              licencia: consulta.licencia,
+              // Para debugging (opcional)
+              _rawData: consulta
+            };
+          });
+
+          console.log('📋 Consultas transformadas:', consultasTransformadas);
+          setTimelineItems(consultasTransformadas);
+          
+          if (consultasTransformadas.length > 0) {
+            setActiveId(consultasTransformadas[0].id);
+          }
+        } else {
+          setError('No se encontraron consultas en el formato esperado');
+          setTimelineItems([]);
+        }
+
+      } catch (err) {
+        console.error('❌ Error cargando consultas:', err);
+        console.error('❌ Detalles del error:', err.response?.data);
+        
+        if (err.response?.status === 401) {
+          setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        } else if (err.response?.status === 404) {
+          setError('No se encontró el paciente o no tiene consultas.');
+        } else {
+          setError(`Error al cargar consultas: ${err.message}`);
+        }
+        
+        // Datos mock SOLO para desarrollo
+        if (process.env.NODE_ENV === 'development') {
+          const mockItems = getMockTimelineItems();
+          setTimelineItems(mockItems);
+          if (mockItems.length > 0) {
+            setActiveId(mockItems[0].id);
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConsultasPaciente();
+  }, []);
+
+  // Datos mock SOLO para desarrollo
+  const getMockTimelineItems = () => [
+    {
+      id: 1,
+      especialidad: 'Medicina General',
+      medico: 'Dr. Ana Silva',
+      fecha: '15 Ago 2024',
+      centro: 'CESFAM Norte',
+      resumen: 'Control rutinario anual. Paciente en buen estado general.',
+      observaciones: 'Control rutinario anual. Paciente en buen estado general.',
+      estado: 'Completada',
+      proximoControl: '15 Feb 2025',
+      medicamentos: ['Paracetamol 500mg', 'Ibuprofeno 200mg', 'Omeprazol 20mg'],
+      vitals: { presion: '120/80', temperatura: '36.5°C', pulso: '72 bpm' },
+      recetaId: 'R-001',
+    }
+  ];
+
+  const handleReload = () => {
+    setError(null);
+    setLoading(true);
+    window.location.reload();
+  };
+
   const consulta = timelineItems.find((x) => x.id === activeId);
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Cargando historial...</span>
+        </div>
+        <span className="ms-2">Cargando historial médico...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-warning" role="alert">
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            {error}
+          </div>
+          <button className="btn btn-sm btn-outline-primary" onClick={handleReload}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (timelineItems.length === 0) {
+    return (
+      <div className="text-center py-5">
+        <i className="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+        <h4>No hay consultas registradas</h4>
+        <p className="text-muted">Aún no tienes consultas médicas completadas en tu historial.</p>
+        <button className="btn btn-primary" onClick={handleReload}>
+          Actualizar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="row g-3">
       <div className="col-12 col-lg-5 col-xl-4">
-        {/* Timeline de consultas (lista clickeable) */}
-        <Timeline items={timelineItems} activeId={activeId} onSelect={setActiveId} />
+        <Timeline 
+          items={timelineItems} 
+          activeId={activeId} 
+          onSelect={setActiveId} 
+          loading={loading}
+        />
       </div>
 
       <div className="col-12 col-lg-7 col-xl-5">
-        {/* Panel central que muestra el detalle de la consulta seleccionada */}
         <ConsultationDetail consulta={consulta} />
       </div>
 
       <div className="col-12 col-xl-3">
-        {/* Columna derecha con alertas y tarjetas informativas */}
         <div className="alert border-destructive bg-destructive-5 d-flex align-items-center">
           <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
           <div className="text-destructive small">
@@ -145,16 +242,10 @@ export default function HistorialPage() {
           </div>
         </div>
 
-        {/* Tarjeta con lista de medicamentos activos (carga desde mock) */}
         <ActiveMedicationsCard />
-
-        {/* Acciones rápidas (botones demo) */}
         <QuickActionsCard />
-
-        {/* Próxima cita destacada */}
         <NextAppointmentCard fechaHora="25 Ago 2024 • 10:30" medico="Dr. Juan Pérez" />
       </div>
     </div>
   );
 }
-
