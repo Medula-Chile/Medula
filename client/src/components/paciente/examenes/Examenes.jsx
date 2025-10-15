@@ -9,7 +9,41 @@ const MisExamenes = () => {
     const [error, setError] = useState(null);
 
     // Obtener el pacienteId del usuario autenticado
-    const pacienteId = user?.pacienteId || user?.id || user?.user?.id;
+    // Primero intentar obtener desde el perfil de paciente
+    const [pacienteId, setPacienteId] = useState(null);
+
+    // Resolver pacienteId desde el usuario autenticado
+    useEffect(() => {
+        if (!user) return;
+        
+        const fetchPacienteId = async () => {
+            try {
+                // Si el usuario ya tiene pacienteId directo
+                if (user.pacienteId) {
+                    setPacienteId(user.pacienteId);
+                    return;
+                }
+                
+                // Buscar el paciente por usuario_id
+                const userId = user.id || user._id;
+                if (!userId) return;
+                
+                const resp = await axios.get('http://localhost:5000/api/pacientes');
+                const pacientes = Array.isArray(resp.data.pacientes) ? resp.data.pacientes : (Array.isArray(resp.data) ? resp.data : []);
+                const paciente = pacientes.find(p => 
+                    String(p.usuario_id?._id || p.usuario_id) === String(userId)
+                );
+                
+                if (paciente) {
+                    setPacienteId(paciente._id);
+                }
+            } catch (err) {
+                console.error('Error obteniendo pacienteId:', err);
+            }
+        };
+        
+        fetchPacienteId();
+    }, [user]);
 
     // Cargar exámenes cuando el usuario esté autenticado
     useEffect(() => {
@@ -25,8 +59,12 @@ const MisExamenes = () => {
             try {
                 setLoading(true);
                 setError(null);
-                const response = await axios.get(`http://localhost:5000/api/examenes/paciente/${pacienteId}`);
-                setExamenes(response.data);
+                // Usar el endpoint correcto con query param
+                const response = await axios.get('http://localhost:5000/api/examenes', {
+                    params: { paciente: pacienteId }
+                });
+                const data = Array.isArray(response.data) ? response.data : [];
+                setExamenes(data);
             } catch (err) {
                 if (err.response?.status === 404) {
                     setError('No se encontraron exámenes para este paciente');
@@ -255,18 +293,14 @@ const MisExamenes = () => {
     // Estado: Cargando autenticación
     if (authLoading) {
         return (
-            <div className="row g-3">
-                <div className="col-md-9 col-lg-10 main-content p-3">
-                    <div className="content-wrapper">
-                        <div className="card h-100">
-                            <div className="card-body d-flex justify-content-center align-items-center">
-                                <div className="text-center">
-                                    <div className="spinner-border text-primary mb-3" role="status">
-                                        <span className="visually-hidden">Cargando...</span>
-                                    </div>
-                                    <p>Verificando autenticación...</p>
-                                </div>
+            <div className="container-fluid">
+                <div className="card">
+                    <div className="card-body d-flex justify-content-center align-items-center" style={{minHeight: '400px'}}>
+                        <div className="text-center">
+                            <div className="spinner-border text-primary mb-3" role="status">
+                                <span className="visually-hidden">Cargando...</span>
                             </div>
+                            <p>Verificando autenticación...</p>
                         </div>
                     </div>
                 </div>
@@ -277,17 +311,13 @@ const MisExamenes = () => {
     // Estado: No autenticado
     if (!user) {
         return (
-            <div className="row g-3">
-                <div className="col-md-9 col-lg-10 main-content p-3">
-                    <div className="content-wrapper">
-                        <div className="card h-100">
-                            <div className="card-body">
-                                <div className="alert alert-warning text-center" role="alert">
-                                    <i className="fas fa-exclamation-triangle fa-2x mb-3"></i>
-                                    <h5>Acceso no autorizado</h5>
-                                    <p>Por favor, inicie sesión para ver sus exámenes</p>
-                                </div>
-                            </div>
+            <div className="container-fluid">
+                <div className="card">
+                    <div className="card-body">
+                        <div className="alert alert-warning text-center" role="alert">
+                            <i className="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                            <h5>Acceso no autorizado</h5>
+                            <p>Por favor, inicie sesión para ver sus exámenes</p>
                         </div>
                     </div>
                 </div>
@@ -297,19 +327,15 @@ const MisExamenes = () => {
 
     if (loading) {
         return (
-            <div className="row g-3">
-                <div className="col-md-9 col-lg-10 main-content p-3">
-                    <div className="content-wrapper">
-                        <div className="card h-100">
-                            <div className="card-body d-flex justify-content-center align-items-center">
-                                <div className="text-center">
-                                    <div className="spinner-border text-primary mb-3" role="status">
-                                        <span className="visually-hidden">Cargando...</span>
-                                    </div>
-                                    <p>Cargando sus exámenes...</p>
-                                    <small className="text-muted">Usuario: {user.nombre || user.email}</small>
-                                </div>
+            <div className="container-fluid">
+                <div className="card">
+                    <div className="card-body d-flex justify-content-center align-items-center" style={{minHeight: '400px'}}>
+                        <div className="text-center">
+                            <div className="spinner-border text-primary mb-3" role="status">
+                                <span className="visually-hidden">Cargando...</span>
                             </div>
+                            <p>Cargando sus exámenes...</p>
+                            <small className="text-muted">Usuario: {user.nombre || user.email}</small>
                         </div>
                     </div>
                 </div>
@@ -319,28 +345,24 @@ const MisExamenes = () => {
 
     if (error) {
         return (
-            <div className="row g-3">
-                <div className="col-md-9 col-lg-10 main-content p-3">
-                    <div className="content-wrapper">
-                        <div className="card h-100">
-                            <div className="card-body">
-                                <div className="alert alert-danger" role="alert">
-                                    <i className="fas fa-exclamation-triangle me-2"></i>
-                                    {error}
-                                    <div className="mt-2">
-                                        <small>
-                                            Usuario: {user.nombre || user.email} 
-                                        </small>
-                                    </div>
-                                    <button 
-                                        className="btn btn-outline-primary btn-sm mt-2"
-                                        onClick={() => window.location.reload()}
-                                    >
-                                        <i className="fas fa-redo me-1"></i>
-                                        Reintentar
-                                    </button>
-                                </div>
+            <div className="container-fluid">
+                <div className="card">
+                    <div className="card-body">
+                        <div className="alert alert-danger" role="alert">
+                            <i className="fas fa-exclamation-triangle me-2"></i>
+                            {error}
+                            <div className="mt-2">
+                                <small>
+                                    Usuario: {user.nombre || user.email} 
+                                </small>
                             </div>
+                            <button 
+                                className="btn btn-outline-primary btn-sm mt-2"
+                                onClick={() => window.location.reload()}
+                            >
+                                <i className="fas fa-redo me-1"></i>
+                                Reintentar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -349,10 +371,8 @@ const MisExamenes = () => {
     }
 
     return (
-        <div className="row g-3">
-            <div className="col-md-9 col-lg-10 main-content p-3">
-                <div className="content-wrapper">
-                    <div className="card h-100">
+        <div className="container-fluid">
+            <div className="card">
                         <div className="card-header bg-white pb-2">
                             <div className="d-flex justify-content-between align-items-center">
                                 <div>
@@ -424,9 +444,9 @@ const MisExamenes = () => {
                                         return (
                                             <div key={examen._id} className="card history-card mb-3">
                                                 <div className="card-body">
-                                                    <div className="d-flex justify-content-between align-items-start">
-                                                        <div className="d-flex">
-                                                            <div className="history-icon me-3">
+                                                    <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+                                                        <div className="d-flex flex-grow-1 w-100">
+                                                            <div className="history-icon me-3 flex-shrink-0">
                                                                 <svg 
                                                                     className={`icon ${getExamenIcon(examen.tipo_examen)}`} 
                                                                     viewBox="0 0 24 24" 
@@ -516,9 +536,9 @@ const MisExamenes = () => {
                                                             </div>
                                                         </div>
                                                         
-                                                        <div className="d-flex flex-column align-items-end">
+                                                        <div className="d-flex flex-column flex-sm-row gap-2 align-items-stretch w-100 w-lg-auto">
                                                             <button 
-                                                                className="btn btn-primary btn-sm mb-2"
+                                                                className="btn btn-primary btn-sm"
                                                                 onClick={() => solicitarDescargable(examen._id, examen.archivo_adjunto, examen.tipo_examen)}
                                                                 disabled={!disponible}
                                                                 title={disponible ? `Descargar ${examen.tipo_examen}` : mensajeEstado}
@@ -551,8 +571,6 @@ const MisExamenes = () => {
                             )}
                         </div>
                     </div>
-                </div>
-            </div>
         </div>
     );
 };

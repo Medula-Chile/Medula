@@ -89,19 +89,7 @@ export default function DoctorSettings() {
                   <button className="btn btn-outline-danger btn-sm">Cerrar sesión en todos los dispositivos</button>
                 </div>
                 <p className="text-muted-foreground mt-2 mb-0">Si usas ClaveÚnica, el cierre global puede requerir revocar desde el proveedor.</p>
-              </div>
-
-              <div className="col-12 col-md-6">
-                <h6 className="mb-2">Herramientas de Desarrollo</h6>
-                <div className="form-check form-switch mb-2">
-                  <input className="form-check-input" type="checkbox" id="inUseApi" />
-                  <label className="form-check-label" htmlFor="inUseApi">Conectar al backend médico</label>
-                </div>
-                <button className="btn btn-outline-warning btn-sm" onClick={handleClearLocal}>
-                  Limpiar datos locales (localStorage)
-                </button>
-                <p className="text-muted-foreground mt-2 mb-0">Los cambios de modo aplican al recargar.</p>
-              </div>
+              </div>  
 
               <div className="col-12"><hr className="my-2" /></div>
 

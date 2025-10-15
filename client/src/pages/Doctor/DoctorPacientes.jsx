@@ -186,15 +186,8 @@ export default function DoctorPacientes() {
 
   return (
     <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="mb-0">Pacientes asignados</h4>
-        <div className="d-flex gap-2">
-          <button className="btn btn-outline-secondary btn-sm" onClick={fetchCitas} disabled={loading}><i className="fas fa-rotate me-2"/>Actualizar</button>
-        </div>
-      </div>
-
       {error && (
-        <div className="alert alert-danger py-2 small" role="alert">{error}</div>
+        <div className="alert alert-danger py-2 small mb-3" role="alert">{error}</div>
       )}
 
       {/* Filtros */}

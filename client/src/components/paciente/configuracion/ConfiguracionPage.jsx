@@ -75,16 +75,6 @@ export default function ConfiguracionPage() {
                 </div>
                 <p className="text-muted-foreground mt-2 mb-0">Si usas ClaveÚnica, el cierre global puede requerir revocar desde el proveedor.</p>
               </div>
-
-              <div className="col-12 col-md-6">
-                <h6 className="mb-2">Herramientas (demo)</h6>
-                <div className="form-check form-switch mb-2">
-                  <input className="form-check-input" type="checkbox" id="inUseApi" />
-                  <label className="form-check-label" htmlFor="inUseApi">Conectar al backend (USE_API)</label>
-                </div>
-                <button className="btn btn-outline-secondary btn-sm" id="btnClearLocal">Limpiar datos locales (localStorage)</button>
-                <p className="text-muted-foreground mt-2 mb-0">Los cambios de modo aplican al recargar.</p>
-              </div>
             </div>
           </div>
         </div>
