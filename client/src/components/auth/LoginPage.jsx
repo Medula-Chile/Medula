@@ -1,26 +1,20 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-// Página de inicio de sesión (Login)
-// Maneja selección de rol, validación básica y redirección según el rol seleccionado.
+
 export default function LoginPage() {
-  // Estados locales y utilidades de navegación
   const navigate = useNavigate();
   const [role, setRole] = React.useState('paciente');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [accept, setAccept] = React.useState(true);
-
-  // Estado para manejar errores y carga
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
 
-  // Manejador de envío del formulario: valida datos y autentica
   const onSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    // Validación simple
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return alert('Por favor, ingresa un correo válido.');
     if (!password) return alert('Por favor, ingresa tu contraseña.');
@@ -28,25 +22,13 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      const { data } = await api.post('/auth/login', {
-        email,
-        password,
-        rol: role
-      });
-
-      // Guardar el token
+      const { data } = await api.post('/auth/login', { email, password, rol: role });
       localStorage.setItem('token', data.token);
-      // Notificar al resto de la app que hubo login
       try { window.dispatchEvent(new Event('auth:login')); } catch {}
 
-      // Redirigir según rol
-      if (role === 'medico') {
-        navigate('/doctor');
-      } else if (role === 'administrador') {
-        navigate('/admin');
-      } else {
-        navigate('/paciente/historial');
-      }
+      if (role === 'medico') navigate('/doctor');
+      else if (role === 'administrador') navigate('/admin');
+      else navigate('/paciente/historial');
     } catch (err) {
       const serverMsg = err?.response?.data?.message;
       setError(serverMsg || err.message);
@@ -56,70 +38,140 @@ export default function LoginPage() {
     }
   };
 
-  // Render de la vista de Login y su formulario
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div className="card border shadow-sm p-4" role="main" aria-labelledby="titulo-login" style={{ maxWidth: '400px', width: '100%' }}>
-        <div className="text-center mb-3" aria-hidden="true">
-          <img src="/medula_icono.png" alt="Logo Médula" className="img-fluid" style={{ width: 120 }} />
-        </div>
-        <h1 id="titulo-login" className="text-center mb-1 fw-bold text-primary">MEDULA</h1>
-        <p className="text-center text-muted mb-4">Cuida, organiza y protege</p>
+    <div className="auth-root auth-bg-login">
+      {/* Desktop: alinea a la derecha; móvil: centra */}
+      <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center justify-content-lg-end py-5">
+        <div className="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4 me-lg-5">
+          <div className="card shadow-sm auth-card" role="main" aria-labelledby="titulo-login">
+            <div className="card-body p-4 p-md-5">
+              <div className="text-center mb-3 auth-logo" aria-hidden="true">
+                <img src="/MEDULABLACK2.png" alt="Logo Médula" style={{ width: 150, height: 'auto' }} />
+              </div>
+              
+              <p className="text-center text-muted mb-4 auth-tagline">Cuida, organiza y protege</p>
 
-        <form onSubmit={onSubmit} noValidate>
-          <h2 className="text-center h5 mb-3">Inicio de Sesión</h2>
+              <form onSubmit={onSubmit} noValidate>
+                <h2 className="text-center h5 mb-3">Inicio de Sesión</h2>
 
-          {/* Selector de rol (paciente / médico) */}
-          <div className="btn-group w-100 mb-3" role="radiogroup" aria-label="Tipo de usuario">
-            <button type="button" className={`btn btn-outline-primary ${role === 'paciente' ? 'active' : ''}`} aria-pressed={role === 'paciente'} onClick={() => setRole('paciente')}>Soy paciente</button>
-            <button type="button" className={`btn btn-outline-primary ${role === 'medico' ? 'active' : ''}`} aria-pressed={role === 'medico'} onClick={() => setRole('medico')}>Soy médico</button>
-          </div>
+                {/* Selector de rol con Bootstrap */}
+                <div className="d-flex justify-content-center mb-3" role="radiogroup" aria-label="Tipo de usuario">
+                  <div className="btn-group" role="group" aria-label="Selector de rol">
+                    <input
+                      type="radio"
+                      className="btn-check"
+                      name="role"
+                      id="rolePaciente"
+                      autoComplete="off"
+                      checked={role === 'paciente'}
+                      onChange={() => setRole('paciente')}
+                    />
+                    <label className={`btn btn-outline-secondary btn-sm ${role === 'paciente' ? 'active' : ''}`} htmlFor="rolePaciente">
+                      Soy paciente
+                    </label>
 
-          {/* Campo de email */}
-          <label className="form-label" htmlFor="inEmail">Email</label>
-          <input id="inEmail" className="form-control mb-2" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Ingresa email" required />
+                    <input
+                      type="radio"
+                      className="btn-check"
+                      name="role"
+                      id="roleMedico"
+                      autoComplete="off"
+                      checked={role === 'medico'}
+                      onChange={() => setRole('medico')}
+                    />
+                    <label className={`btn btn-outline-secondary btn-sm ${role === 'medico' ? 'active' : ''}`} htmlFor="roleMedico">
+                      Soy médico
+                    </label>
+                  </div>
+                </div>
 
-          {/* Campo de contraseña */}
-          <label className="form-label" htmlFor="inPass">Contraseña</label>
-          <input id="inPass" className="form-control mb-2" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Ingresa tu contraseña" required />
+                {/* Email */}
+                <div className="mb-3">
+                  <label className="form-label auth-label" htmlFor="inEmail">Correo electrónico</label>
+                  <input
+                    id="inEmail"
+                    className="form-control auth-input"
+                    type="email"
+                    value={email}
+                    onChange={(e)=>setEmail(e.target.value)}
+                    placeholder="ana@medula.cl"
+                    required
+                  />
+                </div>
 
-          {/* Aceptación de Términos y Política de Privacidad */}
-          <div className="form-check mb-3">
-            <input id="inAccept" className="form-check-input" type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} />
-            <label className="form-check-label" htmlFor="inAccept">
-              Acepto los <a href="#">Términos y Condiciones</a> y la <a href="#">Política de Privacidad</a>
-            </label>
-          </div>
+                {/* Contraseña */}
+                <div className="mb-3">
+                  <label className="form-label auth-label" htmlFor="inPass">Contraseña</label>
+                  <input
+                    id="inPass"
+                    className="form-control auth-input"
+                    type="password"
+                    value={password}
+                    onChange={(e)=>setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
 
-          {/* Acción principal: enviar formulario */}
-          <button
-            type="submit"
-            className="btn btn-primary w-100 mb-2"
-            disabled={loading}
-          >
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
-          {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
+                {/* Aceptación */}
+                <div className="form-check mb-3 auth-checkbox">
+                  <input
+                    id="inAccept"
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={accept}
+                    onChange={(e)=>setAccept(e.target.checked)}
+                  />
+                  <label className="form-check-label" htmlFor="inAccept" style={{ fontWeight: 'normal' }}>
+                    Acepto los <a href="#">Términos y Condiciones</a> y la <a href="#">Política de Privacidad</a>
+                  </label>
+                </div>
+
+                {/* Acción principal */}
+                <div className="d-grid gap-2 mb-2 auth-actions">
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-sm py-2"
+                    style={{ minWidth: 140 }}
+                    disabled={loading}
+                  >
+                    {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+                  </button>
+                </div>
+
+                {/* Error */}
+                {error && (
+                  <div className="alert alert-danger" role="alert">
+                    {error}
+                  </div>
+                )}
+
+                {/* Enlace a registro */}
+                <div className="text-center small auth-link mb-3">
+                  ¿No tienes cuenta? <Link to="/auth/register">Regístrate aquí</Link>
+                </div>
+
+                {/* Separador */}
+                <div className="position-relative text-center my-3 auth-divider">
+                  <hr />
+                  <span className="px-2 bg-white position-absolute top-50 start-50 translate-middle text-muted">o</span>
+                </div>
+
+                {/* ClaveÚnica */}
+                <div className="text-center">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => window.open('https://claveunica.gob.cl', '_blank')}
+                  >
+                    Ingresar con ClaveÚnica
+                  </button>
+                </div>
+              </form>
+
             </div>
-          )}
-
-          {/* Enlace para ir a la página de registro */}
-          <div className="text-center">
-            ¿No tienes cuenta? <Link to="/auth/register" className="text-decoration-none">Regístrate aquí</Link>
           </div>
-
-          {/* Separador de opciones */}
-          <div className="text-center my-3">
-            <span className="bg-light px-2">o</span>
-          </div>
-
-          {/* Alternativa de ingreso con ClaveÚnica (placeholder) */}
-          <div className="text-center">
-            <button type="button" className="btn btn-outline-secondary w-100" onClick={() => window.open('https://claveunica.gob.cl', '_blank')}>Ingresar con ClaveÚnica</button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

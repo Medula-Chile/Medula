@@ -1,6 +1,5 @@
 import React from 'react';
-import ActiveMedicationsCard from '../shared/ActiveMedicationsCard';
-import QuickActionsCard from '../shared/QuickActionsCard';
+import ActiveMedicationsCard from '../shared/ActiveMedicationsCard';;
 import MedicamentosList from '../shared/MedicamentosList';
 import { useLocation } from 'react-router-dom';
 import api from '../../../services/api';
@@ -498,7 +497,6 @@ export default function RecetasPage() {
         )}
 
         <ActiveMedicationsCard />
-        <QuickActionsCard />
       </div>
     </div>
   );

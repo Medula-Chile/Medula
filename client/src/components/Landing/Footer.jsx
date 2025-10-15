@@ -14,7 +14,7 @@ export default function Footer() {
           </a>
         </div>
         <p className="text-muted mb-2">{t('protected').text}</p>
-        <a className="fw-800" href="mailto:contact@medula.cl">contact@medula.cl</a>
+        <a className="fw-800" href="mailto:contact@medula.cl">medulaservicio@gmail.com</a>
       </div>
     </footer>
   )
