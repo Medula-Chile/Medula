@@ -12,8 +12,6 @@
   <img src="https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?logo=mongodb&logoColor=fff&style=for-the-badge" alt="MongoDB"/>
   <img src="https://img.shields.io/badge/Auth-JWT-orange?logo=jsonwebtokens&style=for-the-badge" alt="JWT"/>
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT"/>
-  <br/>
-  <i>Próximos features: Notificaciones y API externa</i>
 </p>
 
 ---
@@ -21,6 +19,7 @@
 ## 🧭 Índice
 
 - [Descripción](#-descripción)
+- [Vista previa](#-vista-previa)
 - [Arquitectura](#-arquitectura)
 - [Modelo de Datos](#-modelo-de-datos)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
@@ -40,7 +39,6 @@
 - [Seguridad](#-seguridad)
 - [i18n & Accesibilidad](#-i18n--accesibilidad)
 - [Troubleshooting](#-troubleshooting)
-- [Roadmap](#-roadmap)
 - [Contribución](#-contribución)
 - [Changelog](#-changelog)
 - [Licencia y Contacto](#-licencia-y-contacto)
@@ -50,6 +48,63 @@
 ## 📝 Descripción
 
 **Medula** es una plataforma web moderna para digitalizar la gestión clínica y administrativa de centros de salud. Conecta **pacientes**, **médicos** y **administradores** en flujos seguros y eficientes: **agenda**, **historial clínico**, **exámenes**, **prescripciones** y **dashboard**.
+
+---
+
+## 🖼️ Vista previa
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/images/01-portal-medico-atencion.png" alt="Portal Médico — Atención del paciente" width="480" />
+      <br/><sub>Portal Médico — Atención del paciente</sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/02-portal-medico-agenda.png" alt="Agenda del Médico" width="480" />
+      <br/><sub>Agenda del Médico</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/images/03-portal-medico-configuracion.png" alt="Configuración del Médico" width="480" />
+      <br/><sub>Configuración del Médico</sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/04-admin-dashboard.png" alt="Dashboard Administrador" width="480" />
+      <br/><sub>Dashboard Administrador</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/images/05-portal-paciente-historial.png" alt="Portal Paciente — Historial" width="480" />
+      <br/><sub>Portal Paciente — Historial</sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/06-admin-usuarios.png" alt="Administración de Usuarios" width="480" />
+      <br/><sub>Administración de Usuarios</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/images/07-admin-citas.png" alt="Gestión de Citas Médicas" width="480" />
+      <br/><sub>Gestión de Citas Médicas</sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/08-admin-centros.png" alt="Gestión de Centros de Salud" width="480" />
+      <br/><sub>Gestión de Centros de Salud</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="docs/images/09-portal-paciente-recetas.png" alt="Portal Paciente — Recetas" width="820" />
+      <br/><sub>Portal Paciente — Recetas</sub>
+    </td>
+  </tr>
+</table>
+
+</div>
 
 ---
 
@@ -75,8 +130,6 @@ React (Vite) ── Axios ───────────┐
 
 ## 🗃️ Modelo de Datos
 
-> Resumen de colecciones principales (nombres pueden variar levemente según el repo).
-
 | Colección         | Campos clave                                                                          |
 |-------------------|----------------------------------------------------------------------------------------|
 | `User`            | `nombre`, `email`, `rut`, `rol (admin/medico/paciente)`, `hash`                        |
@@ -88,16 +141,11 @@ React (Vite) ── Axios ───────────┐
 
 **Índices recomendados**
 ```js
-// HistorialMedico
 db.Historial.createIndex({ paciente_id: 1, fecha: -1 });
 db.Historial.createIndex({ profesional_id: 1 });
 db.Historial.createIndex({ fecha: -1 });
-
-// Examenes
 db.Examenes.createIndex({ paciente_id: 1, fecha_resultado: -1 });
 db.Examenes.createIndex({ historial_id: 1 });
-
-// Appointment
 db.Appointments.createIndex({ profesional_id: 1, fecha_hora: -1 });
 ```
 
@@ -141,17 +189,10 @@ server/                     # Node/Express
 ### 📦 Instalación
 
 ```bash
-# Clonar
 git clone https://github.com/Medula-Chile/Medula.git
 cd Medula
-
-# Backend
-cd server
-npm install
-
-# Frontend
-cd ../client
-npm install
+cd server && npm install
+cd ../client && npm install
 ```
 
 ### 🔧 Variables de Entorno
@@ -175,7 +216,7 @@ VITE_API_URL="http://localhost:5000/api"
 ```bash
 # Backend
 cd server
-npm run dev    # nodemon
+npm run dev
 
 # Frontend (otra terminal)
 cd client
@@ -189,19 +230,18 @@ npm run dev    # http://localhost:5173
 ### 👨‍⚕️ Doctores
 - Gestión de pacientes y fichas.
 - **Historial clínico** (diagnóstico, tratamiento, notas, medicamentos).
-- **Exámenes** asociados a consultas/pacientes (PDF/imagen opcional).
-- Agenda y manejo de **citas**.
+- **Exámenes** (PDF/imagen).
+- Agenda y **citas**.
 
 ### 🧑‍🤝‍🧑 Pacientes
-- Acceso a su historial clínico.
+- Historial clínico propio.
 - Gestión de **citas**.
 - Prescripciones y resultados.
-- Actualización de datos personales.
+- Datos personales.
 
 ### 🔐 Autenticación
-- Login/Registro con **JWT**.
-- Roles: **Admin**, **Médico**, **Paciente**.
-- Protección de rutas por rol.
+- **JWT** + roles (**Admin**, **Médico**, **Paciente**).
+- Protección de rutas.
 
 ---
 
@@ -243,23 +283,12 @@ Authorization: Bearer <token>
 
 ```json
 [
-  {
-    "_id": "671...e9",
-    "medicoNombre": "Dra. Paula Contreras",
+  { "medicoNombre": "Dra. Paula Contreras",
     "fecha_hora": "2024-08-15T10:30:00.000Z",
     "resumen": "Control anual; diagnóstico: anemia ferropénica",
-    "observaciones": "Suplemento de hierro por 3 meses",
     "estado": "completada",
     "examenes": [
-      {
-        "_id": "672...d4",
-        "tipo": "Hemograma",
-        "fecha_resultado": "2024-08-14T12:00:00.000Z",
-        "laboratorio": "LabCentral",
-        "resultado": "Hb baja (10.8 g/dL)",
-        "archivoUrl": "https://.../hemograma-672d4.pdf",
-        "historial_id": "671...e9"
-      }
+      { "tipo": "Hemograma", "resultado": "Hb baja (10.8 g/dL)" }
     ]
   }
 ]
@@ -280,8 +309,7 @@ Content-Type: application/json
   "tratamiento": "Amoxicilina 500mg c/8h por 7 días",
   "medicamentos": [
     { "nombre": "Amoxicilina", "dosis": "500mg", "frecuencia": "c/8h", "duracion": "7d" }
-  ],
-  "notas": "Hidratación y reposo"
+  ]
 }
 ```
 
@@ -289,39 +317,29 @@ Content-Type: application/json
 
 ## 🐳 Docker (opcional)
 
-Archivo mínimo `docker-compose.yml`:
-
 ```yaml
 version: '3.9'
 services:
   api:
     build: ./server
-    container_name: medula_api
     environment:
       - PORT=5000
       - NODE_ENV=production
       - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
-    ports:
-      - "5000:5000"
-    depends_on:
-      - mongo
+    ports: ["5000:5000"]
+    depends_on: [mongo]
 
   web:
     build: ./client
-    container_name: medula_web
     environment:
       - VITE_API_URL=http://localhost:5000/api
-    ports:
-      - "5173:5173"
-    depends_on:
-      - api
+    ports: ["5173:5173"]
+    depends_on: [api]
 
   mongo:
     image: mongo:6
-    container_name: medula_db
-    volumes:
-      - mongo_data:/data/db
+    volumes: [mongo_data:/data/db]
 
 volumes:
   mongo_data:
@@ -331,56 +349,39 @@ volumes:
 
 ## 🌱 Seeds y Datos de Prueba
 
-Script sugerido: `server/scripts/seed.js` para crear:
-
-- Usuarios (admin, médico, paciente)
-- Médico + Paciente
-- Citas de ejemplo
-- 1–2 historiales con **exámenes**
+`server/scripts/seed.js` (sugerido) para crear usuarios, médico/paciente, citas e historiales con **exámenes**.
 
 ```bash
 cd server
-npm run seed   # si está definido en package.json
+npm run seed   # si está definido
 ```
 
 ---
 
 ## ✅ Testing
 
-- **Unit**: lógica de controladores y utils.
-- **Integration**: endpoints críticos (`/auth`, `/historial`).
+- **Unit**: controladores y utils.
+- **Integration**: `/auth`, `/historial`.
 - **E2E (opcional)**: Cypress (login → agenda → historial → exámenes).
-
-Sugerencia de scripts (`server/package.json`):
-```json
-{
-  "scripts": {
-    "test": "jest --runInBand",
-    "test:watch": "jest --watch",
-    "test:e2e": "cypress run"
-  }
-}
-```
 
 ---
 
 ## ☁️ Despliegue
 
-- **Frontend**: Vercel / Netlify (build Vite).
+- **Frontend**: Vercel / Netlify (Vite).
 - **Backend**: Render / Railway / Fly.io.
 - **DB**: MongoDB Atlas.
-- **Assets**: Cloudinary para PDFs/imagenes de exámenes.
-- **ENV**: en producción, setea `VITE_API_URL` al dominio del backend.
+- **Assets**: Cloudinary.
+- **ENV**: setear `VITE_API_URL` al dominio de backend.
 
 ---
 
 ## 🚀 Performance
 
-- Índices en colecciones grandes (ver [Modelo de Datos](#-modelo-de-datos)).
-- Paginación (`limit`, `skip`) en listados voluminosos.
-- Filtros **server-side** (en `/historial`) cuando cambien `q/from/to`.
-- `populate` selectivo (proyectar campos necesarios).
-- Cache (opcional) para consultas pesadas/recurrentes.
+- Índices (ver Modelo).
+- Paginación (`limit`, `skip`).
+- Filtros server-side (`/historial`).
+- `populate` selectivo.
 
 ---
 
@@ -388,57 +389,31 @@ Sugerencia de scripts (`server/package.json`):
 
 - JWT firmado (rotar `JWT_SECRET`).
 - CORS por entorno.
-- Sanitización / validación de payloads.
-- Control de acceso por rol/middleware.
-- Validación de archivos (si subes PDFs de exámenes).
+- Validación/sanitización de payloads.
+- Control de acceso por rol.
 
 ---
 
 ## 🌍 i18n & Accesibilidad
 
-- Fechas/región **es-CL**.
-- Formularios con labels y `aria-*`.
-- Contraste adecuado y estados `:focus` visibles.
-- Textos alternativos en imágenes.
-
----
-
-## 🆘 Troubleshooting
-
-- **`MongoNetworkError`**: revisa `MONGO_URI` y allowlist de IP en Atlas.
-- **CORS**: ajusta origen en middleware del backend.
-- **404 en API**: confirma `VITE_API_URL` y prefijo `/api`.
-- **JWT inválido**: envía `Authorization: Bearer <token>`.
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Notificaciones (email/SMS) para recordatorios de citas
-- [ ] Integraciones con APIs externas de salud
-- [ ] Firma digital de recetas
-- [ ] Auditoría de cambios en historial
-- [ ] Multisede / multi-centro
-- [ ] App móvil (React Native)
-- [ ] PWA / Modo offline
+- es-CL (fechas).
+- Labels y `aria-*`.
+- Contraste y `:focus` visibles.
 
 ---
 
 ## 🤝 Contribución
 
-1. Haz un **fork**.
-2. Crea tu rama: `git checkout -b feat/mi-feature`.
-3. Commit: `git commit -m "feat: agrega mi feature"`.
-4. Push: `git push origin feat/mi-feature`.
-5. Abre un **Pull Request**.
-
-> Estilo recomendado: [Conventional Commits](https://www.conventionalcommits.org/).
+1. Fork.
+2. Rama: `feat/mi-feature`.
+3. Commit: `feat: agrega mi feature`.
+4. PR.
 
 ---
 
 ## 🧭 Changelog
 
-- **1.0.0** — Base del proyecto: auth, pacientes/médicos, citas, historial con exámenes, dashboard inicial.
+- **1.0.0** — Base: auth, pacientes/médicos, citas, historial con exámenes, dashboard inicial.
 
 ---
 
@@ -446,5 +421,5 @@ Sugerencia de scripts (`server/package.json`):
 
 - Licencia: **MIT** (ver `LICENSE`).
 - Repo: **https://github.com/Medula-Chile/Medula**
-- Issues: usa el tab **Issues** en el repositorio
-- Equipo: Medula Chile
+- Email: **medulaservicio@gmail.com**
+- Issues: usar el tab **Issues** del repositorio
