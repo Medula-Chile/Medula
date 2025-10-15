@@ -10,23 +10,32 @@ export default function MedicamentosPage() {
   const [error, setError] = React.useState('');
   const [query, setQuery] = React.useState('');
   const [pacienteId, setPacienteId] = React.useState(null);
+  const [pacienteIdLoading, setPacienteIdLoading] = React.useState(true);
   const [alergias, setAlergias] = React.useState([]);
   const navigate = useNavigate();
   const goToReceta = (recetaId) => navigate(`/paciente/recetas?folio=${encodeURIComponent(recetaId)}`);
 
   // Resolver pacienteId desde el usuario autenticado
   React.useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setPacienteIdLoading(false);
+      return;
+    }
     
     const fetchPacienteId = async () => {
       try {
+        setPacienteIdLoading(true);
         if (user.pacienteId) {
           setPacienteId(user.pacienteId);
+          setPacienteIdLoading(false);
           return;
         }
         
         const userId = user.id || user._id;
-        if (!userId) return;
+        if (!userId) {
+          setPacienteIdLoading(false);
+          return;
+        }
         
         const resp = await axios.get('http://localhost:5000/api/pacientes');
         const pacientes = Array.isArray(resp.data.pacientes) ? resp.data.pacientes : (Array.isArray(resp.data) ? resp.data : []);
@@ -40,6 +49,8 @@ export default function MedicamentosPage() {
         }
       } catch (err) {
         console.error('Error obteniendo pacienteId:', err);
+      } finally {
+        setPacienteIdLoading(false);
       }
     };
     
@@ -54,7 +65,18 @@ export default function MedicamentosPage() {
   }, []);
 
   React.useEffect(() => {
-    if (!pacienteId) return;
+    if (pacienteIdLoading) {
+      setLoading(true);
+      return;
+    }
+    
+    if (!pacienteId) {
+      setLoading(false);
+      if (!pacienteIdLoading) {
+        setError('No se pudo identificar al paciente.');
+      }
+      return;
+    }
     
     let mounted = true;
     setLoading(true);
@@ -114,7 +136,7 @@ export default function MedicamentosPage() {
     
     fetchMedicamentos();
     return () => { mounted = false; };
-  }, [pacienteId]);
+  }, [pacienteId, pacienteIdLoading]);
 
   // Normalización de estados y orden
   const estadoOrder = { ACTIVO: 1, PENDIENTE: 2, INACTIVO: 3 };

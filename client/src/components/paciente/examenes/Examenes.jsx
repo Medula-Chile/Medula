@@ -11,22 +11,32 @@ const MisExamenes = () => {
     // Obtener el pacienteId del usuario autenticado
     // Primero intentar obtener desde el perfil de paciente
     const [pacienteId, setPacienteId] = useState(null);
+    const [pacienteIdLoading, setPacienteIdLoading] = useState(true);
 
     // Resolver pacienteId desde el usuario autenticado
     useEffect(() => {
-        if (!user) return;
+        if (authLoading) return;
+        if (!user) {
+            setPacienteIdLoading(false);
+            return;
+        }
         
         const fetchPacienteId = async () => {
             try {
+                setPacienteIdLoading(true);
                 // Si el usuario ya tiene pacienteId directo
                 if (user.pacienteId) {
                     setPacienteId(user.pacienteId);
+                    setPacienteIdLoading(false);
                     return;
                 }
                 
                 // Buscar el paciente por usuario_id
                 const userId = user.id || user._id;
-                if (!userId) return;
+                if (!userId) {
+                    setPacienteIdLoading(false);
+                    return;
+                }
                 
                 const resp = await axios.get('http://localhost:5000/api/pacientes');
                 const pacientes = Array.isArray(resp.data.pacientes) ? resp.data.pacientes : (Array.isArray(resp.data) ? resp.data : []);
@@ -36,22 +46,32 @@ const MisExamenes = () => {
                 
                 if (paciente) {
                     setPacienteId(paciente._id);
+                } else {
+                    console.warn('No se encontró paciente para el usuario');
                 }
             } catch (err) {
                 console.error('Error obteniendo pacienteId:', err);
+            } finally {
+                setPacienteIdLoading(false);
             }
         };
         
         fetchPacienteId();
-    }, [user]);
+    }, [user, authLoading]);
 
     // Cargar exámenes cuando el usuario esté autenticado
     useEffect(() => {
-        if (authLoading) return;
+        if (authLoading || pacienteIdLoading) {
+            setLoading(true);
+            return;
+        }
 
         const fetchExamenes = async () => {
             if (!pacienteId) {
-                setError('No se ha identificado al paciente. Por favor, inicie sesión nuevamente.');
+                // Solo mostrar error si ya terminó de cargar y no hay pacienteId
+                if (!pacienteIdLoading) {
+                    setError('No se ha identificado al paciente. Por favor, inicie sesión nuevamente.');
+                }
                 setLoading(false);
                 return;
             }
@@ -78,7 +98,7 @@ const MisExamenes = () => {
         };
 
         fetchExamenes();
-    }, [pacienteId, authLoading]);
+    }, [pacienteId, authLoading, pacienteIdLoading]);
 
     const solicitarDescargable = async (examenId, archivoAdjunto, tipoExamen) => {
         try {
