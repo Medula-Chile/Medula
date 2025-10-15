@@ -106,3 +106,48 @@ exports.obtenerRecetas = async (req, res) => {
     });
   }
 };
+// AGREGAR ESTE MÉTODO AL CONTROLLER
+exports.obtenerRecetasPorPaciente = async (req, res) => {
+  try {
+    const { pacienteId } = req.params;
+
+    console.log('🔍 Buscando recetas para paciente:', pacienteId);
+
+    // Validar que pacienteId sea un ObjectId válido
+    if (!pacienteId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        message: 'ID de paciente no válido'
+      });
+    }
+
+    const recetas = await Receta.find({ paciente_id: pacienteId })
+      .populate({
+        path: 'paciente_id',
+        select: 'usuario_id nombre',
+        populate: { path: 'usuario_id', select: 'nombre rut email' }
+      })
+      .populate({
+        path: 'medico_id',
+        select: 'usuario_id nombre especialidad email',
+        populate: { path: 'usuario_id', select: 'nombre email' }
+      })
+      .sort({ fecha_emision: -1 });
+
+    console.log('📋 Recetas encontradas:', recetas.length);
+
+    if (recetas.length === 0) {
+      return res.status(404).json({
+        message: 'No se encontraron recetas para este paciente',
+        pacienteId: pacienteId
+      });
+    }
+
+    res.json(recetas);
+  } catch (error) {
+    console.error('❌ Error en obtenerRecetasPorPaciente:', error);
+    res.status(500).json({
+      message: 'Error al obtener recetas del paciente',
+      error: error.message
+    });
+  }
+};
