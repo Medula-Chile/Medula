@@ -160,10 +160,11 @@ export default function DoctorInicio() {
             console.debug('[DoctorInicio] citas hoy (raw->mapped):', today.slice(0, 5).map(it => ({ id: it.id, paciente_id: it.paciente_id, paciente: it.paciente })));
           }
         } catch {}
-        // Enriquecer con nombre de paciente si no viene en la cita
+        // Enriquecer con nombre de paciente Y consulta asociada
         const enriched = await Promise.all(today.map(async (it) => {
           let next = { ...it };
-          // Intento A: si tenemos paciente_id pero falta nombre, enriquecer nombre desde /pacientes/:id
+          
+          // PASO 1: Enriquecer nombre de paciente
           if ((next.paciente === '—' || !next.paciente) && next.paciente_id) {
             try {
               const pr = await api.get(`/pacientes/${next.paciente_id}`);
@@ -177,7 +178,7 @@ export default function DoctorInicio() {
               if (name) next = { ...next, paciente: name };
             } catch {}
           }
-          // Intento B: si falta paciente_id, siempre intentar /citas/:id para resolver pid y nombre
+          
           if (!next.paciente_id && next.id) {
             try {
               const cr = await api.get(`/citas/${next.id}`);
@@ -194,6 +195,52 @@ export default function DoctorInicio() {
               next = { ...next, paciente_id: pid || next.paciente_id || null, paciente: next.paciente || name || '—' };
             } catch {}
           }
+          
+          // PASO 2: Buscar consulta asociada a esta cita
+          if (next.id) {
+            try {
+              const consultaResp = await api.get('/consultas', { params: { cita_id: next.id } });
+              const consultas = Array.isArray(consultaResp.data) ? consultaResp.data : [];
+              
+              // Filtrar por paciente para asegurar que es la consulta correcta
+              const consultaFiltrada = next.paciente_id
+                ? consultas.find(c => {
+                    const cPacId = c?.paciente_id?._id || c?.paciente_id || c?.receta?.paciente_id?._id || c?.receta?.paciente_id;
+                    return String(cPacId) === String(next.paciente_id);
+                  })
+                : consultas[0];
+              
+              if (consultaFiltrada) {
+                // Merge datos de la consulta con la cita
+                next = {
+                  ...next,
+                  _consultaId: consultaFiltrada._id,
+                  diagnostico: consultaFiltrada.diagnostico || next.diagnostico,
+                  tratamiento: consultaFiltrada.tratamiento || next.tratamiento,
+                  observaciones: consultaFiltrada.observaciones || next.observaciones,
+                  motivo: consultaFiltrada.motivo || next.motivo,
+                  sintomas: consultaFiltrada.sintomas || null,
+                  examenes: consultaFiltrada.examenes || next.examenes,
+                  licencia: consultaFiltrada.licencia || next.licencia,
+                  receta: consultaFiltrada.receta || null,
+                  recetaId: consultaFiltrada.recetaId || consultaFiltrada.receta?._id || next.recetaId,
+                  medicamentosDet: Array.isArray(consultaFiltrada.receta?.medicamentos)
+                    ? consultaFiltrada.receta.medicamentos.map(m => ({ 
+                        nombre: m.nombre, 
+                        dias: m.duracion, 
+                        frecuencia: m.frecuencia 
+                      }))
+                    : next.medicamentosDet,
+                };
+                console.log('✅ Consulta encontrada para cita:', next.id, 'diagnóstico:', consultaFiltrada.diagnostico);
+              } else {
+                console.log('ℹ️ No hay consulta para cita:', next.id);
+              }
+            } catch (err) {
+              console.log('❌ Error buscando consulta para cita:', next.id, err.message);
+            }
+          }
+          
           return next;
         }));
         try {

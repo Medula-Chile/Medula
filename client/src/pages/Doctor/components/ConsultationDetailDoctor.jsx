@@ -7,17 +7,29 @@ export default function ConsultationDetailDoctor({ consulta }) {
   const { user } = useAuth();
   const doctorNameAuth = (user?.fullName || user?.name || user?.nombre || [user?.firstName, user?.lastName].filter(Boolean).join(' ')).trim() || 'Médico/a';
   const doctorSpecialtyAuth = (user?.specialty || user?.especialidad || user?.profession || user?.titulo || 'Medicina General');
+  
   // Estado local con detalle enriquecido desde backend (consulta guardada)
-  const [detalle, setDetalle] = useState(consulta || null);
+  const [detalle, setDetalle] = useState(null);
+  
+  // RESET INMEDIATO: Cuando cambia la consulta, resetear el detalle
+  useEffect(() => {
+    console.log('🔄 Consulta cambió, reseteando detalle:', {
+      citaId: consulta?.id,
+      paciente: consulta?.paciente,
+      pacienteId: consulta?.paciente_id
+    });
+    setDetalle(consulta || null);
+  }, [consulta]);
+  
   const presion = detalle?.vitals?.presion ?? '—';
   const temperatura = detalle?.vitals?.temperatura ?? '—';
   const pulso = detalle?.vitals?.pulso ?? '—';
 
   // Paciente: nombre y ID desde la consulta seleccionada
-  const pacienteObj = detalle?.paciente_id || detalle?.paciente || null;
+  const pacienteObj = detalle?.paciente_id || detalle?.receta?.paciente_id || detalle?.paciente || null;
   const pacienteId = (typeof pacienteObj === 'object')
     ? (pacienteObj?._id || pacienteObj?.id)
-    : (detalle?.paciente_id || null);
+    : (detalle?.paciente_id || detalle?.pacienteId || null);
   const [pacienteNombreFetched, setPacienteNombreFetched] = useState(null);
   const pacienteNombreGuess = (
     (typeof pacienteObj === 'string' ? pacienteObj : null) ||
@@ -37,6 +49,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
     const run = async () => {
       try {
         if (!consulta) { setDetalle(null); return; }
+        
         // Si ya viene con contenido útil, no disparamos request
         const alreadyRich = (consulta?.diagnostico && consulta.diagnostico !== '—') ||
                             (Array.isArray(consulta?.examenes) && consulta.examenes.length > 0) ||
@@ -44,35 +57,87 @@ export default function ConsultationDetailDoctor({ consulta }) {
                             (consulta?.observaciones && consulta.observaciones !== '—');
         if (alreadyRich) { setDetalle(consulta); return; }
 
-        // 1) Intentar por ID de Consulta (caso Historial)
-        let saved = null;
-        try {
-          // /consultas/:id
-          const r = await api.get(`/consultas/${consulta.id || consulta._id}`);
-          saved = r.data || null;
-        } catch {}
-        if (!saved) {
-          // /consultas?_id=:id o ?consulta=:id
-          try {
-            const r = await api.get('/consultas', { params: { _id: (consulta.id || consulta._id) } });
-            const arr = Array.isArray(r.data) ? r.data : (Array.isArray(r.data?.consultas) ? r.data.consultas : []);
-            saved = arr[0] || null;
-          } catch {}
+        // Obtener IDs relevantes
+        const citaId = consulta.id || consulta._id || consulta?.cita_id || consulta?.citaId;
+        const consultaPacienteId = (
+          consulta?.paciente_id?._id || 
+          consulta?.paciente_id || 
+          consulta?.pacienteId ||
+          consulta?.receta?.paciente_id?._id ||
+          consulta?.receta?.paciente_id
+        );
+        
+        if (!citaId) {
+          setDetalle(consulta);
+          return;
         }
 
-        // 2) Fallback: buscar por cita_id (caso Inicio)
-        if (!saved && consulta?.id) {
+        let saved = null;
+
+        // ESTRATEGIA 1: Buscar por cita_id (caso más común en DoctorPacientes)
+        // El objeto que llega es una CITA, no una CONSULTA, por lo que su ID es el cita_id
+        try {
+          console.log('🔍 Buscando consulta por cita_id:', citaId, 'paciente:', consultaPacienteId);
+          const r1 = await api.get('/consultas', { params: { cita_id: citaId } });
+          const arr1 = Array.isArray(r1.data) ? r1.data : (Array.isArray(r1.data?.consultas) ? r1.data.consultas : []);
+          console.log('📦 Consultas encontradas:', arr1.length, arr1.map(x => ({
+            _id: x._id,
+            cita_id: x.cita_id,
+            paciente_id: x.paciente_id?._id || x.paciente_id,
+            diagnostico: x.diagnostico
+          })));
+          
+          // Filtrar por paciente si está disponible
+          const filtered1 = consultaPacienteId
+            ? arr1.filter(x => {
+                const xPacId = x?.paciente_id?._id || x?.paciente_id || x?.pacienteId;
+                const match = String(xPacId) === String(consultaPacienteId);
+                console.log('  Filtro paciente:', xPacId, '===', consultaPacienteId, '?', match);
+                return match;
+              })
+            : arr1;
+          
+          console.log('✅ Consultas filtradas:', filtered1.length);
+          
+          // Buscar la que coincida exactamente con el cita_id
+          saved = filtered1.find(x => String(x?.cita_id || x?.citaId) === String(citaId)) || filtered1[0] || null;
+          
+          if (saved) {
+            console.log('✅ Consulta encontrada:', {
+              _id: saved._id,
+              cita_id: saved.cita_id,
+              paciente_id: saved.paciente_id?._id || saved.paciente_id,
+              diagnostico: saved.diagnostico
+            });
+          } else {
+            console.log('❌ No se encontró consulta para esta cita');
+          }
+        } catch (err) {
+          console.log('❌ Error buscando consulta por cita_id:', citaId, err.message);
+        }
+
+        // ESTRATEGIA 2: Solo si parece ser un ID de consulta (no de cita)
+        // Las consultas vienen con diagnostico, observaciones, etc.
+        // Las citas solo tienen motivo, estado, fecha_hora
+        if (!saved && consulta?._id && consulta?.diagnostico) {
+          // Parece ser una consulta completa, intentar por ID directo
           try {
-            const r1 = await api.get('/consultas', { params: { cita_id: consulta.id } });
-            const arr1 = Array.isArray(r1.data) ? r1.data : (Array.isArray(r1.data?.consultas) ? r1.data.consultas : []);
-            saved = arr1.find(x => String(x?.cita_id || x?.citaId) === String(consulta.id)) || arr1[0] || null;
-          } catch {}
-          if (!saved) {
-            try {
-              const r2 = await api.get('/consultas', { params: { citaId: consulta.id } });
-              const arr2 = Array.isArray(r2.data) ? r2.data : (Array.isArray(r2.data?.consultas) ? r2.data.consultas : []);
-              saved = arr2.find(x => String(x?.cita_id || x?.citaId) === String(consulta.id)) || arr2[0] || null;
-            } catch {}
+            console.log('🔍 Intentando buscar por ID directo (parece consulta):', citaId);
+            const r = await api.get(`/consultas/${citaId}`);
+            const data = r.data || null;
+            // Validar que sea del mismo paciente si está disponible
+            if (data && consultaPacienteId) {
+              const dataPacId = data?.paciente_id?._id || data?.paciente_id || data?.pacienteId;
+              if (String(dataPacId) === String(consultaPacienteId)) {
+                saved = data;
+                console.log('✅ Consulta encontrada por ID directo');
+              }
+            } else if (data) {
+              saved = data;
+              console.log('✅ Consulta encontrada por ID directo (sin validar paciente)');
+            }
+          } catch (err) {
+            console.log('❌ No se encontró consulta por ID directo:', citaId, err.message);
           }
         }
 
@@ -120,7 +185,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
     let cancelled = false;
     const run = async () => {
       try {
-        const cid = consulta?.cita_id || detalle?.cita_id || consulta?.citaId || detalle?.citaId;
+        const cid = consulta?.cita_id || consulta?.citaId || consulta?.id;
         if (!cid) return;
         const r = await api.get(`/citas/${cid}`);
         const c = r.data || {};
@@ -133,7 +198,7 @@ export default function ConsultationDetailDoctor({ consulta }) {
     };
     run();
     return () => { cancelled = true; };
-  }, [consulta?.cita_id, detalle?.cita_id]);
+  }, [consulta]);
 
   // Si el "nombre" parece un ObjectId o un ID sin espacios, intentar obtener nombre real desde API
   useEffect(() => {
@@ -189,15 +254,24 @@ export default function ConsultationDetailDoctor({ consulta }) {
   const [examenesVinculados, setExamenesVinculados] = useState([]);
   const [examenesLoading, setExamenesLoading] = useState(false);
   const [estadoFiltro, setEstadoFiltro] = useState(''); // '', solicitado, realizado, analizado, entregado
+  
   const fetchExamenes = async () => {
     let cancelled = false;
     try {
       setExamenesLoading(true);
-      const params = {};
-      if (detalle?._id) params.consulta = detalle._id;
-      else if (pacienteId) params.paciente = pacienteId;
-      else { setExamenesVinculados([]); setExamenesLoading(false); return; }
+      
+      // Solo buscar exámenes si hay un ID de consulta guardada
+      // NO buscar por paciente para evitar mostrar exámenes de otras consultas
+      const consultaId = detalle?._id || detalle?._consultaId;
+      if (!consultaId) {
+        setExamenesVinculados([]);
+        setExamenesLoading(false);
+        return;
+      }
+      
+      const params = { consulta: consultaId };
       if (estadoFiltro) params.estado = estadoFiltro;
+      
       const r = await api.get('/examenes', { params });
       if (!cancelled) setExamenesVinculados(Array.isArray(r.data) ? r.data : []);
     } catch {
@@ -207,11 +281,18 @@ export default function ConsultationDetailDoctor({ consulta }) {
     }
     return () => { cancelled = true; };
   };
+  
   useEffect(() => {
-    // refetch when consulta id, paciente or filter changes
-    fetchExamenes();
+    // Resetear exámenes cuando cambia la consulta
+    setExamenesVinculados([]);
+    
+    // Solo cargar si hay ID de consulta
+    const consultaId = detalle?._id || detalle?._consultaId;
+    if (consultaId) {
+      fetchExamenes();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detalle?._id, pacienteId, estadoFiltro]);
+  }, [consulta?.id, detalle?._id, detalle?._consultaId, estadoFiltro]);
 
   // Medicamentos desde receta guardada
   const medsFromReceta = Array.isArray(detalle?.receta?.medicamentos)

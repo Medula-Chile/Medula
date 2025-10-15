@@ -32,6 +32,7 @@ exports.crearConsulta = async (req, res) => {
 
     const payload = {
       cita_id: cita_id || null,
+      paciente_id: receta?.paciente_id || consulta.paciente_id || null,
       motivo: String(consulta.motivo).trim(),
       sintomas: (consulta.sintomas || '').trim(),
       diagnostico: String(consulta.diagnostico).trim(),
@@ -241,13 +242,23 @@ exports.listarConsultas = async (req, res) => {
       }
     }
 
-    if (paciente) filter['receta.paciente_id'] = paciente;
+    // Filtrar por paciente usando el campo directo (nuevo) o el embebido en receta (legacy)
+    if (paciente) {
+      filter.$or = [
+        { paciente_id: paciente },
+        { 'receta.paciente_id': paciente }
+      ];
+    }
     if (medico) filter['receta.medico_id'] = medico;
     // Permitir filtrar por vínculo con cita
     if (cita_id || citaId) filter.cita_id = cita_id || citaId;
 
     const cs = await Consulta.find(filter)
       .sort({ createdAt: -1 })
+      .populate({
+        path: 'paciente_id',
+        populate: { path: 'usuario_id', select: 'nombre rut' }
+      })
       .populate({
         path: 'receta.paciente_id',
         populate: { path: 'usuario_id', select: 'nombre rut' }

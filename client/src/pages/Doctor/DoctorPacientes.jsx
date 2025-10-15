@@ -82,8 +82,63 @@ export default function DoctorPacientes() {
         licencia: { otorga: false, dias: null, nota: '' },
       }));
 
+      // Enriquecer con consultas asociadas
+      const enriched = await Promise.all(mapped.map(async (it) => {
+        let next = { ...it };
+        
+        // Buscar consulta asociada a esta cita
+        if (next.id) {
+          try {
+            const consultaResp = await axios.get('http://localhost:5000/api/consultas', { 
+              params: { cita_id: next.id } 
+            });
+            const consultas = Array.isArray(consultaResp.data) ? consultaResp.data : [];
+            
+            // Filtrar por paciente para asegurar que es la consulta correcta
+            const consultaFiltrada = next.paciente_id
+              ? consultas.find(c => {
+                  const cPacId = c?.paciente_id?._id || c?.paciente_id || c?.receta?.paciente_id?._id || c?.receta?.paciente_id;
+                  return String(cPacId) === String(next.paciente_id);
+                })
+              : consultas[0];
+            
+            if (consultaFiltrada) {
+              // Merge datos de la consulta con la cita
+              next = {
+                ...next,
+                _id: consultaFiltrada._id,
+                _consultaId: consultaFiltrada._id,
+                diagnostico: consultaFiltrada.diagnostico || next.diagnostico,
+                tratamiento: consultaFiltrada.tratamiento || next.tratamiento,
+                observaciones: consultaFiltrada.observaciones || next.observaciones,
+                motivo: consultaFiltrada.motivo || next.motivo,
+                sintomas: consultaFiltrada.sintomas || null,
+                examenes: consultaFiltrada.examenes || next.examenes,
+                licencia: consultaFiltrada.licencia || next.licencia,
+                receta: consultaFiltrada.receta || null,
+                recetaId: consultaFiltrada.recetaId || consultaFiltrada.receta?._id || next.recetaId,
+                medicamentosDet: Array.isArray(consultaFiltrada.receta?.medicamentos)
+                  ? consultaFiltrada.receta.medicamentos.map(m => ({ 
+                      nombre: m.nombre, 
+                      dias: m.duracion, 
+                      frecuencia: m.frecuencia 
+                    }))
+                  : next.medicamentosDet,
+              };
+              console.log('✅ [DoctorPacientes] Consulta encontrada para cita:', next.id);
+            } else {
+              console.log('ℹ️ [DoctorPacientes] No hay consulta para cita:', next.id);
+            }
+          } catch (err) {
+            console.log('❌ [DoctorPacientes] Error buscando consulta:', next.id, err.message);
+          }
+        }
+        
+        return next;
+      }));
+
       // cargar en el store existente para reutilizar UI/filtros
-      setAssignments(mapped);
+      setAssignments(enriched);
     } catch (e) {
       console.error('Error cargando citas del backend:', e);
       setError('No fue posible cargar tus citas.');
