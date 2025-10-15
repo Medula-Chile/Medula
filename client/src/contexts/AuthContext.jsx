@@ -50,8 +50,14 @@ export function AuthProvider({ children }) {
         };
     }, [loadUser]);
 
+    const logout = useCallback(() => {
+        localStorage.removeItem('token');
+        setUser(null);
+        window.dispatchEvent(new Event('auth:logout'));
+    }, []);
+
     return (
-        <AuthContext.Provider value={{ user, setUser, loading, refresh: loadUser }}>
+        <AuthContext.Provider value={{ user, setUser, loading, refresh: loadUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

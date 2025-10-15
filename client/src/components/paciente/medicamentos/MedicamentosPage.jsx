@@ -1,64 +1,120 @@
 import React from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export default function MedicamentosPage() {
-  // Página que lista los medicamentos prescritos al paciente.
-  // Carga datos desde un mock y permite navegar a la receta asociada.
+  const { user } = useAuth();
   const [meds, setMeds] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
-  // Búsqueda por ID o nombre de medicamento
   const [query, setQuery] = React.useState('');
+  const [pacienteId, setPacienteId] = React.useState(null);
+  const [alergias, setAlergias] = React.useState([]);
   const navigate = useNavigate();
-  const goToReceta = (idOrFolio, folio) => navigate(`/paciente/recetas?folio=${encodeURIComponent(folio || idOrFolio)}`);
+  const goToReceta = (recetaId) => navigate(`/paciente/recetas?folio=${encodeURIComponent(recetaId)}`);
 
-  // Cargar recetas para derivar frecuencia/duración desde el folio
-  const [recetas, setRecetas] = React.useState([]);
+  // Resolver pacienteId desde el usuario autenticado
   React.useEffect(() => {
-    // Carga inicial de recetas (mock). Se usa BASE_URL para soportar entornos.
-    let mounted = true;
-    const base = import.meta.env.BASE_URL || '/';
-    axios.get(`${base}mock/recetas.json`)
-      .then(r => { if (mounted) setRecetas(Array.isArray(r.data) ? r.data : []); })
-      .catch(() => { /* opcional: console.warn('No se pudo cargar recetas'); */ });
-    return () => { mounted = false; };
-  }, []);
-  const recetaByFolio = React.useMemo(() => {
-    // Mapa de recetas por id/folio para búsqueda rápida al formatear frecuencia.
-    const map = new Map();
-    for (const r of recetas) map.set(r.id, r);
-    return map;
-  }, [recetas]);
+    if (!user) return;
+    
+    const fetchPacienteId = async () => {
+      try {
+        if (user.pacienteId) {
+          setPacienteId(user.pacienteId);
+          return;
+        }
+        
+        const userId = user.id || user._id;
+        if (!userId) return;
+        
+        const resp = await axios.get('http://localhost:5000/api/pacientes');
+        const pacientes = Array.isArray(resp.data.pacientes) ? resp.data.pacientes : (Array.isArray(resp.data) ? resp.data : []);
+        const paciente = pacientes.find(p => 
+          String(p.usuario_id?._id || p.usuario_id) === String(userId)
+        );
+        
+        if (paciente) {
+          setPacienteId(paciente._id);
+          setAlergias(paciente.alergias || []);
+        }
+      } catch (err) {
+        console.error('Error obteniendo pacienteId:', err);
+      }
+    };
+    
+    fetchPacienteId();
+  }, [user]);
 
   const displayFrecuencia = React.useCallback((m) => {
-    // Obtiene frecuencia/duración desde la receta, si existe; si no usa los campos del medicamento.
-    const r = recetaByFolio.get(m.folio || m.id);
-    if (r && Array.isArray(r.meds)) {
-      const rm = r.meds.find(x => (x.nombre || '').toLowerCase() === (m.nombre || '').toLowerCase());
-      if (rm) {
-        const f = rm.frecuencia || m.frecuencia || '';
-        if (f && f.toLowerCase().includes('diario')) return f;
-        const d = rm.duracionDias || m.duracionDias;
-        return `${f}${d ? ` x ${d} días` : ''}`;
-      }
-    }
     const f = m.frecuencia || '';
+    const d = m.duracion || m.duracionDias;
     if (f && f.toLowerCase().includes('diario')) return f;
-    return `${f}${m.duracionDias ? ` x ${m.duracionDias} días` : ''}`;
-  }, [recetaByFolio]);
+    return `${f}${d ? ` x ${d} días` : ''}`;
+  }, []);
 
   React.useEffect(() => {
-    // Carga inicial del listado de medicamentos desde mock.
+    if (!pacienteId) return;
+    
     let mounted = true;
     setLoading(true);
-    const base = import.meta.env.BASE_URL || '/';
-    axios.get(`${base}mock/medicamentos.json`)
-      .then(r => { if (mounted) { setMeds(Array.isArray(r.data) ? r.data : []); setError(''); }})
-      .catch(() => { if (mounted) setError('No se pudo cargar la lista de medicamentos.'); })
-      .finally(() => { if (mounted) setLoading(false); });
+    setError('');
+    
+    const fetchMedicamentos = async () => {
+      try {
+        // Obtener todas las consultas del paciente
+        const consultasResp = await axios.get('http://localhost:5000/api/consultas', {
+          params: { paciente: pacienteId }
+        });
+        const consultas = Array.isArray(consultasResp.data) ? consultasResp.data : [];
+        
+        // Extraer medicamentos de las recetas embebidas en las consultas
+        const medicamentosMap = new Map();
+        
+        for (const consulta of consultas) {
+          const receta = consulta.receta;
+          if (!receta || !Array.isArray(receta.medicamentos)) continue;
+          
+          const recetaId = receta._id || consulta._id;
+          const fechaEmision = receta.fecha_emision || consulta.createdAt;
+          const activa = receta.activa !== undefined ? receta.activa : true;
+          
+          for (const med of receta.medicamentos) {
+            const key = `${recetaId}-${med.nombre}`;
+            if (!medicamentosMap.has(key)) {
+              medicamentosMap.set(key, {
+                id: recetaId,
+                folio: recetaId,
+                nombre: med.nombre || '',
+                dosis: med.dosis || '',
+                frecuencia: med.frecuencia || '',
+                duracion: med.duracion || '',
+                instrucciones: med.instrucciones || '',
+                inicio: fechaEmision ? new Date(fechaEmision).toLocaleDateString('es-CL') : '',
+                estado: activa ? 'ACTIVO' : 'INACTIVO',
+                recetaId: recetaId
+              });
+            }
+          }
+        }
+        
+        if (mounted) {
+          setMeds(Array.from(medicamentosMap.values()));
+          setError('');
+        }
+      } catch (err) {
+        console.error('Error cargando medicamentos:', err);
+        if (mounted) {
+          setError('No se pudo cargar la lista de medicamentos.');
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    
+    fetchMedicamentos();
     return () => { mounted = false; };
-  }, []);
+  }, [pacienteId]);
 
   // Normalización de estados y orden
   const estadoOrder = { ACTIVO: 1, PENDIENTE: 2, INACTIVO: 3 };
@@ -71,9 +127,11 @@ export default function MedicamentosPage() {
       nombre: m.nombre || '',
       dosis: m.dosis || '',
       frecuencia: m.frecuencia || '',
+      duracion: m.duracion || '',
       duracionDias: m.duracionDias,
       inicio: m.inicio || '',
       estado: toUpper(m.estado) === 'SUSPENDIDO' ? 'INACTIVO' : toUpper(m.estado || 'INACTIVO'),
+      recetaId: m.recetaId
     }));
     // Respetar estados del mock y solo ordenar por estado sin imponer topes
     return [...base].sort((a, b) => (estadoOrder[a.estado] ?? 99) - (estadoOrder[b.estado] ?? 99));
@@ -131,9 +189,10 @@ export default function MedicamentosPage() {
             {/* Cabecera de columnas (solo cuando hay datos y no está cargando) */}
             {!loading && !error && (
               <div className="row gx-2 gy-0 border-bottom small text-muted fw-semibold py-2 px-2 position-sticky top-0 bg-white" style={{ zIndex: 1 }}>
-                <div className="col-6 col-md-3">Nombre</div>
+                <div className="col-6 col-md-2">Nombre</div>
                 <div className="col-6 col-md-2">Dosis</div>
-                <div className="col-12 col-md-3 d-none d-md-block">Frecuencia</div>
+                <div className="col-12 col-md-2 d-none d-md-block">Frecuencia</div>
+                <div className="col-6 col-md-2 d-none d-md-block">Duración</div>
                 <div className="col-6 col-md-2 d-none d-md-block">Inicio</div>
                 <div className="col-6 col-md-1 d-none d-md-block">Receta</div>
                 <div className="col-6 col-md-1 d-none d-md-block text-end pe-2">Estado</div>
@@ -146,18 +205,19 @@ export default function MedicamentosPage() {
               <div className="px-2">
                 {current.map(m => (
                   <div key={`${m.id}-${m.nombre}`} className="row gx-2 gy-2 py-2 border-bottom align-items-center small">
-                    <div className="col-6 col-md-3 fw-medium">{m.nombre}</div>
+                    <div className="col-6 col-md-2 fw-medium">{m.nombre}</div>
                     <div className="col-6 col-md-2">{m.dosis}</div>
-                    <div className="col-12 col-md-3 d-none d-md-block">{displayFrecuencia(m)}</div>
+                    <div className="col-12 col-md-2 d-none d-md-block">{m.frecuencia || '—'}</div>
+                    <div className="col-6 col-md-2 d-none d-md-block">{m.duracion || '—'}</div>
                     <div className="col-6 col-md-2 d-none d-md-block">{m.inicio}</div>
                     <div className="col-6 col-md-1 d-none d-md-block">
                       <button
                         className="btn btn-link p-0"
                         title="Ver receta"
-                        aria-label={`Ver receta ${m.folio || m.id}`}
-                        onClick={() => goToReceta(m.id, m.folio)}
+                        aria-label={`Ver receta ${m.recetaId}`}
+                        onClick={() => goToReceta(m.recetaId)}
                       >
-                        {m.folio || m.id}
+                        <i className="fas fa-file-prescription"></i>
                       </button>
                     </div>
                     <div className="col-6 col-md-1 d-none d-md-block text-end pe-2">
@@ -167,14 +227,14 @@ export default function MedicamentosPage() {
                     </div>
                     {/* Resumen móvil */}
                     <div className="col-12 d-md-none small text-muted mt-1">
-                      {displayFrecuencia(m)} • {m.inicio} • 
+                      {m.frecuencia || '—'} • {m.duracion || '—'} • {m.inicio} • 
                       <button
                         className="btn btn-link p-0 align-baseline ms-1 me-1"
                         title="Ver receta"
-                        aria-label={`Ver receta ${m.folio || m.id}`}
-                        onClick={() => goToReceta(m.id, m.folio)}
+                        aria-label={`Ver receta ${m.recetaId}`}
+                        onClick={() => goToReceta(m.recetaId)}
                       >
-                        {m.folio || m.id}
+                        Receta
                       </button>
                       • {m.estado.charAt(0)}{m.estado.slice(1).toLowerCase()}
                     </div>
@@ -210,13 +270,15 @@ export default function MedicamentosPage() {
       </div>
 
       <div className="col-12 col-md-12 col-lg-3 col-xl-3">
-        <div className="alert border-destructive bg-destructive-5 d-flex align-items-center">
-          <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
-          <div className="text-destructive small">
-            <strong>ALERGIAS:</strong><br />
-            Penicilina
+        {alergias.length > 0 && (
+          <div className="alert border-destructive bg-destructive-5 d-flex align-items-center">
+            <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
+            <div className="text-destructive small">
+              <strong>ALERGIAS:</strong><br />
+              {alergias.join(', ')}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Resumen de medicamentos activos (top 5) con enlaces a receta */}
         <div className="card mb-3">
@@ -227,7 +289,7 @@ export default function MedicamentosPage() {
             {(ordered.filter(m=>m.estado==='ACTIVO').slice(0,5)).map((m)=> (
               <div key={`act-${m.id}-${m.nombre}`} className="d-flex align-items-center gap-2 small mb-2">
                 <i className="fas fa-pills text-success small"></i>
-                <span>{m.nombre} {m.dosis} <button className="btn btn-link p-0 align-baseline" onClick={()=>goToReceta(m.folio || m.id, m.folio)}><span className="text-muted">({m.folio || m.id})</span></button></span>
+                <span>{m.nombre} {m.dosis} <button className="btn btn-link p-0 align-baseline" onClick={()=>goToReceta(m.recetaId)} title="Ver receta"><i className="fas fa-file-prescription text-muted"></i></button></span>
               </div>
             ))}
             {ordered.filter(m=>m.estado==='ACTIVO').length === 0 && (

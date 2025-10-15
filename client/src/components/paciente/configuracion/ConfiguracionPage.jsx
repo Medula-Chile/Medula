@@ -1,12 +1,15 @@
 import React from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function ConfiguracionPage() {
-  // Página de configuración de preferencias de usuario (demo).
-  // Persiste algunas opciones en localStorage para simular preferencias.
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [notifEmail, setNotifEmail] = React.useState(false);
   const [notifSMS, setNotifSMS] = React.useState(false);
   const [theme, setTheme] = React.useState('system');
   const [lang, setLang] = React.useState('es');
+  const [loggingOut, setLoggingOut] = React.useState(false);
 
   // Cargar preferencias desde localStorage
   React.useEffect(() => {
@@ -24,7 +27,48 @@ export default function ConfiguracionPage() {
     const data = { notifEmail, notifSMS, theme, lang };
     localStorage.setItem('medula_config', JSON.stringify(data));
   }, [notifEmail, notifSMS, theme, lang]);
-  // Implementar cierre de sesión
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    
+    const confirmed = window.confirm('¿Estás seguro de que deseas cerrar sesión?');
+    if (!confirmed) return;
+    
+    try {
+      setLoggingOut(true);
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      alert('Error al cerrar sesión. Por favor, intenta nuevamente.');
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
+  const handleLogoutAll = async () => {
+    if (loggingOut) return;
+    
+    const confirmed = window.confirm(
+      '¿Estás seguro de que deseas cerrar sesión en todos los dispositivos?\n\n' +
+      'Esto cerrará tu sesión en este dispositivo y en cualquier otro donde hayas iniciado sesión.'
+    );
+    if (!confirmed) return;
+    
+    try {
+      setLoggingOut(true);
+      // Por ahora, el logout cierra la sesión actual
+      // En el futuro se puede implementar un endpoint para invalidar todos los tokens
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      alert('Error al cerrar sesión. Por favor, intenta nuevamente.');
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
   return (
     <div className="row g-3">
       <div className="col-12">
@@ -70,10 +114,45 @@ export default function ConfiguracionPage() {
               <div className="col-12 col-md-6">
                 <h6 className="mb-2">Sesión</h6>
                 <div className="d-flex gap-2 flex-wrap">
-                  <button className="btn btn-outline-secondary btn-sm" id="btnLogoutCurrent">Cerrar sesión (este dispositivo)</button>
-                  <button className="btn btn-outline-danger btn-sm" id="btnLogoutAll">Cerrar sesión en todos los dispositivos</button>
+                  <button 
+                    className="btn btn-outline-secondary btn-sm" 
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                  >
+                    {loggingOut ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Cerrando sesión...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-sign-out-alt me-2"></i>
+                        Cerrar sesión (este dispositivo)
+                      </>
+                    )}
+                  </button>
+                  <button 
+                    className="btn btn-outline-danger btn-sm" 
+                    onClick={handleLogoutAll}
+                    disabled={loggingOut}
+                  >
+                    {loggingOut ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Cerrando sesión...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-power-off me-2"></i>
+                        Cerrar sesión en todos los dispositivos
+                      </>
+                    )}
+                  </button>
                 </div>
-                <p className="text-muted-foreground mt-2 mb-0">Si usas ClaveÚnica, el cierre global puede requerir revocar desde el proveedor.</p>
+                <p className="text-muted-foreground mt-2 mb-0">
+                  <i className="fas fa-info-circle me-1"></i>
+                  Al cerrar sesión serás redirigido a la página de inicio de sesión.
+                </p>
               </div>
             </div>
           </div>
