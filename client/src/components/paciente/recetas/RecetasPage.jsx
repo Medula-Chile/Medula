@@ -1,8 +1,9 @@
 import React from 'react';
 import ActiveMedicationsCard from '../shared/ActiveMedicationsCard';
 import QuickActionsCard from '../shared/QuickActionsCard';
+import MedicamentosList from '../shared/MedicamentosList';
 import { useLocation } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 
 export default function RecetasPage() {
@@ -10,15 +11,42 @@ export default function RecetasPage() {
   const [recetas, setRecetas] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
-  
-  // Obtener el pacienteId del usuario autenticado
-  const pacienteId = user?.pacienteId || user?.id || user?.user?.id;
+  const [pacienteId, setPacienteId] = React.useState(null);
+  const [alergias, setAlergias] = React.useState([]);
+
+  // Resolver el pacienteId del usuario autenticado usando endpoint protegido /me
+  React.useEffect(() => {
+    const resolvePacienteId = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        // Requiere JWT; el interceptor de api agrega Authorization automáticamente
+        const pacienteResp = await api.get('/pacientes/me');
+        const paciente = pacienteResp?.data;
+        if (!paciente?._id) {
+          setError('No se pudo identificar su perfil de paciente. Inicie sesión nuevamente.');
+          setLoading(false);
+          return;
+        }
+        console.log('✅ Paciente actual:', paciente._id);
+        setPacienteId(paciente._id);
+        if (Array.isArray(paciente.alergias)) {
+          setAlergias(paciente.alergias.filter(Boolean));
+        }
+      } catch (err) {
+        console.error('❌ Error obteniendo paciente actual (/me):', err);
+        setError('No se pudo obtener su perfil de paciente');
+      } finally {
+        setLoading(false);
+      }
+    };
+    resolvePacienteId();
+  }, [user]);
 
   React.useEffect(() => {
     const fetchRecetas = async () => {
       if (!pacienteId) {
-        setError('No se ha identificado al paciente. Por favor, inicie sesión nuevamente.');
-        setLoading(false);
+        // Esperar a que se resuelva el pacienteId
         return;
       }
 
@@ -26,8 +54,10 @@ export default function RecetasPage() {
         setLoading(true);
         setError('');
         
-        // ✅ LLAMADA A TU API REAL - ENDPOINT COMPLETO
-        const response = await axios.get(`http://localhost:5000/api/recetas/paciente/${pacienteId}`);
+        console.log('🔍 Buscando recetas para paciente:', pacienteId);
+        
+        // ✅ Llamada al backend filtrando por el paciente actual
+        const response = await api.get(`/recetas/paciente/${pacienteId}`);
         
         console.log('📋 Recetas recibidas de la API:', response.data);
 
@@ -38,32 +68,50 @@ export default function RecetasPage() {
                                receta.paciente_id?.nombre || 
                                'Paciente';
           
-          const nombreMedico = receta.medico_id?.usuario_id?.nombre || 
-                             receta.medico_id?.nombre || 
-                             'Dr. No especificado';
+          // El medico_id puede ser un objeto Medico o un objeto Usuario
+          const nombreMedico = (
+            receta.medico_id?.usuario_id?.nombre || 
+            receta.medico_id?.nombre || 
+            'Dr. No especificado'
+          );
           
-          const especialidadMedico = receta.medico_id?.especialidad || 
-                                   'Médico General';
+          const especialidadMedico = receta.medico_id?.especialidad || 'Médico General';
+          
+          // Calcular fecha de vencimiento (30 días desde emisión por defecto)
+          const fechaEmision = new Date(receta.fecha_emision);
+          const fechaVencimiento = new Date(fechaEmision);
+          fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
+          
+          const ahora = new Date();
+          const estaVigente = receta.activa && fechaVencimiento > ahora;
 
           return {
             id: receta._id,
-            doctor: nombreMedico,
+            doctor: `Dr. ${nombreMedico}`,
             centro: especialidadMedico,
-            fechaLabel: new Date(receta.fecha_emision).toLocaleDateString('es-CL', {
+            fechaLabel: fechaEmision.toLocaleDateString('es-CL', {
               day: 'numeric',
               month: 'long',
               year: 'numeric'
             }),
-            validaHasta: receta.activa ? 'Vigente' : 'Expirada',
-            status: receta.activa ? 'Vigente' : 'Expirada',
+            validaHasta: estaVigente 
+              ? fechaVencimiento.toLocaleDateString('es-CL', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })
+              : 'Expirada',
+            status: estaVigente ? 'Vigente' : 'Expirada',
             notas: receta.indicaciones || 'Sin indicaciones adicionales',
-            meds: receta.medicamentos.map(med => ({
-              nombre: med.nombre,
-              dosis: med.dosis,
-              frecuencia: med.frecuencia,
-              duracionDias: med.duracion,
-              instrucciones: med.instrucciones || ''
-            })),
+            meds: Array.isArray(receta.medicamentos) 
+              ? receta.medicamentos.map(med => ({
+                  nombre: med.nombre,
+                  dosis: med.dosis,
+                  frecuencia: med.frecuencia,
+                  duracionDias: med.duracion,
+                  instrucciones: med.instrucciones || ''
+                }))
+              : [],
             // Campos originales de la BD
             fecha_emision: receta.fecha_emision,
             activa: receta.activa,
@@ -316,7 +364,7 @@ export default function RecetasPage() {
               {recetas.map((r) => (
                 <div 
                   key={r.id} 
-                  className={`consultation-item ${activa.id === r.id ? 'active' : ''}`} 
+                  className={`consultation-item ${activa?.id === r.id ? 'active' : ''}`} 
                   role="button" 
                   onClick={() => setActiva(r)}
                   style={{ cursor: 'pointer' }}
@@ -434,13 +482,20 @@ export default function RecetasPage() {
 
       <div className="col-12 col-xl-3">
         {/* Columna derecha: alertas y tarjetas complementarias */}
-        <div className="alert border-destructive bg-destructive-5 d-flex align-items-center">
-          <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
-          <div className="text-destructive small">
-            <strong>ALERGIAS:</strong><br />
-            Penicilina
+        {alergias.length > 0 && (
+          <div className="alert border-destructive bg-destructive-5 d-flex align-items-start">
+            <i className="fas fa-exclamation-triangle text-destructive me-3 mt-1"></i>
+            <div className="text-destructive small">
+              <strong>ALERGIAS:</strong><br />
+              {alergias.map((alergia, idx) => (
+                <span key={idx}>
+                  {alergia}
+                  {idx < alergias.length - 1 && ', '}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <ActiveMedicationsCard />
         <QuickActionsCard />

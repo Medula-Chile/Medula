@@ -247,9 +247,20 @@ const MisExamenes = () => {
     };
 
     // Función para obtener el nombre del médico
-    const getNombreMedico = (medicoData) => {
+    const getNombreMedico = (medicoData, examen) => {
+        // Si no hay medico_solicitante, intentar obtener desde la consulta/cita
+        if (!medicoData && examen?.consulta_id?.cita_id?.profesional_id) {
+            const profesional = examen.consulta_id.cita_id.profesional_id;
+            return profesional.nombre || profesional.email || 'Médico';
+        }
+        
         if (!medicoData) return 'No asignado';
-        return medicoData.usuario_id?.nombre || medicoData.nombre || 'Médico';
+        
+        // El backend popula medico_solicitante con usuario_id.nombre
+        if (medicoData.usuario_id) {
+            return medicoData.usuario_id.nombre || medicoData.usuario_id.email || 'Médico';
+        }
+        return medicoData.nombre || 'Médico';
     };
 
     // Función para obtener especialidad del médico
@@ -488,7 +499,7 @@ const MisExamenes = () => {
                                                                 </div>
                                                                 
                                                                 <p className="doctor mb-1">
-                                                                    <strong>Dr. {getNombreMedico(examen.medico_solicitante)}</strong>
+                                                                    <strong>Dr. {getNombreMedico(examen.medico_solicitante, examen)}</strong>
                                                                     {getEspecialidadMedico(examen.medico_solicitante) && (
                                                                         <span className="text-muted small ms-2">
                                                                             ({getEspecialidadMedico(examen.medico_solicitante)})
@@ -499,7 +510,7 @@ const MisExamenes = () => {
                                                                 {examen.medico_realizador && (
                                                                     <p className="text-muted small mb-1">
                                                                         <i className="fas fa-user-md me-1"></i>
-                                                                        Realizado por: Dr. {getNombreMedico(examen.medico_realizador)}
+                                                                        Realizado por: Dr. {getNombreMedico(examen.medico_realizador, examen)}
                                                                         {getEspecialidadMedico(examen.medico_realizador) && (
                                                                             <span className="ms-1">
                                                                                 ({getEspecialidadMedico(examen.medico_realizador)})

@@ -120,7 +120,8 @@ exports.obtenerRecetasPorPaciente = async (req, res) => {
       });
     }
 
-    const recetas = await Receta.find({ paciente_id: pacienteId })
+    // Buscar recetas por paciente_id
+    let recetas = await Receta.find({ paciente_id: pacienteId })
       .populate({
         path: 'paciente_id',
         select: 'usuario_id nombre',
@@ -132,6 +133,28 @@ exports.obtenerRecetasPorPaciente = async (req, res) => {
         populate: { path: 'usuario_id', select: 'nombre email' }
       })
       .sort({ fecha_emision: -1 });
+
+    // Si no se encontraron recetas, intentar buscar por usuario_id (casos legacy)
+    if (recetas.length === 0) {
+      console.log('⚠️ No se encontraron recetas por paciente_id, buscando por usuario_id (legacy)');
+      
+      // Buscar si el ID corresponde a un usuario que tiene recetas
+      const paciente = await Paciente.findOne({ usuario_id: pacienteId }).select('_id');
+      if (paciente) {
+        recetas = await Receta.find({ paciente_id: paciente._id })
+          .populate({
+            path: 'paciente_id',
+            select: 'usuario_id nombre',
+            populate: { path: 'usuario_id', select: 'nombre rut email' }
+          })
+          .populate({
+            path: 'medico_id',
+            select: 'usuario_id nombre especialidad email',
+            populate: { path: 'usuario_id', select: 'nombre email' }
+          })
+          .sort({ fecha_emision: -1 });
+      }
+    }
 
     console.log('📋 Recetas encontradas:', recetas.length);
 

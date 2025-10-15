@@ -11,6 +11,8 @@ export default function HistorialPage() {
   const [timelineItems, setTimelineItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [alergias, setAlergias] = useState([]);
+  const [enfermedadesCronicas, setEnfermedadesCronicas] = useState([]);
 
   // Cargar consultas del paciente desde la API
   useEffect(() => {
@@ -38,6 +40,26 @@ export default function HistorialPage() {
 
         const pacienteId = pacienteResponse.data._id;
         console.log('✅ ID del paciente:', pacienteId);
+
+        // Poblar alergias y enfermedades crónicas desde el perfil del paciente
+        try {
+          const alerg = pacienteResponse?.data?.alergias;
+          if (Array.isArray(alerg)) {
+            setAlergias(alerg.filter(Boolean));
+          } else {
+            setAlergias([]);
+          }
+          
+          const enf = pacienteResponse?.data?.enfermedades_cronicas;
+          if (Array.isArray(enf)) {
+            setEnfermedadesCronicas(enf.filter(Boolean));
+          } else {
+            setEnfermedadesCronicas([]);
+          }
+        } catch (_) {
+          setAlergias([]);
+          setEnfermedadesCronicas([]);
+        }
 
         // 2. Obtener consultas filtrando por el ID del paciente
         console.log('🔍 Buscando consultas para paciente:', pacienteId);
@@ -233,18 +255,42 @@ export default function HistorialPage() {
       </div>
 
       <div className="col-12 col-xl-3">
-        <div className="alert border-destructive bg-destructive-5 d-flex align-items-center">
-          <i className="fas fa-exclamation-triangle text-destructive me-3"></i>
-          <div className="text-destructive small">
-            <strong>ALERGIAS:</strong>
-            <br />
-            Penicilina
+        {/* Alergias del paciente (dinámicas) */}
+        {alergias.length > 0 && (
+          <div className="alert border-destructive bg-destructive-5 d-flex align-items-start mb-3">
+            <i className="fas fa-exclamation-triangle text-destructive me-3 mt-1"></i>
+            <div className="text-destructive small">
+              <strong>ALERGIAS:</strong>
+              <br />
+              {alergias.map((a, i) => (
+                <span key={`alergia-${i}`}>
+                  {a}
+                  {i < alergias.length - 1 && ', '}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Enfermedades crónicas del paciente (dinámicas) */}
+        {enfermedadesCronicas.length > 0 && (
+          <div className="alert border-warning bg-warning-subtle d-flex align-items-start mb-3">
+            <i className="fas fa-heartbeat text-warning me-3 mt-1"></i>
+            <div className="text-dark small">
+              <strong>ENFERMEDADES CRÓNICAS:</strong>
+              <br />
+              {enfermedadesCronicas.map((e, i) => (
+                <span key={`enfermedad-${i}`}>
+                  {e}
+                  {i < enfermedadesCronicas.length - 1 && ', '}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <ActiveMedicationsCard />
-        <QuickActionsCard />
-        <NextAppointmentCard fechaHora="25 Ago 2024 • 10:30" medico="Dr. Juan Pérez" />
+      
       </div>
     </div>
   );

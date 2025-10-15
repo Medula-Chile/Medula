@@ -1,6 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function DoctorSettings() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [notifEmail, setNotifEmail] = React.useState(false);
   const [notifSMS, setNotifSMS] = React.useState(false);
   const [notifUrgent, setNotifUrgent] = React.useState(true);
@@ -30,6 +34,35 @@ export default function DoctorSettings() {
       localStorage.removeItem('medula_doctor_config');
       localStorage.removeItem('medula_doctor_profile');
       window.location.reload();
+    }
+  };
+
+  const handleLogout = async () => {
+    if (confirm('¿Estás seguro de que deseas cerrar sesión en este dispositivo?')) {
+      try {
+        await logout();
+        navigate('/');
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        alert('Error al cerrar sesión. Intenta nuevamente.');
+      }
+    }
+  };
+
+  const handleLogoutAll = async () => {
+    if (confirm('¿Estás seguro de que deseas cerrar sesión en TODOS los dispositivos? Deberás volver a iniciar sesión en cada uno.')) {
+      try {
+        // Cerrar sesión local
+        await logout();
+        // Limpiar todos los datos locales
+        localStorage.clear();
+        sessionStorage.clear();
+        // Redirigir al landing
+        navigate('/');
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        alert('Error al cerrar sesión. Intenta nuevamente.');
+      }
     }
   };
 
@@ -85,8 +118,20 @@ export default function DoctorSettings() {
               <div className="col-12 col-md-6">
                 <h6 className="mb-2">Gestión de Sesión</h6>
                 <div className="d-flex gap-2 flex-wrap">
-                  <button className="btn btn-outline-secondary btn-sm">Cerrar sesión (este dispositivo)</button>
-                  <button className="btn btn-outline-danger btn-sm">Cerrar sesión en todos los dispositivos</button>
+                  <button 
+                    className="btn btn-outline-secondary btn-sm" 
+                    onClick={handleLogout}
+                  >
+                    <i className="fas fa-sign-out-alt me-1"></i>
+                    Cerrar sesión (este dispositivo)
+                  </button>
+                  <button 
+                    className="btn btn-outline-danger btn-sm" 
+                    onClick={handleLogoutAll}
+                  >
+                    <i className="fas fa-power-off me-1"></i>
+                    Cerrar sesión en todos los dispositivos
+                  </button>
                 </div>
                 <p className="text-muted-foreground mt-2 mb-0">Si usas ClaveÚnica, el cierre global puede requerir revocar desde el proveedor.</p>
               </div>  
