@@ -66,6 +66,12 @@ export function removeAssignment(id) {
   emit();
 }
 
+export function clearAssignments() {
+  assignments = [];
+  try { localStorage.removeItem(LS_KEY); } catch {}
+  emit();
+}
+
 export function seedIfEmpty({ doctorName, doctorSpecialty }) {
   if (assignments.length > 0) return;
   const now = new Date();

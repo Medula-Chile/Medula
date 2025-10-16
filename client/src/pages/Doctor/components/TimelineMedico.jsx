@@ -71,10 +71,6 @@ export default function TimelineMedico({ items, activeId, onSelect, onStart }) {
                           onClick={(e) => {
                             e.stopPropagation();
                             onSelect(item.id);
-                            if (isCompleted) {
-                              alert('Esta atención ya fue completada. Si necesita editar, contacte al administrador.');
-                              return;
-                            }
                             onStart && onStart();
                           }}
                         >

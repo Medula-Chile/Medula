@@ -4,7 +4,7 @@ import TimelineMedico from './components/TimelineMedico';
 import ConsultationDetailDoctor from './components/ConsultationDetailDoctor';
 import ModalAtencion from './components/ModalAtencion';
 import { useAuth } from '../../contexts/AuthContext';
-import { subscribe, getAssignments, seedIfEmpty, upsertAssignment, setAssignments } from './data/assignmentsStore';
+import { subscribe, getAssignments, seedIfEmpty, upsertAssignment, setAssignments, clearAssignments } from './data/assignmentsStore';
 import { formatDateTime } from '../../utils/datetime';
 
 export default function DoctorInicio() {
@@ -20,6 +20,14 @@ export default function DoctorInicio() {
   // Fuente de datos: store maestro de asignaciones
   const [allItems, setAllItems] = useState(() => getAssignments());
   const [activeId, setActiveId] = useState(allItems[0]?.id ?? null);
+  // Limpiar store al cambiar de usuario (logout/login)
+  useEffect(() => {
+    // Si no hay usuario, limpiar el store
+    if (!user) {
+      clearAssignments();
+    }
+  }, [user]);
+  
   // Seed inicial si está vacío (será sobreescrito por datos reales si existen)
   useEffect(() => { seedIfEmpty({ doctorName, doctorSpecialty }); }, [doctorName, doctorSpecialty]);
   // Suscripción al store
@@ -341,11 +349,15 @@ export default function DoctorInicio() {
   }, [doctorName, doctorSpecialty]);
 
   const openModal = () => {
+    // Buscar el item actual directamente del store para tener el estado más reciente
+    const currentItem = todayItems.find(it => String(it.id) === String(activeId));
+    
     // Evitar abrir si ya está completada
-    if (consulta?.estado === 'Completado') {
+    if (currentItem?.estado === 'Completado') {
       alert('Esta atención ya fue completada. Para realizar cambios, contacte al administrador.');
       return;
     }
+    
     if (consulta) {
       setForm({
         observaciones: consulta.observaciones && consulta.observaciones !== '—' ? consulta.observaciones : '',
